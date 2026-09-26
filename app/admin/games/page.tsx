@@ -47,7 +47,7 @@ export default function GamesPage() {
     const { data: memberships, error: membershipError } =
       await supabase
         .from("workspace_members")
-        .select("workspace_id, role")
+        .select("workspace_id")
         .eq("user_id", user.id);
 
     if (
@@ -81,14 +81,6 @@ export default function GamesPage() {
     loadGames();
   }, []);
 
-  function createSlug(value: string) {
-    return value
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  }
-
   async function handleCreateGame(
     event: FormEvent<HTMLFormElement>
   ) {
@@ -102,60 +94,40 @@ export default function GamesPage() {
     setSaving(true);
     setError("");
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      window.location.href = "/login";
-      return;
-    }
-
-    const { data: memberships, error: membershipError } =
-      await supabase
-        .from("workspace_members")
-        .select("workspace_id, role")
-        .eq("user_id", user.id);
-
-    if (
-      membershipError ||
-      !memberships ||
-      memberships.length === 0
-    ) {
-      setError("No workspace membership found.");
-      setSaving(false);
-      return;
-    }
-
-    const workspaceId = memberships[0].workspace_id;
-    const slug = createSlug(name);
-
-    const { error: insertError } = await supabase
-      .from("games")
-      .insert({
-        workspace_id: workspaceId,
-        name: name.trim(),
-        slug,
-        type,
-        description: description.trim() || null,
-        status: "draft",
-        default_config: {},
-        created_by: user.id,
+    try {
+      const response = await fetch("/api/admin/games", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          type,
+          description,
+        }),
       });
 
-    if (insertError) {
-      setError(insertError.message);
-      setSaving(false);
-      return;
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(
+          result.error || "Failed to create game."
+        );
+        setSaving(false);
+        return;
+      }
+
+      setName("");
+      setDescription("");
+      setType("spin");
+      setShowForm(false);
+
+      await loadGames();
+    } catch {
+      setError("Unable to create game.");
     }
 
-    setName("");
-    setDescription("");
-    setType("spin");
-    setShowForm(false);
     setSaving(false);
-
-    await loadGames();
   }
 
   return (
