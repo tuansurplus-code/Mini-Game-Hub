@@ -1,55 +1,48 @@
-"use client";
+import { requireAdmin } from "../../../lib/admin-auth";
+import { createSupabaseServerClient } from "../../../lib/supabase-server";
 
-import { useEffect, useState } from "react";
-import { supabase } from "../../../lib/supabase";
+export default async function PrizesPage() {
+  const { workspaceId } = await requireAdmin();
+  const supabase = await createSupabaseServerClient();
 
-type Prize = {
-  id: string;
-  name: string;
-  description: string | null;
-  weight: number;
-  inventory: number | null;
-  active: boolean;
-};
-
-export default function PrizesPage() {
-  const [prizes, setPrizes] = useState<Prize[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    async function loadPrizes() {
-      const { data, error } = await supabase
-        .from("prizes")
-        .select(
-          "id, name, description, weight, inventory, active"
+  const { data: prizes, error } = await supabase
+    .from("prizes")
+    .select(
+      `
+        id,
+        name,
+        description,
+        weight,
+        inventory,
+        active,
+        created_at,
+        campaign_games!inner (
+          id,
+          campaign_id,
+          campaigns!inner (
+            id,
+            name,
+            workspace_id
+          )
         )
-        .order("created_at", {
-          ascending: false,
-        });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        setPrizes(data ?? []);
-      }
-
-      setLoading(false);
-    }
-
-    loadPrizes();
-  }, []);
+      `
+    )
+    .eq(
+      "campaign_games.campaigns.workspace_id",
+      workspaceId
+    )
+    .order("created_at", { ascending: false });
 
   return (
-    <div>
+    <>
       <div className="admin-header">
         <div>
-          <p className="eyebrow">MANAGEMENT</p>
+          <div className="eyebrow">PRIZE MANAGEMENT</div>
 
           <h1>Prizes</h1>
 
           <p>
-            Manage prizes, winning weights and available inventory.
+            Manage rewards and prize inventory for your campaigns.
           </p>
         </div>
 
@@ -60,22 +53,17 @@ export default function PrizesPage() {
 
       {error && (
         <div className="error-box">
-          {error}
+          Failed to load prizes: {error.message}
         </div>
       )}
 
       <div className="admin-panel">
-        {loading ? (
-          <p>Loading prizes...</p>
-        ) : prizes.length === 0 ? (
-          <p className="empty">
-            No prizes yet. Create your first prize to get started.
-          </p>
-        ) : (
+        {prizes && prizes.length > 0 ? (
           <table>
             <thead>
               <tr>
                 <th>Prize</th>
+                <th>Campaign</th>
                 <th>Weight</th>
                 <th>Inventory</th>
                 <th>Status</th>
@@ -83,45 +71,51 @@ export default function PrizesPage() {
             </thead>
 
             <tbody>
-              {prizes.map((prize) => (
-                <tr key={prize.id}>
-                  <td>
-                    <strong>{prize.name}</strong>
+              {prizes.map((prize) => {
+                const campaignGame = Array.isArray(
+                  prize.campaign_games
+                )
+                  ? prize.campaign_games[0]
+                  : prize.campaign_games;
 
-                    {prize.description && (
-                      <div
-                        style={{
-                          color: "#697386",
-                          fontSize: "13px",
-                          marginTop: "4px",
-                        }}
-                      >
-                        {prize.description}
-                      </div>
-                    )}
-                  </td>
+                const campaign = campaignGame?.campaigns;
 
-                  <td>
-                    {prize.weight}
-                  </td>
+                return (
+                  <tr key={prize.id}>
+                    <td>
+                      <strong>{prize.name}</strong>
+                    </td>
 
-                  <td>
-                    {prize.inventory === null
-                      ? "Unlimited"
-                      : prize.inventory}
-                  </td>
+                    <td>
+                      {campaign?.name ?? "—"}
+                    </td>
 
-                  <td>
-                    <span className="tag">
-                      {prize.active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                    <td>{prize.weight}</td>
+
+                    <td>
+                      {prize.inventory === null
+                        ? "Unlimited"
+                        : prize.inventory}
+                    </td>
+
+                    <td>
+                      <span className="tag">
+                        {prize.active
+                          ? "Active"
+                          : "Inactive"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+        ) : (
+          <div className="empty">
+            No prizes have been created yet.
+          </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
