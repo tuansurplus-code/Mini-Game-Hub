@@ -1,50 +1,28 @@
-"use client";
+import { requireAdmin } from "../../../lib/admin-auth";
+import { createSupabaseServerClient } from "../../../lib/supabase-server";
 
-import { useEffect, useState } from "react";
-import { supabase } from "../../../lib/supabase";
+export default async function CampaignsPage() {
+  const { workspaceId } = await requireAdmin();
+  const supabase = await createSupabaseServerClient();
 
-type Campaign = {
-  id: string;
-  name: string;
-  status: string;
-};
-
-export default function CampaignsPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    async function loadCampaigns() {
-      const { data, error } = await supabase
-        .from("campaigns")
-        .select("id, name, status")
-        .order("created_at", {
-          ascending: false,
-        });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        setCampaigns(data ?? []);
-      }
-
-      setLoading(false);
-    }
-
-    loadCampaigns();
-  }, []);
+  const { data: campaigns, error } = await supabase
+    .from("campaigns")
+    .select(
+      "id, name, slug, status, starts_at, ends_at, created_at"
+    )
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false });
 
   return (
-    <div>
+    <>
       <div className="admin-header">
         <div>
-          <p className="eyebrow">MANAGEMENT</p>
+          <div className="eyebrow">CAMPAIGN MANAGEMENT</div>
 
           <h1>Campaigns</h1>
 
           <p>
-            Create and manage promotional campaigns.
+            Create and manage promotional campaigns for your games.
           </p>
         </div>
 
@@ -55,24 +33,20 @@ export default function CampaignsPage() {
 
       {error && (
         <div className="error-box">
-          {error}
+          Failed to load campaigns: {error.message}
         </div>
       )}
 
       <div className="admin-panel">
-        {loading ? (
-          <p>Loading campaigns...</p>
-        ) : campaigns.length === 0 ? (
-          <p className="empty">
-            No campaigns yet. Create your first campaign
-            to get started.
-          </p>
-        ) : (
+        {campaigns && campaigns.length > 0 ? (
           <table>
             <thead>
               <tr>
                 <th>Name</th>
+                <th>Slug</th>
                 <th>Status</th>
+                <th>Start</th>
+                <th>End</th>
               </tr>
             </thead>
 
@@ -80,20 +54,42 @@ export default function CampaignsPage() {
               {campaigns.map((campaign) => (
                 <tr key={campaign.id}>
                   <td>
-                    {campaign.name}
+                    <strong>{campaign.name}</strong>
                   </td>
+
+                  <td>{campaign.slug}</td>
 
                   <td>
                     <span className="tag">
                       {campaign.status}
                     </span>
                   </td>
+
+                  <td>
+                    {campaign.starts_at
+                      ? new Date(
+                          campaign.starts_at
+                        ).toLocaleString()
+                      : "—"}
+                  </td>
+
+                  <td>
+                    {campaign.ends_at
+                      ? new Date(
+                          campaign.ends_at
+                        ).toLocaleString()
+                      : "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        ) : (
+          <div className="empty">
+            No campaigns have been created yet.
+          </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
