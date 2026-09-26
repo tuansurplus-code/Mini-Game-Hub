@@ -78,7 +78,11 @@ export default async function PrizesPage() {
                   ? prize.campaign_games[0]
                   : prize.campaign_games;
 
-                const campaign = campaignGame?.campaigns;
+                const campaignData = campaignGame?.campaigns;
+
+                const campaign = Array.isArray(campaignData)
+                  ? campaignData[0]
+                  : campaignData;
 
                 return (
                   <tr key={prize.id}>
