@@ -1,51 +1,24 @@
-"use client";
+import { requireAdmin } from "../../../lib/admin-auth";
+import { createSupabaseServerClient } from "../../../lib/supabase-server";
 
-import { useEffect, useState } from "react";
-import { supabase } from "../../../lib/supabase";
+export default async function GamesPage() {
+  const { workspaceId } = await requireAdmin();
+  const supabase = await createSupabaseServerClient();
 
-type Game = {
-  id: string;
-  name: string;
-  type: string;
-  status: string;
-};
-
-export default function GamesPage() {
-  const [games, setGames] = useState<Game[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    async function loadGames() {
-      const { data, error } = await supabase
-        .from("games")
-        .select("id, name, type, status")
-        .order("created_at", {
-          ascending: false,
-        });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        setGames(data ?? []);
-      }
-
-      setLoading(false);
-    }
-
-    loadGames();
-  }, []);
+  const { data: games, error } = await supabase
+    .from("games")
+    .select("id, name, slug, type, status, created_at")
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false });
 
   return (
-    <div>
+    <>
       <div className="admin-header">
         <div>
-          <p className="eyebrow">MANAGEMENT</p>
-
+          <div className="eyebrow">GAME MANAGEMENT</div>
           <h1>Games</h1>
-
           <p>
-            Configure the game types available in your hub.
+            Create and manage the games available in your campaigns.
           </p>
         </div>
 
@@ -56,23 +29,18 @@ export default function GamesPage() {
 
       {error && (
         <div className="error-box">
-          {error}
+          Failed to load games: {error.message}
         </div>
       )}
 
       <div className="admin-panel">
-        {loading ? (
-          <p>Loading games...</p>
-        ) : games.length === 0 ? (
-          <p className="empty">
-            No games yet. Create your first game to get started.
-          </p>
-        ) : (
+        {games && games.length > 0 ? (
           <table>
             <thead>
               <tr>
                 <th>Name</th>
                 <th>Type</th>
+                <th>Slug</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -80,11 +48,17 @@ export default function GamesPage() {
             <tbody>
               {games.map((game) => (
                 <tr key={game.id}>
-                  <td>{game.name}</td>
+                  <td>
+                    <strong>{game.name}</strong>
+                  </td>
 
                   <td>
-                    {game.type}
+                    <span className="tag">
+                      {game.type}
+                    </span>
                   </td>
+
+                  <td>{game.slug}</td>
 
                   <td>
                     <span className="tag">
@@ -95,8 +69,12 @@ export default function GamesPage() {
               ))}
             </tbody>
           </table>
+        ) : (
+          <div className="empty">
+            No games have been created yet.
+          </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
