@@ -221,3 +221,11 @@ th {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+.success-box {
+  background: #ecfdf3;
+  border: 1px solid #b7ebc6;
+  color: #16733b;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 18px;
+}
