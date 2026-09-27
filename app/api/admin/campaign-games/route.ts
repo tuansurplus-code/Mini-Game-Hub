@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "../../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../../lib/supabase-server";
 
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export async function GET() {
   try {
     const { workspaceId } = await requireAdmin();
@@ -48,8 +56,7 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        error:
-          "Unable to load campaigns and games.",
+        error: "Unable to load campaigns and games.",
       },
       { status: 500 }
     );
@@ -86,10 +93,11 @@ export async function POST(request: Request) {
 
     const supabase = await createSupabaseServerClient();
 
+    // Verify campaign belongs to this workspace.
     const { data: campaign, error: campaignError } =
       await supabase
         .from("campaigns")
-        .select("id")
+        .select("id, slug")
         .eq("id", campaignId)
         .eq("workspace_id", workspaceId)
         .maybeSingle();
@@ -110,9 +118,10 @@ export async function POST(request: Request) {
       );
     }
 
+    // Verify game belongs to this workspace.
     const { data: game, error: gameError } = await supabase
       .from("games")
-      .select("id")
+      .select("id, slug")
       .eq("id", gameId)
       .eq("workspace_id", workspaceId)
       .maybeSingle();
@@ -133,6 +142,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // Prevent the same game from being assigned twice.
     const { data: existingAssignment } = await supabase
       .from("campaign_games")
       .select("id")
@@ -149,6 +159,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // Get the next display order.
     const { data: lastGame } = await supabase
       .from("campaign_games")
       .select("display_order")
@@ -162,11 +173,30 @@ export async function POST(request: Request) {
         ? lastGame.display_order + 1
         : 1;
 
+    // Create the public URL slug.
+    const baseSlug = `${slugify(campaign.slug)}-${slugify(
+      game.slug
+    )}`;
+
+    let publicSlug = baseSlug;
+
+    // Make sure the public slug is unique.
+    const { data: existingSlug } = await supabase
+      .from("campaign_games")
+      .select("id")
+      .eq("public_slug", publicSlug)
+      .maybeSingle();
+
+    if (existingSlug) {
+      publicSlug = `${baseSlug}-${Date.now()}`;
+    }
+
     const { data: campaignGame, error } = await supabase
       .from("campaign_games")
       .insert({
         campaign_id: campaignId,
         game_id: gameId,
+        public_slug: publicSlug,
         status: "draft",
         display_order: displayOrder,
         appearance: {},
@@ -204,8 +234,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        error:
-          "Unable to assign game to campaign.",
+        error: "Unable to assign game to campaign.",
       },
       { status: 500 }
     );
