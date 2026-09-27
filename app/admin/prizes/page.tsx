@@ -1,5 +1,6 @@
 import { requireAdmin } from "../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../lib/supabase-server";
+import PrizeForm from "./PrizeForm";
 
 export default async function PrizesPage() {
   const { workspaceId } = await requireAdmin();
@@ -46,9 +47,7 @@ export default async function PrizesPage() {
           </p>
         </div>
 
-        <button className="primary-btn">
-          + New Prize
-        </button>
+        <PrizeForm />
       </div>
 
       {error && (
