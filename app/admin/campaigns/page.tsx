@@ -91,6 +91,7 @@ export default async function CampaignsPage() {
                     <tr key={campaign.id}>
                       <td>
                         <strong>{campaign.name}</strong>
+
                         <div
                           style={{
                             fontSize: "12px",
@@ -133,75 +134,80 @@ export default async function CampaignsPage() {
                 }
 
                 return campaignGames.map(
-                  (campaignGame, index) => (
-                    <tr
-                      key={campaignGame.id}
-                    >
-                      <td>
-                        {index === 0 && (
-                          <>
-                            <strong>
-                              {campaign.name}
-                            </strong>
+                  (campaignGame, index) => {
+                    const game = Array.isArray(
+                      campaignGame.games
+                    )
+                      ? campaignGame.games[0]
+                      : campaignGame.games;
 
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                color: "#777",
-                                marginTop: "4px",
-                              }}
-                            >
-                              {campaign.slug}
-                            </div>
-                          </>
-                        )}
-                      </td>
+                    return (
+                      <tr key={campaignGame.id}>
+                        <td>
+                          {index === 0 && (
+                            <>
+                              <strong>
+                                {campaign.name}
+                              </strong>
 
-                      <td>
-                        <strong>
-                          {campaignGame.games?.name ??
-                            "Unknown Game"}
-                        </strong>
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  color: "#777",
+                                  marginTop: "4px",
+                                }}
+                              >
+                                {campaign.slug}
+                              </div>
+                            </>
+                          )}
+                        </td>
 
-                        <div
-                          style={{
-                            fontSize: "12px",
-                            color: "#777",
-                            marginTop: "4px",
-                          }}
-                        >
-                          {campaignGame.games?.type ??
-                            "—"}
-                        </div>
-                      </td>
+                        <td>
+                          <strong>
+                            {game?.name ??
+                              "Unknown Game"}
+                          </strong>
 
-                      <td>
-                        <span className="tag">
-                          {campaignGame.status}
-                        </span>
-                      </td>
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "#777",
+                              marginTop: "4px",
+                            }}
+                          >
+                            {game?.type ?? "—"}
+                          </div>
+                        </td>
 
-                      <td>
-                        {campaignGame.public_slug}
-                      </td>
+                        <td>
+                          <span className="tag">
+                            {campaignGame.status}
+                          </span>
+                        </td>
 
-                      <td>
-                        {campaign.starts_at
-                          ? new Date(
-                              campaign.starts_at
-                            ).toLocaleString()
-                          : "—"}
-                      </td>
+                        <td>
+                          {campaignGame.public_slug}
+                        </td>
 
-                      <td>
-                        {campaign.ends_at
-                          ? new Date(
-                              campaign.ends_at
-                            ).toLocaleString()
-                          : "—"}
-                      </td>
-                    </tr>
-                  )
+                        <td>
+                          {campaign.starts_at
+                            ? new Date(
+                                campaign.starts_at
+                              ).toLocaleString()
+                            : "—"}
+                        </td>
+
+                        <td>
+                          {campaign.ends_at
+                            ? new Date(
+                                campaign.ends_at
+                              ).toLocaleString()
+                            : "—"}
+                        </td>
+                      </tr>
+                    );
+                  }
                 );
               })}
             </tbody>
