@@ -2,6 +2,60 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "../../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../../lib/supabase-server";
 
+export async function GET() {
+  try {
+    const { workspaceId } = await requireAdmin();
+
+    const supabase = await createSupabaseServerClient();
+
+    const [campaignsResult, gamesResult] = await Promise.all([
+      supabase
+        .from("campaigns")
+        .select("id, name")
+        .eq("workspace_id", workspaceId)
+        .order("created_at", { ascending: false }),
+
+      supabase
+        .from("games")
+        .select("id, name, type, status")
+        .eq("workspace_id", workspaceId)
+        .order("created_at", { ascending: false }),
+    ]);
+
+    if (campaignsResult.error) {
+      return NextResponse.json(
+        { error: campaignsResult.error.message },
+        { status: 400 }
+      );
+    }
+
+    if (gamesResult.error) {
+      return NextResponse.json(
+        { error: gamesResult.error.message },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({
+      campaigns: campaignsResult.data ?? [],
+      games: gamesResult.data ?? [],
+    });
+  } catch (error) {
+    console.error(
+      "Load campaign game assignment data error:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          "Unable to load campaigns and games.",
+      },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const { workspaceId, role } = await requireAdmin();
@@ -32,7 +86,6 @@ export async function POST(request: Request) {
 
     const supabase = await createSupabaseServerClient();
 
-    // Verify that the campaign belongs to this workspace.
     const { data: campaign, error: campaignError } =
       await supabase
         .from("campaigns")
@@ -57,7 +110,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verify that the game belongs to this workspace.
     const { data: game, error: gameError } = await supabase
       .from("games")
       .select("id")
@@ -81,7 +133,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Prevent the same game from being assigned twice.
     const { data: existingAssignment } = await supabase
       .from("campaign_games")
       .select("id")
@@ -98,7 +149,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get the next display order.
     const { data: lastGame } = await supabase
       .from("campaign_games")
       .select("display_order")
