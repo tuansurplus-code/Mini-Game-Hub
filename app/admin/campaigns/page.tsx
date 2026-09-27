@@ -1,5 +1,6 @@
 import { requireAdmin } from "../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../lib/supabase-server";
+import CampaignForm from "./CampaignForm";
 
 export default async function CampaignsPage() {
   const { workspaceId } = await requireAdmin();
@@ -26,9 +27,7 @@ export default async function CampaignsPage() {
           </p>
         </div>
 
-        <button className="primary-btn">
-          + New Campaign
-        </button>
+        <CampaignForm />
       </div>
 
       {error && (
