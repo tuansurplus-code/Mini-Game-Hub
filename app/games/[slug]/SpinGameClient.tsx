@@ -51,7 +51,6 @@ export default function SpinGameClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [winner, setWinner] = useState<Prize | null>(null);
-  const [hasSpun, setHasSpun] = useState(false);
   const [rotation, setRotation] = useState(0);
 
   const wheelPrizes = useMemo(() => prizes, [prizes]);
@@ -66,15 +65,13 @@ export default function SpinGameClient({
       return;
     }
 
-    if (loading || hasSpun) {
+    if (loading || winner) {
       return;
     }
 
     setLoading(true);
 
     try {
-      const requestId = createRequestId();
-
       const response = await fetch("/api/spin", {
         method: "POST",
         headers: {
@@ -83,7 +80,7 @@ export default function SpinGameClient({
         body: JSON.stringify({
           campaign_game_id: campaignGameId,
           mobile: normalizedMobile,
-          request_id: requestId,
+          request_id: createRequestId(),
         }),
       });
 
@@ -91,6 +88,7 @@ export default function SpinGameClient({
 
       if (!response.ok) {
         setError(data.error || "Unable to complete the spin.");
+        setLoading(false);
         return;
       }
 
@@ -102,6 +100,7 @@ export default function SpinGameClient({
 
       if (!winningPrize) {
         setError("The winning prize could not be found.");
+        setLoading(false);
         return;
       }
 
@@ -110,22 +109,19 @@ export default function SpinGameClient({
       );
 
       const segmentAngle = 360 / wheelPrizes.length;
+
       const targetAngle =
         360 - winnerIndex * segmentAngle - segmentAngle / 2;
 
-      const extraSpins = 5 * 360;
-      const finalRotation = rotation + extraSpins + targetAngle;
-
-      setRotation(finalRotation);
+      setRotation((current) => current + 5 * 360 + targetAngle);
 
       setTimeout(() => {
         setWinner(winningPrize);
-        setHasSpun(true);
+        setLoading(false);
       }, 4200);
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
@@ -140,7 +136,9 @@ export default function SpinGameClient({
             {campaignName}
           </p>
 
-          <h1 className="text-4xl font-black sm:text-5xl">{title}</h1>
+          <h1 className="text-4xl font-black sm:text-5xl">
+            {title}
+          </h1>
 
           <p className="mx-auto mt-3 max-w-lg text-sm text-white/90 sm:text-base">
             {description}
@@ -161,36 +159,28 @@ export default function SpinGameClient({
                     transform: `rotate(${rotation}deg)`,
                   }}
                 >
-                  {wheelPrizes.map((prize, index) => {
-                    const startAngle = index * segmentAngle;
-                    const endAngle = startAngle + segmentAngle;
-
-                    return (
+                  {wheelPrizes.map((prize, index) => (
+                    <div
+                      key={prize.id}
+                      className="absolute left-1/2 top-1/2 h-1/2 w-1/2 origin-bottom-left"
+                      style={{
+                        transform: `rotate(${index * segmentAngle}deg) skewY(${90 - segmentAngle}deg)`,
+                        background:
+                          index % 2 === 0 ? "#dc2626" : "#facc15",
+                        clipPath:
+                          "polygon(0 0, 100% 0, 0 100%)",
+                      }}
+                    >
                       <div
-                        key={prize.id}
-                        className="absolute left-1/2 top-1/2 h-1/2 w-1/2 origin-bottom-left"
+                        className="absolute left-4 top-8 w-28 -rotate-[20deg] text-center text-xs font-bold text-white sm:w-32 sm:text-sm"
                         style={{
-                          transform: `rotate(${startAngle}deg) skewY(${
-                            90 - segmentAngle
-                          }deg)`,
-                          background:
-                            index % 2 === 0 ? "#dc2626" : "#facc15",
-                          clipPath: "polygon(0 0, 100% 0, 0 100%)",
+                          transform: `rotate(${segmentAngle / 2}deg)`,
                         }}
                       >
-                        <div
-                          className="absolute left-4 top-8 w-28 -rotate-[20deg] text-center text-xs font-bold text-white sm:w-32 sm:text-sm"
-                          style={{
-                            transform: `rotate(${
-                              segmentAngle / 2
-                            }deg)`,
-                          }}
-                        >
-                          {prize.name}
-                        </div>
+                        {prize.name}
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
 
                   <div className="absolute left-1/2 top-1/2 z-10 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-4 border-white bg-red-600 text-center text-xs font-black text-white shadow-lg">
                     SPIN
@@ -212,9 +202,11 @@ export default function SpinGameClient({
                     type="tel"
                     inputMode="numeric"
                     value={mobile}
-                    onChange={(event) => setMobile(event.target.value)}
+                    onChange={(event) =>
+                      setMobile(event.target.value)
+                    }
                     placeholder="07XXXXXXXX"
-                    disabled={loading || hasSpun}
+                    disabled={loading}
                     className="w-full rounded-xl border border-gray-300 px-4 py-3 text-lg outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-200 disabled:bg-gray-100"
                   />
                 </div>
@@ -228,7 +220,7 @@ export default function SpinGameClient({
                 <button
                   type="button"
                   onClick={handleSpin}
-                  disabled={loading || hasSpun}
+                  disabled={loading || !!winner}
                   className="w-full rounded-xl bg-red-600 px-6 py-4 text-lg font-black text-white shadow-lg transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? "SPINNING..." : "SPIN NOW"}
