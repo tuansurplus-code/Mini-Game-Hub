@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAdmin } from "../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../lib/supabase-server";
 import CampaignForm from "./CampaignForm";
@@ -69,105 +70,30 @@ export default async function CampaignsPage() {
 
       <div className="admin-panel">
         {campaigns && campaigns.length > 0 ? (
-          <table>
-            <thead>
-              <tr>
-                <th>Campaign</th>
-                <th>Game</th>
-                <th>Status</th>
-                <th>Public Slug</th>
-                <th>Start</th>
-                <th>End</th>
-              </tr>
-            </thead>
+          <div className="overflow-x-auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Campaign</th>
+                  <th>Game</th>
+                  <th>Status</th>
+                  <th>Public Slug</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              {campaigns.map((campaign) => {
-                const campaignGames =
-                  campaign.campaign_games ?? [];
+              <tbody>
+                {campaigns.map((campaign) => {
+                  const campaignGames =
+                    campaign.campaign_games ?? [];
 
-                if (campaignGames.length === 0) {
-                  return (
-                    <tr key={campaign.id}>
-                      <td>
-                        <strong>{campaign.name}</strong>
-
-                        <div
-                          style={{
-                            fontSize: "12px",
-                            color: "#777",
-                            marginTop: "4px",
-                          }}
-                        >
-                          {campaign.slug}
-                        </div>
-                      </td>
-
-                      <td colSpan={3}>
-                        <span
-                          style={{
-                            color: "#777",
-                            fontSize: "13px",
-                          }}
-                        >
-                          No games assigned
-                        </span>
-                      </td>
-
-                      <td>
-                        {campaign.starts_at
-                          ? new Date(
-                              campaign.starts_at
-                            ).toLocaleString()
-                          : "—"}
-                      </td>
-
-                      <td>
-                        {campaign.ends_at
-                          ? new Date(
-                              campaign.ends_at
-                            ).toLocaleString()
-                          : "—"}
-                      </td>
-                    </tr>
-                  );
-                }
-
-                return campaignGames.map(
-                  (campaignGame, index) => {
-                    const game = Array.isArray(
-                      campaignGame.games
-                    )
-                      ? campaignGame.games[0]
-                      : campaignGame.games;
-
+                  if (campaignGames.length === 0) {
                     return (
-                      <tr key={campaignGame.id}>
+                      <tr key={campaign.id}>
                         <td>
-                          {index === 0 && (
-                            <>
-                              <strong>
-                                {campaign.name}
-                              </strong>
-
-                              <div
-                                style={{
-                                  fontSize: "12px",
-                                  color: "#777",
-                                  marginTop: "4px",
-                                }}
-                              >
-                                {campaign.slug}
-                              </div>
-                            </>
-                          )}
-                        </td>
-
-                        <td>
-                          <strong>
-                            {game?.name ??
-                              "Unknown Game"}
-                          </strong>
+                          <strong>{campaign.name}</strong>
 
                           <div
                             style={{
@@ -176,18 +102,19 @@ export default async function CampaignsPage() {
                               marginTop: "4px",
                             }}
                           >
-                            {game?.type ?? "—"}
+                            {campaign.slug}
                           </div>
                         </td>
 
-                        <td>
-                          <span className="tag">
-                            {campaignGame.status}
+                        <td colSpan={3}>
+                          <span
+                            style={{
+                              color: "#777",
+                              fontSize: "13px",
+                            }}
+                          >
+                            No games assigned
                           </span>
-                        </td>
-
-                        <td>
-                          {campaignGame.public_slug}
                         </td>
 
                         <td>
@@ -205,13 +132,120 @@ export default async function CampaignsPage() {
                               ).toLocaleString()
                             : "—"}
                         </td>
+
+                        <td>
+                          <Link
+                            href={`/admin/campaigns/${campaign.id}`}
+                            className="primary-btn"
+                            style={{
+                              display: "inline-block",
+                              textDecoration: "none",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            Edit
+                          </Link>
+                        </td>
                       </tr>
                     );
                   }
-                );
-              })}
-            </tbody>
-          </table>
+
+                  return campaignGames.map(
+                    (campaignGame, index) => {
+                      const game = Array.isArray(
+                        campaignGame.games
+                      )
+                        ? campaignGame.games[0]
+                        : campaignGame.games;
+
+                      return (
+                        <tr key={campaignGame.id}>
+                          <td>
+                            {index === 0 && (
+                              <>
+                                <strong>
+                                  {campaign.name}
+                                </strong>
+
+                                <div
+                                  style={{
+                                    fontSize: "12px",
+                                    color: "#777",
+                                    marginTop: "4px",
+                                  }}
+                                >
+                                  {campaign.slug}
+                                </div>
+                              </>
+                            )}
+                          </td>
+
+                          <td>
+                            <strong>
+                              {game?.name ??
+                                "Unknown Game"}
+                            </strong>
+
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#777",
+                                marginTop: "4px",
+                              }}
+                            >
+                              {game?.type ?? "—"}
+                            </div>
+                          </td>
+
+                          <td>
+                            <span className="tag">
+                              {campaignGame.status}
+                            </span>
+                          </td>
+
+                          <td>
+                            {campaignGame.public_slug}
+                          </td>
+
+                          <td>
+                            {campaign.starts_at
+                              ? new Date(
+                                  campaign.starts_at
+                                ).toLocaleString()
+                              : "—"}
+                          </td>
+
+                          <td>
+                            {campaign.ends_at
+                              ? new Date(
+                                  campaign.ends_at
+                                ).toLocaleString()
+                              : "—"}
+                          </td>
+
+                          <td>
+                            {index === 0 && (
+                              <Link
+                                href={`/admin/campaigns/${campaign.id}`}
+                                className="primary-btn"
+                                style={{
+                                  display: "inline-block",
+                                  textDecoration: "none",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                Edit
+                              </Link>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    }
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <div className="empty">
             No campaigns have been created yet.
