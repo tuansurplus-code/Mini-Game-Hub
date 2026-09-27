@@ -1,6 +1,7 @@
 import { requireAdmin } from "../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../lib/supabase-server";
 import PrizeForm from "./PrizeForm";
+import PrizeActions from "./PrizeActions";
 
 export default async function PrizesPage() {
   const { workspaceId } = await requireAdmin();
@@ -13,6 +14,7 @@ export default async function PrizesPage() {
         id,
         name,
         description,
+        image_url,
         weight,
         inventory,
         active,
@@ -66,6 +68,7 @@ export default async function PrizesPage() {
                 <th>Weight</th>
                 <th>Inventory</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
 
@@ -77,9 +80,12 @@ export default async function PrizesPage() {
                   ? prize.campaign_games[0]
                   : prize.campaign_games;
 
-                const campaignData = campaignGame?.campaigns;
+                const campaignData =
+                  campaignGame?.campaigns;
 
-                const campaign = Array.isArray(campaignData)
+                const campaign = Array.isArray(
+                  campaignData
+                )
                   ? campaignData[0]
                   : campaignData;
 
@@ -107,6 +113,25 @@ export default async function PrizesPage() {
                           ? "Active"
                           : "Inactive"}
                       </span>
+                    </td>
+
+                    <td>
+                      <PrizeActions
+                        prize={{
+                          id: prize.id,
+                          name: prize.name,
+                          description:
+                            prize.description,
+                          image_url:
+                            prize.image_url,
+                          weight: Number(
+                            prize.weight
+                          ),
+                          inventory:
+                            prize.inventory,
+                          active: prize.active,
+                        }}
+                      />
                     </td>
                   </tr>
                 );
