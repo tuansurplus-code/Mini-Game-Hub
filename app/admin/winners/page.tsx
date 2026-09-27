@@ -6,9 +6,11 @@ import { supabase } from "../../../lib/supabase";
 type Winner = {
   id: string;
   won_at: string;
-  campaign_game_id: string;
-  participant_id: string;
-  prize_id: string;
+  mobile: string;
+  campaign_name: string;
+  game_name: string;
+  prize_name: string;
+  public_slug: string;
 };
 
 export default function WinnersPage() {
@@ -18,14 +20,9 @@ export default function WinnersPage() {
 
   useEffect(() => {
     async function loadWinners() {
-      const { data, error } = await supabase
-        .from("winners")
-        .select(
-          "id, won_at, campaign_game_id, participant_id, prize_id"
-        )
-        .order("won_at", {
-          ascending: false,
-        });
+      const { data, error } = await supabase.rpc(
+        "get_winner_history"
+      );
 
       if (error) {
         setError(error.message);
@@ -68,38 +65,37 @@ export default function WinnersPage() {
             when participants win prizes.
           </p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Participant</th>
-                <th>Prize</th>
-                <th>Campaign Game</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {winners.map((winner) => (
-                <tr key={winner.id}>
-                  <td>
-                    {new Date(winner.won_at).toLocaleString()}
-                  </td>
-
-                  <td>
-                    {winner.participant_id}
-                  </td>
-
-                  <td>
-                    {winner.prize_id}
-                  </td>
-
-                  <td>
-                    {winner.campaign_game_id}
-                  </td>
+          <div className="overflow-x-auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date &amp; Time</th>
+                  <th>Mobile</th>
+                  <th>Campaign</th>
+                  <th>Game</th>
+                  <th>Prize</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {winners.map((winner) => (
+                  <tr key={winner.id}>
+                    <td>
+                      {new Date(winner.won_at).toLocaleString()}
+                    </td>
+
+                    <td>{winner.mobile}</td>
+
+                    <td>{winner.campaign_name}</td>
+
+                    <td>{winner.game_name}</td>
+
+                    <td>{winner.prize_name}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
