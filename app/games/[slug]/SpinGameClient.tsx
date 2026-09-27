@@ -10,6 +10,11 @@ type Prize = {
   weight: number;
 };
 
+type SpinResult = {
+  coupon_code?: string | null;
+  coupon_status?: string | null;
+};
+
 type Props = {
   campaignGameId: string;
   title: string;
@@ -51,6 +56,7 @@ export default function SpinGameClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [winner, setWinner] = useState<Prize | null>(null);
+  const [coupon, setCoupon] = useState<SpinResult | null>(null);
   const [rotation, setRotation] = useState(0);
 
   const wheelPrizes = useMemo(() => prizes, [prizes]);
@@ -113,10 +119,16 @@ export default function SpinGameClient({
       const targetAngle =
         360 - winnerIndex * segmentAngle - segmentAngle / 2;
 
-      setRotation((current) => current + 5 * 360 + targetAngle);
+      setRotation(
+        (current) => current + 5 * 360 + targetAngle
+      );
 
       setTimeout(() => {
         setWinner(winningPrize);
+        setCoupon({
+          coupon_code: result.coupon_code ?? null,
+          coupon_status: result.coupon_status ?? null,
+        });
         setLoading(false);
       }, 4200);
     } catch (err) {
@@ -166,7 +178,9 @@ export default function SpinGameClient({
                       style={{
                         transform: `rotate(${index * segmentAngle}deg) skewY(${90 - segmentAngle}deg)`,
                         background:
-                          index % 2 === 0 ? "#dc2626" : "#facc15",
+                          index % 2 === 0
+                            ? "#dc2626"
+                            : "#facc15",
                         clipPath:
                           "polygon(0 0, 100% 0, 0 100%)",
                       }}
@@ -258,6 +272,22 @@ export default function SpinGameClient({
                   </p>
                 )}
               </div>
+
+              {coupon?.coupon_code && (
+                <div className="mx-auto mt-5 max-w-sm rounded-2xl border-2 border-dashed border-red-300 bg-white p-5">
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                    Your Coupon Code
+                  </p>
+
+                  <p className="mt-3 rounded-xl bg-gray-100 px-4 py-3 text-2xl font-black tracking-wider text-gray-900">
+                    {coupon.coupon_code}
+                  </p>
+
+                  <p className="mt-3 text-xs text-gray-500">
+                    Please keep this coupon code for your purchase.
+                  </p>
+                </div>
+              )}
 
               <p className="mt-6 text-sm text-gray-500">
                 This mobile number has already used its spin.
