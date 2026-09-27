@@ -11,6 +11,8 @@ type Winner = {
   game_name: string;
   prize_name: string;
   public_slug: string;
+  coupon_code: string | null;
+  coupon_status: string | null;
 };
 
 export default function WinnersPage() {
@@ -74,6 +76,8 @@ export default function WinnersPage() {
                   <th>Campaign</th>
                   <th>Game</th>
                   <th>Prize</th>
+                  <th>Coupon</th>
+                  <th>Status</th>
                 </tr>
               </thead>
 
@@ -81,7 +85,9 @@ export default function WinnersPage() {
                 {winners.map((winner) => (
                   <tr key={winner.id}>
                     <td>
-                      {new Date(winner.won_at).toLocaleString()}
+                      {new Date(
+                        winner.won_at
+                      ).toLocaleString()}
                     </td>
 
                     <td>{winner.mobile}</td>
@@ -91,6 +97,14 @@ export default function WinnersPage() {
                     <td>{winner.game_name}</td>
 
                     <td>{winner.prize_name}</td>
+
+                    <td>
+                      {winner.coupon_code || "—"}
+                    </td>
+
+                    <td>
+                      {winner.coupon_status || "—"}
+                    </td>
                   </tr>
                 ))}
               </tbody>
