@@ -6,6 +6,7 @@ const links = [
   { label: "Games", href: "/admin/games" },
   { label: "Campaigns", href: "/admin/campaigns" },
   { label: "Prizes", href: "/admin/prizes" },
+  { label: "Coupons", href: "/admin/coupons" },
   { label: "Winner History", href: "/admin/winners" },
 ];
 
