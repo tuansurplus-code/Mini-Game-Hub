@@ -16,6 +16,7 @@ export default async function CampaignsPage() {
         name,
         slug,
         status,
+        scheduling_mode,
         starts_at,
         ends_at,
         created_at,
@@ -77,6 +78,7 @@ export default async function CampaignsPage() {
                   <th>Campaign</th>
                   <th>Game</th>
                   <th>Status</th>
+                  <th>Scheduling</th>
                   <th>Public Slug</th>
                   <th>Start</th>
                   <th>End</th>
@@ -106,7 +108,7 @@ export default async function CampaignsPage() {
                           </div>
                         </td>
 
-                        <td colSpan={3}>
+                        <td colSpan={4}>
                           <span
                             style={{
                               color: "#777",
@@ -199,7 +201,16 @@ export default async function CampaignsPage() {
 
                           <td>
                             <span className="tag">
-                              {campaignGame.status}
+                              {campaign.status}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span className="tag">
+                              {campaign.scheduling_mode ===
+                              "automatic"
+                                ? "Automatic"
+                                : "Manual"}
                             </span>
                           </td>
 
