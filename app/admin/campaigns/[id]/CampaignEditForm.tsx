@@ -833,11 +833,11 @@ export default function CampaignEditForm({
                     >
                       <button
                         type="button"
-                        onClick={() => {
-                          alert(
-                            "Game configuration will be available in the next step."
-                          );
-                        }}
+                        onClick={() =>
+                          router.push(
+                            `/admin/campaign-games/${campaignGame.id}`
+                          )
+                        }
                         style={{
                           padding: "9px 12px",
                           border: "1px solid #ddd",
