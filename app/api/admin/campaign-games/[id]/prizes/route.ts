@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "../../../../../lib/admin-auth";
-import { createSupabaseServerClient } from "../../../../../lib/supabase-server";
+import { requireAdmin } from "../../../../../../lib/admin-auth";
+import { createSupabaseServerClient } from "../../../../../../lib/supabase-server";
 
 type RouteContext = {
   params: Promise<{
@@ -33,8 +33,6 @@ export async function GET(
 
     const supabase = await createSupabaseServerClient();
 
-    // Verify that the campaign game belongs to the
-    // current workspace.
     const { data: campaignGame, error: campaignGameError } =
       await supabase
         .from("campaign_games")
@@ -172,6 +170,7 @@ export async function POST(
     const body = await request.json();
 
     const name = String(body.name ?? "").trim();
+
     const description =
       body.description == null
         ? null
@@ -237,8 +236,6 @@ export async function POST(
 
     const supabase = await createSupabaseServerClient();
 
-    // Verify that the campaign game belongs to the
-    // current workspace.
     const { data: campaignGame, error: campaignGameError } =
       await supabase
         .from("campaign_games")
