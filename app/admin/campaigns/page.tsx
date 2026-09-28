@@ -44,6 +44,20 @@ function formatStatus(status: string) {
   }
 }
 
+type GameRecord = {
+  id: string;
+  name: string;
+  type: string;
+};
+
+type CampaignGameRecord = {
+  id: string;
+  status: string;
+  public_slug: string | null;
+  game_id: string;
+  games: GameRecord | GameRecord[] | null;
+};
+
 export default async function CampaignsPage() {
   await requireAdmin();
 
@@ -90,7 +104,9 @@ export default async function CampaignsPage() {
         }}
       >
         <div>
-          <h1 style={{ marginBottom: "6px" }}>Campaigns</h1>
+          <h1 style={{ marginBottom: "6px" }}>
+            Campaigns
+          </h1>
 
           <p style={{ margin: 0, color: "#666" }}>
             Manage promotional campaigns and their schedules.
@@ -209,29 +225,33 @@ export default async function CampaignsPage() {
                 </tr>
               ) : (
                 campaigns.map((campaign) => {
-                  const campaignGames = Array.isArray(
-                    campaign.campaign_games
-                  )
-                    ? campaign.campaign_games
-                    : [];
+                  const campaignGames =
+                    Array.isArray(campaign.campaign_games)
+                      ? (campaign.campaign_games as CampaignGameRecord[])
+                      : [];
 
-                  const firstCampaignGame = campaignGames[0];
+                  const firstCampaignGame =
+                    campaignGames[0];
 
                   const game = firstCampaignGame?.games;
 
-                  const gameName = Array.isArray(game)
-                    ? game[0]?.name
-                    : game?.name;
+                  const gameRecord = Array.isArray(game)
+                    ? game[0]
+                    : game;
 
-                  const gameType = Array.isArray(game)
-                    ? game[0]?.type
-                    : game?.type;
+                  const gameName =
+                    gameRecord?.name;
+
+                  const gameType =
+                    gameRecord?.type;
 
                   const publicSlug =
-                    firstCampaignGame?.public_slug || "—";
+                    firstCampaignGame?.public_slug ||
+                    "—";
 
                   const automatic =
-                    campaign.scheduling_mode === "automatic";
+                    campaign.scheduling_mode ===
+                    "automatic";
 
                   return (
                     <tr key={campaign.id}>
@@ -241,7 +261,9 @@ export default async function CampaignsPage() {
                           borderBottom: "1px solid #eee",
                         }}
                       >
-                        <strong>{campaign.name}</strong>
+                        <strong>
+                          {campaign.name}
+                        </strong>
 
                         <div
                           style={{
@@ -260,7 +282,8 @@ export default async function CampaignsPage() {
                           borderBottom: "1px solid #eee",
                         }}
                       >
-                        {gameName || "No game assigned"}
+                        {gameName ||
+                          "No game assigned"}
 
                         {gameType && (
                           <div
@@ -291,22 +314,29 @@ export default async function CampaignsPage() {
                             fontWeight: 600,
                           }}
                         >
-                          {formatStatus(campaign.status)}
+                          {formatStatus(
+                            campaign.status
+                          )}
                         </span>
                       </td>
 
                       <td
                         style={{
                           padding: "12px",
-                          borderBottom: "1px solid #eee",
+                          borderBottom:
+                            "1px solid #eee",
                         }}
                       >
                         <span
                           style={{
-                            fontWeight: automatic ? 600 : 400,
+                            fontWeight: automatic
+                              ? 600
+                              : 400,
                           }}
                         >
-                          {automatic ? "Automatic" : "Manual"}
+                          {automatic
+                            ? "Automatic"
+                            : "Manual"}
                         </span>
 
                         {automatic && (
@@ -325,41 +355,51 @@ export default async function CampaignsPage() {
                       <td
                         style={{
                           padding: "12px",
-                          borderBottom: "1px solid #eee",
+                          borderBottom:
+                            "1px solid #eee",
                           fontSize: "13px",
                         }}
                       >
                         {publicSlug === "—" ? (
                           "—"
                         ) : (
-                          <code>{publicSlug}</code>
+                          <code>
+                            {publicSlug}
+                          </code>
                         )}
                       </td>
 
                       <td
                         style={{
                           padding: "12px",
-                          borderBottom: "1px solid #eee",
+                          borderBottom:
+                            "1px solid #eee",
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {formatCampaignDate(campaign.starts_at)}
+                        {formatCampaignDate(
+                          campaign.starts_at
+                        )}
                       </td>
 
                       <td
                         style={{
                           padding: "12px",
-                          borderBottom: "1px solid #eee",
+                          borderBottom:
+                            "1px solid #eee",
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {formatCampaignDate(campaign.ends_at)}
+                        {formatCampaignDate(
+                          campaign.ends_at
+                        )}
                       </td>
 
                       <td
                         style={{
                           padding: "12px",
-                          borderBottom: "1px solid #eee",
+                          borderBottom:
+                            "1px solid #eee",
                         }}
                       >
                         <Link
