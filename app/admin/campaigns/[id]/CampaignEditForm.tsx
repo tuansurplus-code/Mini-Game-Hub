@@ -8,6 +8,7 @@ type Campaign = {
   name: string;
   slug: string;
   status: string;
+  scheduling_mode: string;
   starts_at: string | null;
   ends_at: string | null;
   created_at: string;
@@ -29,6 +30,7 @@ function toDateTimeLocal(value: string | null) {
   }
 
   const offset = date.getTimezoneOffset();
+
   const localDate = new Date(
     date.getTime() - offset * 60 * 1000
   );
@@ -42,12 +44,19 @@ export default function CampaignEditForm({
   const router = useRouter();
 
   const [name, setName] = useState(campaign.name);
+
+  const [schedulingMode, setSchedulingMode] = useState(
+    campaign.scheduling_mode || "manual"
+  );
+
   const [startsAt, setStartsAt] = useState(
     toDateTimeLocal(campaign.starts_at)
   );
+
   const [endsAt, setEndsAt] = useState(
     toDateTimeLocal(campaign.ends_at)
   );
+
   const [status, setStatus] = useState(campaign.status);
 
   const [saving, setSaving] = useState(false);
@@ -67,9 +76,26 @@ export default function CampaignEditForm({
       return;
     }
 
+    if (
+      !["manual", "automatic"].includes(
+        schedulingMode
+      )
+    ) {
+      setError("Invalid scheduling mode.");
+      return;
+    }
+
     if (startsAt && endsAt) {
       const start = new Date(startsAt);
       const end = new Date(endsAt);
+
+      if (
+        Number.isNaN(start.getTime()) ||
+        Number.isNaN(end.getTime())
+      ) {
+        setError("Invalid campaign date or time.");
+        return;
+      }
 
       if (end <= start) {
         setError(
@@ -94,6 +120,7 @@ export default function CampaignEditForm({
             starts_at: startsAt || null,
             ends_at: endsAt || null,
             status,
+            scheduling_mode: schedulingMode,
           }),
         }
       );
@@ -105,6 +132,7 @@ export default function CampaignEditForm({
           result.error ||
             "Failed to update campaign."
         );
+
         setSaving(false);
         return;
       }
@@ -120,9 +148,13 @@ export default function CampaignEditForm({
       setError(
         "Unable to update campaign."
       );
+
       setSaving(false);
     }
   }
+
+  const automaticMode =
+    schedulingMode === "automatic";
 
   return (
     <div
@@ -154,7 +186,11 @@ export default function CampaignEditForm({
           </div>
         )}
 
-        <div style={{ marginBottom: "18px" }}>
+        <div
+          style={{
+            marginBottom: "18px",
+          }}
+        >
           <label
             htmlFor="campaign-name"
             style={{
@@ -190,6 +226,62 @@ export default function CampaignEditForm({
           }}
         >
           <label
+            htmlFor="campaign-scheduling-mode"
+            style={{
+              display: "block",
+              marginBottom: "7px",
+              fontWeight: 600,
+            }}
+          >
+            Scheduling Mode
+          </label>
+
+          <select
+            id="campaign-scheduling-mode"
+            value={schedulingMode}
+            onChange={(event) =>
+              setSchedulingMode(event.target.value)
+            }
+            disabled={saving}
+            style={{
+              width: "100%",
+              padding: "11px 13px",
+              border: "1px solid #d8dde5",
+              borderRadius: "9px",
+              background: "#ffffff",
+              fontSize: "14px",
+            }}
+          >
+            <option value="manual">
+              Manual
+            </option>
+
+            <option value="automatic">
+              Automatic
+            </option>
+          </select>
+
+          <p
+            style={{
+              marginTop: "7px",
+              marginBottom: 0,
+              color: "#697386",
+              fontSize: "13px",
+              lineHeight: 1.5,
+            }}
+          >
+            {automaticMode
+              ? "The campaign status will be automatically controlled using the start and end dates."
+              : "You control the campaign status manually."}
+          </p>
+        </div>
+
+        <div
+          style={{
+            marginBottom: "18px",
+          }}
+        >
+          <label
             htmlFor="campaign-status"
             style={{
               display: "block",
@@ -206,13 +298,15 @@ export default function CampaignEditForm({
             onChange={(event) =>
               setStatus(event.target.value)
             }
-            disabled={saving}
+            disabled={saving || automaticMode}
             style={{
               width: "100%",
               padding: "11px 13px",
               border: "1px solid #d8dde5",
               borderRadius: "9px",
-              background: "#ffffff",
+              background: automaticMode
+                ? "#f3f4f6"
+                : "#ffffff",
               fontSize: "14px",
             }}
           >
@@ -236,6 +330,21 @@ export default function CampaignEditForm({
               Archived
             </option>
           </select>
+
+          {automaticMode && (
+            <p
+              style={{
+                marginTop: "7px",
+                marginBottom: 0,
+                color: "#697386",
+                fontSize: "13px",
+                lineHeight: 1.5,
+              }}
+            >
+              Automatic mode will determine this status
+              from the campaign schedule.
+            </p>
+          )}
         </div>
 
         <div
