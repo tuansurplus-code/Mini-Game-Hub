@@ -38,6 +38,17 @@ function toDateTimeLocal(value: string | null) {
   return localDate.toISOString().slice(0, 16);
 }
 
+function formatStatus(status: string) {
+  if (!status) {
+    return "—";
+  }
+
+  return (
+    status.charAt(0).toUpperCase() +
+    status.slice(1)
+  );
+}
+
 export default function CampaignEditForm({
   campaign,
 }: Props) {
@@ -57,7 +68,9 @@ export default function CampaignEditForm({
     toDateTimeLocal(campaign.ends_at)
   );
 
-  const [status, setStatus] = useState(campaign.status);
+  const [status, setStatus] = useState(
+    campaign.status
+  );
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -252,12 +265,12 @@ export default function CampaignEditForm({
               fontSize: "14px",
             }}
           >
-            <option value="manual">
-              Manual
-            </option>
-
             <option value="automatic">
               Automatic
+            </option>
+
+            <option value="manual">
+              Manual
             </option>
           </select>
 
@@ -292,58 +305,75 @@ export default function CampaignEditForm({
             Campaign Status
           </label>
 
-          <select
-            id="campaign-status"
-            value={status}
-            onChange={(event) =>
-              setStatus(event.target.value)
-            }
-            disabled={saving || automaticMode}
-            style={{
-              width: "100%",
-              padding: "11px 13px",
-              border: "1px solid #d8dde5",
-              borderRadius: "9px",
-              background: automaticMode
-                ? "#f3f4f6"
-                : "#ffffff",
-              fontSize: "14px",
-            }}
-          >
-            <option value="draft">
-              Draft
-            </option>
+          {automaticMode ? (
+            <>
+              <div
+                id="campaign-status"
+                style={{
+                  width: "100%",
+                  padding: "11px 13px",
+                  border: "1px solid #d8dde5",
+                  borderRadius: "9px",
+                  background: "#f3f4f6",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  boxSizing: "border-box",
+                }}
+              >
+                {formatStatus(status)}
+              </div>
 
-            <option value="scheduled">
-              Scheduled
-            </option>
-
-            <option value="active">
-              Active
-            </option>
-
-            <option value="ended">
-              Ended
-            </option>
-
-            <option value="archived">
-              Archived
-            </option>
-          </select>
-
-          {automaticMode && (
-            <p
+              <p
+                style={{
+                  marginTop: "7px",
+                  marginBottom: 0,
+                  color: "#697386",
+                  fontSize: "13px",
+                  lineHeight: 1.5,
+                }}
+              >
+                Automatic mode controls this status
+                from the campaign start and end
+                dates.
+              </p>
+            </>
+          ) : (
+            <select
+              id="campaign-status"
+              value={status}
+              onChange={(event) =>
+                setStatus(event.target.value)
+              }
+              disabled={saving}
               style={{
-                marginTop: "7px",
-                marginBottom: 0,
-                color: "#697386",
-                fontSize: "13px",
-                lineHeight: 1.5,
+                width: "100%",
+                padding: "11px 13px",
+                border: "1px solid #d8dde5",
+                borderRadius: "9px",
+                background: "#ffffff",
+                fontSize: "14px",
               }}
             >
-              Automatic mode will determine this status
-              from the campaign schedule.
-            </p>
+              <option value="draft">
+                Draft
+              </option>
+
+              <option value="scheduled">
+                Scheduled
+              </option>
+
+              <option value="active">
+                Active
+              </option>
+
+              <option value="ended">
+                Ended
+              </option>
+
+              <option value="archived">
+                Archived
+              </option>
+            </select>
           )}
         </div>
 
