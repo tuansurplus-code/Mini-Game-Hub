@@ -19,6 +19,18 @@ export async function POST(request: Request) {
     const startsAt = body.starts_at || null;
     const endsAt = body.ends_at || null;
 
+    const schedulingMode =
+      body.scheduling_mode === undefined
+        ? "automatic"
+        : String(body.scheduling_mode).toLowerCase();
+
+    if (!["manual", "automatic"].includes(schedulingMode)) {
+      return NextResponse.json(
+        { error: "Invalid scheduling mode." },
+        { status: 400 }
+      );
+    }
+
     if (!name) {
       return NextResponse.json(
         { error: "Campaign name is required." },
@@ -69,13 +81,14 @@ export async function POST(request: Request) {
         name,
         slug,
         status: "draft",
+        scheduling_mode: schedulingMode,
         starts_at: startsAt,
         ends_at: endsAt,
         settings: {},
         created_by: user.id,
       })
       .select(
-        "id, name, slug, status, starts_at, ends_at, created_at"
+        "id, name, slug, status, scheduling_mode, starts_at, ends_at, created_at"
       )
       .single();
 
