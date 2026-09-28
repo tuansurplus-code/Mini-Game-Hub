@@ -14,6 +14,116 @@ function isValidUuid(value: string) {
   );
 }
 
+function validatePrizeInput(body: Record<string, unknown>) {
+  const name = String(body.name ?? "").trim();
+
+  const description =
+    body.description == null
+      ? null
+      : String(body.description).trim();
+
+  const imageUrl =
+    body.image_url == null
+      ? null
+      : String(body.image_url).trim();
+
+  const weight = Number(body.weight ?? 0);
+
+  const inventory =
+    body.inventory === null ||
+    body.inventory === undefined ||
+    body.inventory === ""
+      ? null
+      : Number(body.inventory);
+
+  const active =
+    body.active === undefined
+      ? true
+      : Boolean(body.active);
+
+  const metadata =
+    body.metadata &&
+    typeof body.metadata === "object" &&
+    !Array.isArray(body.metadata)
+      ? body.metadata
+      : {};
+
+  if (!name) {
+    return {
+      error: "Prize name is required.",
+    };
+  }
+
+  if (!Number.isFinite(weight) || weight < 0) {
+    return {
+      error:
+        "Prize weight must be a number greater than or equal to 0.",
+    };
+  }
+
+  if (
+    inventory !== null &&
+    (!Number.isInteger(inventory) || inventory < 0)
+  ) {
+    return {
+      error:
+        "Inventory must be a whole number greater than or equal to 0.",
+    };
+  }
+
+  return {
+    value: {
+      name,
+      description,
+      image_url: imageUrl,
+      weight,
+      inventory,
+      active,
+      metadata,
+    },
+  };
+}
+
+async function verifyCampaignGame(
+  campaignGameId: string,
+  workspaceId: string
+) {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("campaign_games")
+    .select(
+      `
+        id,
+        campaign_id,
+        campaigns!inner (
+          id,
+          workspace_id
+        )
+      `
+    )
+    .eq("id", campaignGameId)
+    .eq("campaigns.workspace_id", workspaceId)
+    .maybeSingle();
+
+  if (error) {
+    console.error(
+      "Verify campaign game error:",
+      error
+    );
+
+    return {
+      campaignGame: null,
+      error: "Failed to verify campaign game.",
+    };
+  }
+
+  return {
+    campaignGame: data,
+    error: null,
+  };
+}
+
 export async function GET(
   _request: Request,
   context: RouteContext
@@ -31,7 +141,8 @@ export async function GET(
       );
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase =
+      await createSupabaseServerClient();
 
     const { data: campaignGame, error: campaignGameError } =
       await supabase
@@ -144,9 +255,12 @@ export async function POST(
   context: RouteContext
 ) {
   try {
-    const { workspaceId, role } = await requireAdmin();
+    const { workspaceId, role } =
+      await requireAdmin();
 
-    if (!["owner", "admin", "editor"].includes(role)) {
+    if (
+      !["owner", "admin", "editor"].includes(role)
+    ) {
       return NextResponse.json(
         {
           error:
@@ -156,9 +270,13 @@ export async function POST(
       );
     }
 
-    const { id: campaignGameId } = await context.params;
+    const { id: campaignGameId } =
+      await context.params;
 
-    if (!campaignGameId || !isValidUuid(campaignGameId)) {
+    if (
+      !campaignGameId ||
+      !isValidUuid(campaignGameId)
+    ) {
       return NextResponse.json(
         {
           error: "Invalid campaign game ID.",
@@ -167,107 +285,40 @@ export async function POST(
       );
     }
 
-    const body = await request.json();
+    const body =
+      (await request.json()) as Record<
+        string,
+        unknown
+      >;
 
-    const name = String(body.name ?? "").trim();
+    const validation =
+      validatePrizeInput(body);
 
-    const description =
-      body.description == null
-        ? null
-        : String(body.description).trim();
-
-    const imageUrl =
-      body.image_url == null
-        ? null
-        : String(body.image_url).trim();
-
-    const weight = Number(body.weight ?? 0);
-
-    const inventory =
-      body.inventory === null ||
-      body.inventory === undefined ||
-      body.inventory === ""
-        ? null
-        : Number(body.inventory);
-
-    const active =
-      body.active === undefined
-        ? true
-        : Boolean(body.active);
-
-    const metadata =
-      body.metadata &&
-      typeof body.metadata === "object" &&
-      !Array.isArray(body.metadata)
-        ? body.metadata
-        : {};
-
-    if (!name) {
+    if (validation.error) {
       return NextResponse.json(
         {
-          error: "Prize name is required.",
+          error: validation.error,
         },
         { status: 400 }
       );
     }
 
-    if (!Number.isFinite(weight) || weight < 0) {
+    const verified =
+      await verifyCampaignGame(
+        campaignGameId,
+        workspaceId
+      );
+
+    if (verified.error) {
       return NextResponse.json(
         {
-          error:
-            "Prize weight must be a number greater than or equal to 0.",
+          error: verified.error,
         },
         { status: 400 }
       );
     }
 
-    if (
-      inventory !== null &&
-      (!Number.isInteger(inventory) || inventory < 0)
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Inventory must be a whole number greater than or equal to 0.",
-        },
-        { status: 400 }
-      );
-    }
-
-    const supabase = await createSupabaseServerClient();
-
-    const { data: campaignGame, error: campaignGameError } =
-      await supabase
-        .from("campaign_games")
-        .select(
-          `
-            id,
-            campaign_id,
-            campaigns!inner (
-              id,
-              workspace_id
-            )
-          `
-        )
-        .eq("id", campaignGameId)
-        .eq("campaigns.workspace_id", workspaceId)
-        .maybeSingle();
-
-    if (campaignGameError) {
-      console.error(
-        "Verify campaign game for prize creation error:",
-        campaignGameError
-      );
-
-      return NextResponse.json(
-        {
-          error: "Failed to verify campaign game.",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (!campaignGame) {
+    if (!verified.campaignGame) {
       return NextResponse.json(
         {
           error: "Campaign game not found.",
@@ -276,18 +327,15 @@ export async function POST(
       );
     }
 
+    const supabase =
+      await createSupabaseServerClient();
+
     const { data: prize, error: prizeError } =
       await supabase
         .from("prizes")
         .insert({
           campaign_game_id: campaignGameId,
-          name,
-          description,
-          image_url: imageUrl,
-          weight,
-          inventory,
-          active,
-          metadata,
+          ...validation.value,
         })
         .select(
           `
@@ -335,6 +383,353 @@ export async function POST(
     return NextResponse.json(
       {
         error: "Unable to create prize.",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  request: Request,
+  context: RouteContext
+) {
+  try {
+    const { workspaceId, role } =
+      await requireAdmin();
+
+    if (
+      !["owner", "admin", "editor"].includes(role)
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "You do not have permission to manage prizes.",
+        },
+        { status: 403 }
+      );
+    }
+
+    const { id: campaignGameId } =
+      await context.params;
+
+    if (
+      !campaignGameId ||
+      !isValidUuid(campaignGameId)
+    ) {
+      return NextResponse.json(
+        {
+          error: "Invalid campaign game ID.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const body =
+      (await request.json()) as Record<
+        string,
+        unknown
+      >;
+
+    const prizeId = String(
+      body.prize_id ?? ""
+    ).trim();
+
+    if (!prizeId || !isValidUuid(prizeId)) {
+      return NextResponse.json(
+        {
+          error: "Invalid prize ID.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const validation =
+      validatePrizeInput(body);
+
+    if (validation.error) {
+      return NextResponse.json(
+        {
+          error: validation.error,
+        },
+        { status: 400 }
+      );
+    }
+
+    const verified =
+      await verifyCampaignGame(
+        campaignGameId,
+        workspaceId
+      );
+
+    if (verified.error) {
+      return NextResponse.json(
+        {
+          error: verified.error,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!verified.campaignGame) {
+      return NextResponse.json(
+        {
+          error: "Campaign game not found.",
+        },
+        { status: 404 }
+      );
+    }
+
+    const supabase =
+      await createSupabaseServerClient();
+
+    const {
+      data: existingPrize,
+      error: existingPrizeError,
+    } = await supabase
+      .from("prizes")
+      .select("id")
+      .eq("id", prizeId)
+      .eq(
+        "campaign_game_id",
+        campaignGameId
+      )
+      .maybeSingle();
+
+    if (existingPrizeError) {
+      console.error(
+        "Verify prize for update error:",
+        existingPrizeError
+      );
+
+      return NextResponse.json(
+        {
+          error: "Failed to verify prize.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!existingPrize) {
+      return NextResponse.json(
+        {
+          error: "Prize not found.",
+        },
+        { status: 404 }
+      );
+    }
+
+    const { data: prize, error: prizeError } =
+      await supabase
+        .from("prizes")
+        .update(validation.value)
+        .eq("id", prizeId)
+        .eq(
+          "campaign_game_id",
+          campaignGameId
+        )
+        .select(
+          `
+            id,
+            campaign_game_id,
+            name,
+            description,
+            image_url,
+            weight,
+            inventory,
+            active,
+            metadata,
+            created_at,
+            updated_at
+          `
+        )
+        .single();
+
+    if (prizeError) {
+      console.error(
+        "Update prize error:",
+        prizeError
+      );
+
+      return NextResponse.json(
+        {
+          error: prizeError.message,
+        },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({
+      prize,
+    });
+  } catch (error) {
+    console.error(
+      "Update campaign prize error:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        error: "Unable to update prize.",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  context: RouteContext
+) {
+  try {
+    const { workspaceId, role } =
+      await requireAdmin();
+
+    if (
+      !["owner", "admin", "editor"].includes(role)
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "You do not have permission to manage prizes.",
+        },
+        { status: 403 }
+      );
+    }
+
+    const { id: campaignGameId } =
+      await context.params;
+
+    if (
+      !campaignGameId ||
+      !isValidUuid(campaignGameId)
+    ) {
+      return NextResponse.json(
+        {
+          error: "Invalid campaign game ID.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const body =
+      (await request.json()) as Record<
+        string,
+        unknown
+      >;
+
+    const prizeId = String(
+      body.prize_id ?? ""
+    ).trim();
+
+    if (!prizeId || !isValidUuid(prizeId)) {
+      return NextResponse.json(
+        {
+          error: "Invalid prize ID.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const verified =
+      await verifyCampaignGame(
+        campaignGameId,
+        workspaceId
+      );
+
+    if (verified.error) {
+      return NextResponse.json(
+        {
+          error: verified.error,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!verified.campaignGame) {
+      return NextResponse.json(
+        {
+          error: "Campaign game not found.",
+        },
+        { status: 404 }
+      );
+    }
+
+    const supabase =
+      await createSupabaseServerClient();
+
+    const {
+      data: existingPrize,
+      error: existingPrizeError,
+    } = await supabase
+      .from("prizes")
+      .select("id")
+      .eq("id", prizeId)
+      .eq(
+        "campaign_game_id",
+        campaignGameId
+      )
+      .maybeSingle();
+
+    if (existingPrizeError) {
+      console.error(
+        "Verify prize for deletion error:",
+        existingPrizeError
+      );
+
+      return NextResponse.json(
+        {
+          error: "Failed to verify prize.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!existingPrize) {
+      return NextResponse.json(
+        {
+          error: "Prize not found.",
+        },
+        { status: 404 }
+      );
+    }
+
+    const { error: deleteError } =
+      await supabase
+        .from("prizes")
+        .delete()
+        .eq("id", prizeId)
+        .eq(
+          "campaign_game_id",
+          campaignGameId
+        );
+
+    if (deleteError) {
+      console.error(
+        "Delete prize error:",
+        deleteError
+      );
+
+      return NextResponse.json(
+        {
+          error: deleteError.message,
+        },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      prize_id: prizeId,
+    });
+  } catch (error) {
+    console.error(
+      "Delete campaign prize error:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        error: "Unable to delete prize.",
       },
       { status: 500 }
     );
