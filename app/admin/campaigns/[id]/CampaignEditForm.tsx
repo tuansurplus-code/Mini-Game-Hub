@@ -14,6 +14,16 @@ type Campaign = {
   created_at: string;
 };
 
+type GameRecord = {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  description: string | null;
+  status: string;
+  default_config: Record<string, unknown> | null;
+};
+
 type CampaignGame = {
   id: string;
   campaign_id: string;
@@ -25,15 +35,7 @@ type CampaignGame = {
   rules: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
-  games: {
-    id: string;
-    name: string;
-    slug: string;
-    type: string;
-    description: string | null;
-    status: string;
-    default_config: Record<string, unknown> | null;
-  } | null;
+  games: GameRecord | GameRecord[] | null;
 };
 
 type Props = {
