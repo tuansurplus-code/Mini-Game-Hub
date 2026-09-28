@@ -2,267 +2,386 @@ import Link from "next/link";
 import { requireAdmin } from "../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../lib/supabase-server";
 import CampaignForm from "./CampaignForm";
-import CampaignGameForm from "./CampaignGameForm";
+
+function formatCampaignDate(value: string | null) {
+  if (!value) {
+    return "—";
+  }
+
+  return new Date(value).toLocaleString("en-LK", {
+    timeZone: "Asia/Colombo",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
+
+function formatStatus(status: string) {
+  switch (status) {
+    case "draft":
+      return "Draft";
+
+    case "scheduled":
+      return "Scheduled";
+
+    case "active":
+      return "Active";
+
+    case "ended":
+      return "Ended";
+
+    case "archived":
+      return "Archived";
+
+    default:
+      return status
+        .replace(/[_-]/g, " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
+}
 
 export default async function CampaignsPage() {
-  const { workspaceId } = await requireAdmin();
+  await requireAdmin();
+
   const supabase = await createSupabaseServerClient();
 
   const { data: campaigns, error } = await supabase
     .from("campaigns")
-    .select(
-      `
+    .select(`
+      id,
+      name,
+      slug,
+      status,
+      scheduling_mode,
+      starts_at,
+      ends_at,
+      created_at,
+      campaign_games (
         id,
-        name,
-        slug,
         status,
-        scheduling_mode,
-        starts_at,
-        ends_at,
-        created_at,
-        campaign_games (
+        public_slug,
+        game_id,
+        games (
           id,
-          public_slug,
-          status,
-          display_order,
-          games (
-            id,
-            name,
-            type,
-            status
-          )
+          name,
+          type
         )
-      `
-    )
-    .eq("workspace_id", workspaceId)
+      )
+    `)
     .order("created_at", { ascending: false });
 
+  if (error) {
+    throw new Error(error.message);
+  }
+
   return (
-    <>
-      <div className="admin-header">
+    <div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "16px",
+          marginBottom: "24px",
+        }}
+      >
         <div>
-          <div className="eyebrow">CAMPAIGN MANAGEMENT</div>
+          <h1 style={{ marginBottom: "6px" }}>Campaigns</h1>
 
-          <h1>Campaigns</h1>
-
-          <p>
-            Create and manage promotional campaigns for your games.
+          <p style={{ margin: 0, color: "#666" }}>
+            Manage promotional campaigns and their schedules.
           </p>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            flexWrap: "wrap",
-            justifyContent: "flex-end",
-          }}
-        >
-          <CampaignGameForm />
-          <CampaignForm />
-        </div>
+        <CampaignForm />
       </div>
-
-      {error && (
-        <div className="error-box">
-          Failed to load campaigns: {error.message}
-        </div>
-      )}
 
       <div className="admin-panel">
-        {campaigns && campaigns.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table>
-              <thead>
+        <div style={{ overflowX: "auto" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              minWidth: "1050px",
+            }}
+          >
+            <thead>
+              <tr>
+                <th
+                  style={{
+                    textAlign: "left",
+                    padding: "12px",
+                    borderBottom: "1px solid #ddd",
+                  }}
+                >
+                  Campaign
+                </th>
+
+                <th
+                  style={{
+                    textAlign: "left",
+                    padding: "12px",
+                    borderBottom: "1px solid #ddd",
+                  }}
+                >
+                  Game
+                </th>
+
+                <th
+                  style={{
+                    textAlign: "left",
+                    padding: "12px",
+                    borderBottom: "1px solid #ddd",
+                  }}
+                >
+                  Status
+                </th>
+
+                <th
+                  style={{
+                    textAlign: "left",
+                    padding: "12px",
+                    borderBottom: "1px solid #ddd",
+                  }}
+                >
+                  Scheduling
+                </th>
+
+                <th
+                  style={{
+                    textAlign: "left",
+                    padding: "12px",
+                    borderBottom: "1px solid #ddd",
+                  }}
+                >
+                  Public Slug
+                </th>
+
+                <th
+                  style={{
+                    textAlign: "left",
+                    padding: "12px",
+                    borderBottom: "1px solid #ddd",
+                  }}
+                >
+                  Start
+                </th>
+
+                <th
+                  style={{
+                    textAlign: "left",
+                    padding: "12px",
+                    borderBottom: "1px solid #ddd",
+                  }}
+                >
+                  End
+                </th>
+
+                <th
+                  style={{
+                    textAlign: "left",
+                    padding: "12px",
+                    borderBottom: "1px solid #ddd",
+                  }}
+                >
+                  Action
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {!campaigns || campaigns.length === 0 ? (
                 <tr>
-                  <th>Campaign</th>
-                  <th>Game</th>
-                  <th>Status</th>
-                  <th>Scheduling</th>
-                  <th>Public Slug</th>
-                  <th>Start</th>
-                  <th>End</th>
-                  <th>Action</th>
+                  <td
+                    colSpan={8}
+                    style={{
+                      padding: "32px 12px",
+                      textAlign: "center",
+                      color: "#666",
+                    }}
+                  >
+                    No campaigns found.
+                  </td>
                 </tr>
-              </thead>
+              ) : (
+                campaigns.map((campaign) => {
+                  const campaignGames = Array.isArray(
+                    campaign.campaign_games
+                  )
+                    ? campaign.campaign_games
+                    : [];
 
-              <tbody>
-                {campaigns.map((campaign) => {
-                  const campaignGames =
-                    campaign.campaign_games ?? [];
+                  const firstCampaignGame = campaignGames[0];
 
-                  if (campaignGames.length === 0) {
-                    return (
-                      <tr key={campaign.id}>
-                        <td>
-                          <strong>{campaign.name}</strong>
+                  const game = firstCampaignGame?.games;
 
+                  const gameName = Array.isArray(game)
+                    ? game[0]?.name
+                    : game?.name;
+
+                  const gameType = Array.isArray(game)
+                    ? game[0]?.type
+                    : game?.type;
+
+                  const publicSlug =
+                    firstCampaignGame?.public_slug || "—";
+
+                  const automatic =
+                    campaign.scheduling_mode === "automatic";
+
+                  return (
+                    <tr key={campaign.id}>
+                      <td
+                        style={{
+                          padding: "12px",
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        <strong>{campaign.name}</strong>
+
+                        <div
+                          style={{
+                            marginTop: "4px",
+                            color: "#888",
+                            fontSize: "12px",
+                          }}
+                        >
+                          {campaign.slug}
+                        </div>
+                      </td>
+
+                      <td
+                        style={{
+                          padding: "12px",
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        {gameName || "No game assigned"}
+
+                        {gameType && (
                           <div
                             style={{
-                              fontSize: "12px",
-                              color: "#777",
                               marginTop: "4px",
+                              color: "#888",
+                              fontSize: "12px",
                             }}
                           >
-                            {campaign.slug}
+                            {gameType}
                           </div>
-                        </td>
+                        )}
+                      </td>
 
-                        <td colSpan={4}>
-                          <span
+                      <td
+                        style={{
+                          padding: "12px",
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "4px 8px",
+                            borderRadius: "999px",
+                            background: "#f3f3f3",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {formatStatus(campaign.status)}
+                        </span>
+                      </td>
+
+                      <td
+                        style={{
+                          padding: "12px",
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontWeight: automatic ? 600 : 400,
+                          }}
+                        >
+                          {automatic ? "Automatic" : "Manual"}
+                        </span>
+
+                        {automatic && (
+                          <div
                             style={{
-                              color: "#777",
-                              fontSize: "13px",
+                              marginTop: "4px",
+                              color: "#888",
+                              fontSize: "12px",
                             }}
                           >
-                            No games assigned
-                          </span>
-                        </td>
+                            Date-based
+                          </div>
+                        )}
+                      </td>
 
-                        <td>
-                          {campaign.starts_at
-                            ? new Date(
-                                campaign.starts_at
-                              ).toLocaleString()
-                            : "—"}
-                        </td>
+                      <td
+                        style={{
+                          padding: "12px",
+                          borderBottom: "1px solid #eee",
+                          fontSize: "13px",
+                        }}
+                      >
+                        {publicSlug === "—" ? (
+                          "—"
+                        ) : (
+                          <code>{publicSlug}</code>
+                        )}
+                      </td>
 
-                        <td>
-                          {campaign.ends_at
-                            ? new Date(
-                                campaign.ends_at
-                              ).toLocaleString()
-                            : "—"}
-                        </td>
+                      <td
+                        style={{
+                          padding: "12px",
+                          borderBottom: "1px solid #eee",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {formatCampaignDate(campaign.starts_at)}
+                      </td>
 
-                        <td>
-                          <Link
-                            href={`/admin/campaigns/${campaign.id}`}
-                            className="primary-btn"
-                            style={{
-                              display: "inline-block",
-                              textDecoration: "none",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            Edit
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  }
+                      <td
+                        style={{
+                          padding: "12px",
+                          borderBottom: "1px solid #eee",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {formatCampaignDate(campaign.ends_at)}
+                      </td>
 
-                  return campaignGames.map(
-                    (campaignGame, index) => {
-                      const game = Array.isArray(
-                        campaignGame.games
-                      )
-                        ? campaignGame.games[0]
-                        : campaignGame.games;
-
-                      return (
-                        <tr key={campaignGame.id}>
-                          <td>
-                            {index === 0 && (
-                              <>
-                                <strong>
-                                  {campaign.name}
-                                </strong>
-
-                                <div
-                                  style={{
-                                    fontSize: "12px",
-                                    color: "#777",
-                                    marginTop: "4px",
-                                  }}
-                                >
-                                  {campaign.slug}
-                                </div>
-                              </>
-                            )}
-                          </td>
-
-                          <td>
-                            <strong>
-                              {game?.name ??
-                                "Unknown Game"}
-                            </strong>
-
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                color: "#777",
-                                marginTop: "4px",
-                              }}
-                            >
-                              {game?.type ?? "—"}
-                            </div>
-                          </td>
-
-                          <td>
-                            <span className="tag">
-                              {campaign.status}
-                            </span>
-                          </td>
-
-                          <td>
-                            <span className="tag">
-                              {campaign.scheduling_mode ===
-                              "automatic"
-                                ? "Automatic"
-                                : "Manual"}
-                            </span>
-                          </td>
-
-                          <td>
-                            {campaignGame.public_slug}
-                          </td>
-
-                          <td>
-                            {campaign.starts_at
-                              ? new Date(
-                                  campaign.starts_at
-                                ).toLocaleString()
-                              : "—"}
-                          </td>
-
-                          <td>
-                            {campaign.ends_at
-                              ? new Date(
-                                  campaign.ends_at
-                                ).toLocaleString()
-                              : "—"}
-                          </td>
-
-                          <td>
-                            {index === 0 && (
-                              <Link
-                                href={`/admin/campaigns/${campaign.id}`}
-                                className="primary-btn"
-                                style={{
-                                  display: "inline-block",
-                                  textDecoration: "none",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                Edit
-                              </Link>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    }
+                      <td
+                        style={{
+                          padding: "12px",
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        <Link
+                          href={`/admin/campaigns/${campaign.id}`}
+                          className="secondary-btn"
+                          style={{
+                            display: "inline-block",
+                            textDecoration: "none",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          Edit
+                        </Link>
+                      </td>
+                    </tr>
                   );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="empty">
-            No campaigns have been created yet.
-          </div>
-        )}
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
