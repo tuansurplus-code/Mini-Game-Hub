@@ -38,6 +38,13 @@ type CampaignGame = {
   games: GameRecord | GameRecord[] | null;
 };
 
+type AvailableGame = {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+};
+
 type Props = {
   campaign: Campaign;
   campaignGames: CampaignGame[];
@@ -164,6 +171,15 @@ export default function CampaignEditForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const [showAddGame, setShowAddGame] = useState(false);
+  const [availableGames, setAvailableGames] = useState<
+    AvailableGame[]
+  >([]);
+  const [selectedGameId, setSelectedGameId] = useState("");
+  const [loadingGames, setLoadingGames] = useState(false);
+  const [addingGame, setAddingGame] = useState(false);
+  const [gameError, setGameError] = useState("");
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -230,6 +246,114 @@ export default function CampaignEditForm({
     } catch {
       setError("Unable to update campaign.");
       setSaving(false);
+    }
+  }
+
+  async function openAddGame() {
+    setShowAddGame(true);
+    setGameError("");
+    setSelectedGameId("");
+    setLoadingGames(true);
+
+    try {
+      const response = await fetch(
+        "/api/admin/campaign-games"
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setGameError(
+          result.error || "Failed to load available games."
+        );
+        setLoadingGames(false);
+        return;
+      }
+
+      const assignedGameIds = new Set(
+        campaignGames.map((campaignGame) => campaignGame.game_id)
+      );
+
+      const games: AvailableGame[] = (
+        result.games ?? []
+      ).filter(
+        (game: AvailableGame) =>
+          !assignedGameIds.has(game.id)
+      );
+
+      setAvailableGames(games);
+
+      if (games.length > 0) {
+        setSelectedGameId(games[0].id);
+      }
+    } catch {
+      setGameError("Unable to load available games.");
+    }
+
+    setLoadingGames(false);
+  }
+
+  function closeAddGame() {
+    if (addingGame) {
+      return;
+    }
+
+    setShowAddGame(false);
+    setAvailableGames([]);
+    setSelectedGameId("");
+    setGameError("");
+  }
+
+  async function handleAddGame(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    if (!selectedGameId) {
+      setGameError("Please select a game.");
+      return;
+    }
+
+    setAddingGame(true);
+    setGameError("");
+
+    try {
+      const response = await fetch(
+        "/api/admin/campaign-games",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            campaign_id: campaign.id,
+            game_id: selectedGameId,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setGameError(
+          result.error || "Failed to add game to campaign."
+        );
+        setAddingGame(false);
+        return;
+      }
+
+      setAddingGame(false);
+      setShowAddGame(false);
+      setAvailableGames([]);
+      setSelectedGameId("");
+      setGameError("");
+
+      router.refresh();
+    } catch {
+      setGameError(
+        "Unable to add game to campaign."
+      );
+      setAddingGame(false);
     }
   }
 
@@ -539,9 +663,8 @@ export default function CampaignEditForm({
 
           <button
             type="button"
-            onClick={() => {
-              alert("Add Game will be available in the next step.");
-            }}
+            onClick={openAddGame}
+            disabled={loadingGames}
             style={{
               padding: "10px 14px",
               border: "1px solid #ddd",
@@ -753,6 +876,197 @@ export default function CampaignEditForm({
           </div>
         )}
       </section>
+
+      {/* Add Game Modal */}
+      {showAddGame && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-game-title"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            className="admin-panel"
+            style={{
+              width: "100%",
+              maxWidth: "520px",
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "10px",
+              }}
+            >
+              <div>
+                <h2
+                  id="add-game-title"
+                  style={{ margin: 0 }}
+                >
+                  Add Game
+                </h2>
+
+                <p
+                  style={{
+                    margin: "6px 0 0",
+                    color: "#666",
+                    fontSize: "14px",
+                  }}
+                >
+                  Add an existing game to this campaign.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeAddGame}
+                disabled={addingGame}
+                aria-label="Close"
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  fontSize: "24px",
+                  cursor: "pointer",
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {gameError && (
+              <div
+                className="error-box"
+                style={{ marginTop: "16px" }}
+              >
+                {gameError}
+              </div>
+            )}
+
+            {loadingGames ? (
+              <div
+                className="empty"
+                style={{ marginTop: "16px" }}
+              >
+                Loading available games...
+              </div>
+            ) : availableGames.length === 0 ? (
+              <div
+                style={{
+                  marginTop: "16px",
+                  padding: "20px",
+                  border: "1px dashed #ccc",
+                  borderRadius: "10px",
+                  background: "#fafafa",
+                  color: "#666",
+                  textAlign: "center",
+                }}
+              >
+                There are no available games to add.
+              </div>
+            ) : (
+              <form
+                onSubmit={handleAddGame}
+                style={{ marginTop: "20px" }}
+              >
+                <div style={{ marginBottom: "20px" }}>
+                  <label
+                    htmlFor="campaign-game"
+                    style={{
+                      display: "block",
+                      marginBottom: "6px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Select Game
+                  </label>
+
+                  <select
+                    id="campaign-game"
+                    value={selectedGameId}
+                    onChange={(event) =>
+                      setSelectedGameId(
+                        event.target.value
+                      )
+                    }
+                    disabled={addingGame}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      border: "1px solid #ddd",
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                      background: "#fff",
+                    }}
+                  >
+                    <option value="">
+                      Select a game
+                    </option>
+
+                    {availableGames.map((game) => (
+                      <option
+                        key={game.id}
+                        value={game.id}
+                      >
+                        {game.name} —{" "}
+                        {formatGameType(game.type)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={closeAddGame}
+                    disabled={addingGame}
+                    style={{
+                      padding: "10px 16px",
+                      border: "1px solid #ddd",
+                      borderRadius: "8px",
+                      background: "#fff",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="primary-btn"
+                    disabled={
+                      addingGame || !selectedGameId
+                    }
+                  >
+                    {addingGame
+                      ? "Adding..."
+                      : "Add Game"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
