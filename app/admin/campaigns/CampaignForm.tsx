@@ -3,6 +3,20 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+function colomboDateTimeToUtc(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(`${value}:00+05:30`);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toISOString();
+}
+
 export default function CampaignForm() {
   const router = useRouter();
 
@@ -10,9 +24,9 @@ export default function CampaignForm() {
   const [name, setName] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
-  const [schedulingMode, setSchedulingMode] = useState<"manual" | "automatic">(
-    "automatic"
-  );
+  const [schedulingMode, setSchedulingMode] = useState<
+    "manual" | "automatic"
+  >("automatic");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -22,6 +36,16 @@ export default function CampaignForm() {
     if (!name.trim()) {
       setError("Please enter a campaign name.");
       return;
+    }
+
+    if (startsAt && endsAt) {
+      const start = new Date(`${startsAt}:00+05:30`);
+      const end = new Date(`${endsAt}:00+05:30`);
+
+      if (end <= start) {
+        setError("End date must be after the start date.");
+        return;
+      }
     }
 
     setSaving(true);
@@ -35,8 +59,8 @@ export default function CampaignForm() {
         },
         body: JSON.stringify({
           name,
-          starts_at: startsAt || null,
-          ends_at: endsAt || null,
+          starts_at: colomboDateTimeToUtc(startsAt || null),
+          ends_at: colomboDateTimeToUtc(endsAt || null),
           scheduling_mode: schedulingMode,
         }),
       });
@@ -210,6 +234,16 @@ export default function CampaignForm() {
                     fontSize: "14px",
                   }}
                 />
+
+                <small
+                  style={{
+                    display: "block",
+                    marginTop: "6px",
+                    color: "#666",
+                  }}
+                >
+                  Time is entered in Sri Lanka time.
+                </small>
               </div>
 
               <div style={{ marginBottom: "20px" }}>
@@ -238,6 +272,16 @@ export default function CampaignForm() {
                     fontSize: "14px",
                   }}
                 />
+
+                <small
+                  style={{
+                    display: "block",
+                    marginTop: "6px",
+                    color: "#666",
+                  }}
+                >
+                  Time is entered in Sri Lanka time.
+                </small>
               </div>
 
               <div
