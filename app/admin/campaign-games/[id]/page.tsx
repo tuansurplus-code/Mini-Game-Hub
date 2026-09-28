@@ -1,6 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useState,
+} from "react";
 import { useParams, useRouter } from "next/navigation";
 
 type GameRecord = {
@@ -44,6 +48,20 @@ type AppearanceSettings = {
   page_background_color: string;
   button_color: string;
   button_text_color: string;
+};
+
+type Prize = {
+  id: string;
+  campaign_game_id: string;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  weight: number;
+  inventory: number | null;
+  active: boolean;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
 };
 
 const defaultAppearance: AppearanceSettings = {
@@ -112,7 +130,8 @@ function buildAppearance(
     page_background_color:
       settings.page_background_color,
     button_color: settings.button_color,
-    button_text_color: settings.button_text_color,
+    button_text_color:
+      settings.button_text_color,
   };
 }
 
@@ -144,6 +163,14 @@ function parseRules(
   }
 }
 
+function formatInventory(
+  inventory: number | null
+): string {
+  return inventory === null
+    ? "Unlimited"
+    : inventory.toString();
+}
+
 export default function CampaignGameConfigurationPage() {
   const params = useParams();
   const router = useRouter();
@@ -163,11 +190,36 @@ export default function CampaignGameConfigurationPage() {
 
   const [rules, setRules] = useState("{}");
 
+  const [prizes, setPrizes] = useState<Prize[]>(
+    []
+  );
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadingPrizes, setLoadingPrizes] =
+    useState(false);
+  const [addingPrize, setAddingPrize] =
+    useState(false);
+
+  const [showAddPrize, setShowAddPrize] =
+    useState(false);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [prizeError, setPrizeError] =
+    useState("");
+
+  const [prizeName, setPrizeName] = useState("");
+  const [prizeDescription, setPrizeDescription] =
+    useState("");
+  const [prizeImageUrl, setPrizeImageUrl] =
+    useState("");
+  const [prizeWeight, setPrizeWeight] =
+    useState("1");
+  const [prizeInventory, setPrizeInventory] =
+    useState("");
+  const [prizeActive, setPrizeActive] =
+    useState(true);
 
   async function loadConfiguration() {
     if (!campaignGameId) {
@@ -223,8 +275,51 @@ export default function CampaignGameConfigurationPage() {
     setLoading(false);
   }
 
+  async function loadPrizes() {
+    if (!campaignGameId) {
+      return;
+    }
+
+    setLoadingPrizes(true);
+    setPrizeError("");
+
+    try {
+      const response = await fetch(
+        `/api/admin/campaign-games/${campaignGameId}/prizes`,
+        {
+          method: "GET",
+          cache: "no-store",
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setPrizeError(
+          result.error ||
+            "Failed to load prizes."
+        );
+        setLoadingPrizes(false);
+        return;
+      }
+
+      setPrizes(
+        Array.isArray(result.prizes)
+          ? (result.prizes as Prize[])
+          : []
+      );
+    } catch {
+      setPrizeError(
+        "Unable to load prizes."
+      );
+    }
+
+    setLoadingPrizes(false);
+  }
+
   useEffect(() => {
     loadConfiguration();
+    loadPrizes();
   }, [campaignGameId]);
 
   function updateAppearance(
@@ -235,6 +330,135 @@ export default function CampaignGameConfigurationPage() {
       ...current,
       [field]: value,
     }));
+  }
+
+  function resetPrizeForm() {
+    setPrizeName("");
+    setPrizeDescription("");
+    setPrizeImageUrl("");
+    setPrizeWeight("1");
+    setPrizeInventory("");
+    setPrizeActive(true);
+    setPrizeError("");
+  }
+
+  function openAddPrize() {
+    resetPrizeForm();
+    setShowAddPrize(true);
+  }
+
+  function closeAddPrize() {
+    if (addingPrize) {
+      return;
+    }
+
+    setShowAddPrize(false);
+    resetPrizeForm();
+  }
+
+  async function handleAddPrize(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    setAddingPrize(true);
+    setPrizeError("");
+
+    const name = prizeName.trim();
+    const description =
+      prizeDescription.trim();
+    const imageUrl = prizeImageUrl.trim();
+
+    const weight = Number(prizeWeight);
+
+    const inventory =
+      prizeInventory.trim() === ""
+        ? null
+        : Number(prizeInventory);
+
+    if (!name) {
+      setPrizeError(
+        "Prize name is required."
+      );
+      setAddingPrize(false);
+      return;
+    }
+
+    if (
+      !Number.isFinite(weight) ||
+      weight < 0
+    ) {
+      setPrizeError(
+        "Weight must be a number greater than or equal to 0."
+      );
+      setAddingPrize(false);
+      return;
+    }
+
+    if (
+      inventory !== null &&
+      (!Number.isInteger(inventory) ||
+        inventory < 0)
+    ) {
+      setPrizeError(
+        "Inventory must be a whole number greater than or equal to 0."
+      );
+      setAddingPrize(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/admin/campaign-games/${campaignGameId}/prizes`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            description:
+              description || null,
+            image_url:
+              imageUrl || null,
+            weight,
+            inventory,
+            active: prizeActive,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setPrizeError(
+          result.error ||
+            "Failed to create prize."
+        );
+        setAddingPrize(false);
+        return;
+      }
+
+      const createdPrize =
+        result.prize as Prize;
+
+      setPrizes((current) => [
+        ...current,
+        createdPrize,
+      ]);
+
+      setShowAddPrize(false);
+      resetPrizeForm();
+      setSuccess(
+        "Prize added successfully."
+      );
+    } catch {
+      setPrizeError(
+        "Unable to create prize."
+      );
+    }
+
+    setAddingPrize(false);
   }
 
   async function handleSave(
@@ -296,7 +520,8 @@ export default function CampaignGameConfigurationPage() {
               ...current,
               appearance:
                 updatedCampaignGame.appearance,
-              rules: updatedCampaignGame.rules,
+              rules:
+                updatedCampaignGame.rules,
               updated_at:
                 updatedCampaignGame.updated_at,
             }
@@ -310,7 +535,9 @@ export default function CampaignGameConfigurationPage() {
       );
 
       setRules(
-        formatRules(updatedCampaignGame.rules)
+        formatRules(
+          updatedCampaignGame.rules
+        )
       );
 
       setSuccess(
@@ -349,7 +576,8 @@ export default function CampaignGameConfigurationPage() {
         </div>
 
         <div className="error-box">
-          {error || "Campaign game not found."}
+          {error ||
+            "Campaign game not found."}
         </div>
       </>
     );
@@ -363,7 +591,8 @@ export default function CampaignGameConfigurationPage() {
     campaignGame.games
   );
 
-  const isSpinGame = game?.type === "spin";
+  const isSpinGame =
+    game?.type === "spin";
 
   return (
     <>
@@ -374,7 +603,8 @@ export default function CampaignGameConfigurationPage() {
           </div>
 
           <h1>
-            {game?.name || "Game Configuration"}
+            {game?.name ||
+              "Game Configuration"}
           </h1>
 
           <p>
@@ -470,7 +700,8 @@ export default function CampaignGameConfigurationPage() {
                 wordBreak: "break-word",
               }}
             >
-              /play/{campaignGame.public_slug}
+              /play/
+              {campaignGame.public_slug}
             </div>
           </div>
         </div>
@@ -503,8 +734,8 @@ export default function CampaignGameConfigurationPage() {
               }}
             >
               This game uses its reusable game
-              definition. Campaign-specific settings
-              can be configured below.
+              definition. Campaign-specific
+              settings can be configured below.
             </p>
           </div>
 
@@ -513,7 +744,8 @@ export default function CampaignGameConfigurationPage() {
               padding: "16px",
               borderRadius: "10px",
               background: "#f9fafb",
-              border: "1px solid #e5e7eb",
+              border:
+                "1px solid #e5e7eb",
             }}
           >
             <div
@@ -538,8 +770,9 @@ export default function CampaignGameConfigurationPage() {
             </div>
 
             {game?.default_config &&
-              Object.keys(game.default_config)
-                .length > 0 && (
+              Object.keys(
+                game.default_config
+              ).length > 0 && (
                 <div
                   style={{
                     marginTop: "14px",
@@ -577,8 +810,8 @@ export default function CampaignGameConfigurationPage() {
                 color: "#6b7280",
               }}
             >
-              Customize the campaign-specific text
-              and colors shown to customers.
+              Customize the campaign-specific
+              text and colors shown to customers.
             </p>
           </div>
 
@@ -614,7 +847,8 @@ export default function CampaignGameConfigurationPage() {
                 style={{
                   width: "100%",
                   padding: "12px",
-                  border: "1px solid #d1d5db",
+                  border:
+                    "1px solid #d1d5db",
                   borderRadius: "9px",
                   boxSizing: "border-box",
                 }}
@@ -634,7 +868,9 @@ export default function CampaignGameConfigurationPage() {
 
               <input
                 type="text"
-                value={appearance.button_text}
+                value={
+                  appearance.button_text
+                }
                 onChange={(event) =>
                   updateAppearance(
                     "button_text",
@@ -645,7 +881,8 @@ export default function CampaignGameConfigurationPage() {
                 style={{
                   width: "100%",
                   padding: "12px",
-                  border: "1px solid #d1d5db",
+                  border:
+                    "1px solid #d1d5db",
                   borderRadius: "9px",
                   boxSizing: "border-box",
                 }}
@@ -654,8 +891,7 @@ export default function CampaignGameConfigurationPage() {
 
             <div
               style={{
-                gridColumn:
-                  "1 / -1",
+                gridColumn: "1 / -1",
               }}
             >
               <label
@@ -670,7 +906,9 @@ export default function CampaignGameConfigurationPage() {
 
               <input
                 type="text"
-                value={appearance.subtitle}
+                value={
+                  appearance.subtitle
+                }
                 onChange={(event) =>
                   updateAppearance(
                     "subtitle",
@@ -681,7 +919,8 @@ export default function CampaignGameConfigurationPage() {
                 style={{
                   width: "100%",
                   padding: "12px",
-                  border: "1px solid #d1d5db",
+                  border:
+                    "1px solid #d1d5db",
                   borderRadius: "9px",
                   boxSizing: "border-box",
                 }}
@@ -693,7 +932,8 @@ export default function CampaignGameConfigurationPage() {
             style={{
               marginTop: "24px",
               paddingTop: "24px",
-              borderTop: "1px solid #e5e7eb",
+              borderTop:
+                "1px solid #e5e7eb",
             }}
           >
             <div
@@ -770,7 +1010,8 @@ export default function CampaignGameConfigurationPage() {
                       border:
                         "1px solid #d1d5db",
                       borderRadius: "9px",
-                      boxSizing: "border-box",
+                      boxSizing:
+                        "border-box",
                     }}
                   />
                 </div>
@@ -796,7 +1037,9 @@ export default function CampaignGameConfigurationPage() {
                 >
                   <input
                     type="color"
-                    value={appearance.button_color}
+                    value={
+                      appearance.button_color
+                    }
                     onChange={(event) =>
                       updateAppearance(
                         "button_color",
@@ -816,7 +1059,9 @@ export default function CampaignGameConfigurationPage() {
 
                   <input
                     type="text"
-                    value={appearance.button_color}
+                    value={
+                      appearance.button_color
+                    }
                     onChange={(event) =>
                       updateAppearance(
                         "button_color",
@@ -829,7 +1074,8 @@ export default function CampaignGameConfigurationPage() {
                       border:
                         "1px solid #d1d5db",
                       borderRadius: "9px",
-                      boxSizing: "border-box",
+                      boxSizing:
+                        "border-box",
                     }}
                   />
                 </div>
@@ -892,7 +1138,8 @@ export default function CampaignGameConfigurationPage() {
                       border:
                         "1px solid #d1d5db",
                       borderRadius: "9px",
-                      boxSizing: "border-box",
+                      boxSizing:
+                        "border-box",
                     }}
                   />
                 </div>
@@ -907,7 +1154,8 @@ export default function CampaignGameConfigurationPage() {
               borderRadius: "10px",
               background:
                 appearance.page_background_color,
-              border: "1px solid #e5e7eb",
+              border:
+                "1px solid #e5e7eb",
               textAlign: "center",
             }}
           >
@@ -956,6 +1204,232 @@ export default function CampaignGameConfigurationPage() {
         >
           <div style={{ marginBottom: "18px" }}>
             <div className="eyebrow">
+              PRIZES
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent:
+                  "space-between",
+                alignItems: "flex-start",
+                gap: "16px",
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    margin: "4px 0 6px",
+                  }}
+                >
+                  Prize Management
+                </h2>
+
+                <p
+                  style={{
+                    margin: 0,
+                    color: "#6b7280",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  Add the rewards that customers
+                  can win in this campaign game.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={openAddPrize}
+              >
+                + Add Prize
+              </button>
+            </div>
+          </div>
+
+          {prizeError && (
+            <div
+              className="error-box"
+              style={{
+                marginBottom: "16px",
+              }}
+            >
+              {prizeError}
+            </div>
+          )}
+
+          {loadingPrizes ? (
+            <div className="empty">
+              Loading prizes...
+            </div>
+          ) : prizes.length === 0 ? (
+            <div
+              style={{
+                padding: "28px",
+                textAlign: "center",
+                border:
+                  "1px dashed #d1d5db",
+                borderRadius: "10px",
+                color: "#6b7280",
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: 700,
+                  color: "#374151",
+                  marginBottom: "6px",
+                }}
+              >
+                No prizes added yet
+              </div>
+
+              <div
+                style={{
+                  fontSize: "14px",
+                }}
+              >
+                Add the first prize for this game.
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gap: "12px",
+              }}
+            >
+              {prizes.map((prize) => (
+                <div
+                  key={prize.id}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "minmax(0, 1fr) auto",
+                    gap: "16px",
+                    alignItems: "center",
+                    padding: "16px",
+                    border:
+                      "1px solid #e5e7eb",
+                    borderRadius: "10px",
+                    background: "#ffffff",
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        flexWrap: "wrap",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: 800,
+                          fontSize: "16px",
+                        }}
+                      >
+                        {prize.name}
+                      </div>
+
+                      <span className="tag">
+                        {prize.active
+                          ? "Active"
+                          : "Inactive"}
+                      </span>
+                    </div>
+
+                    {prize.description && (
+                      <div
+                        style={{
+                          color: "#6b7280",
+                          fontSize: "14px",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        {prize.description}
+                      </div>
+                    )}
+
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "18px",
+                        flexWrap: "wrap",
+                        color: "#6b7280",
+                        fontSize: "13px",
+                      }}
+                    >
+                      <span>
+                        <strong>
+                          Weight:
+                        </strong>{" "}
+                        {prize.weight}
+                      </span>
+
+                      <span>
+                        <strong>
+                          Inventory:
+                        </strong>{" "}
+                        {formatInventory(
+                          prize.inventory
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      width: "56px",
+                      height: "56px",
+                      borderRadius: "10px",
+                      border:
+                        "1px solid #e5e7eb",
+                      background: "#f9fafb",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent:
+                        "center",
+                      overflow: "hidden",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {prize.image_url ? (
+                      <img
+                        src={prize.image_url}
+                        alt=""
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          color: "#9ca3af",
+                          textAlign: "center",
+                        }}
+                      >
+                        No image
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div
+          className="admin-panel"
+          style={{ marginTop: "20px" }}
+        >
+          <div style={{ marginBottom: "18px" }}>
+            <div className="eyebrow">
               RULES
             </div>
 
@@ -974,10 +1448,10 @@ export default function CampaignGameConfigurationPage() {
                 lineHeight: 1.6,
               }}
             >
-              Advanced campaign-specific rules are
-              stored as JSON. We will replace this
-              with dedicated rule controls once the
-              game rule structure is finalized.
+              Advanced campaign-specific rules
+              are stored as JSON. We will replace
+              this with dedicated rule controls once
+              the game rule structure is finalized.
             </p>
           </div>
 
@@ -991,7 +1465,8 @@ export default function CampaignGameConfigurationPage() {
             style={{
               width: "100%",
               padding: "14px",
-              border: "1px solid #d1d5db",
+              border:
+                "1px solid #d1d5db",
               borderRadius: "9px",
               boxSizing: "border-box",
               fontFamily:
@@ -1020,7 +1495,8 @@ export default function CampaignGameConfigurationPage() {
               padding: "12px 14px",
               borderRadius: "9px",
               background: "#ecfdf5",
-              border: "1px solid #a7f3d0",
+              border:
+                "1px solid #a7f3d0",
               color: "#065f46",
             }}
           >
@@ -1057,6 +1533,352 @@ export default function CampaignGameConfigurationPage() {
           </button>
         </div>
       </form>
+
+      {showAddPrize && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background:
+              "rgba(17, 24, 39, 0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "620px",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              background: "#ffffff",
+              borderRadius: "14px",
+              boxShadow:
+                "0 20px 50px rgba(0,0,0,0.2)",
+            }}
+          >
+            <div
+              style={{
+                padding: "22px 24px",
+                borderBottom:
+                  "1px solid #e5e7eb",
+              }}
+            >
+              <div className="eyebrow">
+                ADD PRIZE
+              </div>
+
+              <h2
+                style={{
+                  margin: "4px 0 6px",
+                }}
+              >
+                Add New Prize
+              </h2>
+
+              <p
+                style={{
+                  margin: 0,
+                  color: "#6b7280",
+                  lineHeight: 1.5,
+                }}
+              >
+                Create a reward that can be won
+                by customers in this game.
+              </p>
+            </div>
+
+            <form
+              onSubmit={handleAddPrize}
+            >
+              <div
+                style={{
+                  padding: "24px",
+                  display: "grid",
+                  gap: "18px",
+                }}
+              >
+                {prizeError && (
+                  <div className="error-box">
+                    {prizeError}
+                  </div>
+                )}
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontWeight: 700,
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Prize Name *
+                  </label>
+
+                  <input
+                    type="text"
+                    value={prizeName}
+                    onChange={(event) =>
+                      setPrizeName(
+                        event.target.value
+                      )
+                    }
+                    placeholder="Example: Rs. 1,000 Voucher"
+                    autoFocus
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      border:
+                        "1px solid #d1d5db",
+                      borderRadius: "9px",
+                      boxSizing:
+                        "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontWeight: 700,
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Description
+                  </label>
+
+                  <textarea
+                    value={
+                      prizeDescription
+                    }
+                    onChange={(event) =>
+                      setPrizeDescription(
+                        event.target.value
+                      )
+                    }
+                    placeholder="Optional prize description"
+                    rows={3}
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      border:
+                        "1px solid #d1d5db",
+                      borderRadius: "9px",
+                      boxSizing:
+                        "border-box",
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontWeight: 700,
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Image URL
+                  </label>
+
+                  <input
+                    type="url"
+                    value={prizeImageUrl}
+                    onChange={(event) =>
+                      setPrizeImageUrl(
+                        event.target.value
+                      )
+                    }
+                    placeholder="https://..."
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      border:
+                        "1px solid #d1d5db",
+                      borderRadius: "9px",
+                      boxSizing:
+                        "border-box",
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "1fr 1fr",
+                    gap: "16px",
+                  }}
+                >
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontWeight: 700,
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Weight *
+                    </label>
+
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={
+                        prizeWeight
+                      }
+                      onChange={(event) =>
+                        setPrizeWeight(
+                          event.target.value
+                        )
+                      }
+                      placeholder="1"
+                      style={{
+                        width: "100%",
+                        padding: "12px",
+                        border:
+                          "1px solid #d1d5db",
+                        borderRadius:
+                          "9px",
+                        boxSizing:
+                          "border-box",
+                      }}
+                    />
+
+                    <div
+                      style={{
+                        marginTop: "6px",
+                        fontSize: "12px",
+                        color: "#6b7280",
+                      }}
+                    >
+                      Higher weight means a
+                      higher relative chance.
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontWeight: 700,
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Inventory
+                    </label>
+
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={
+                        prizeInventory
+                      }
+                      onChange={(event) =>
+                        setPrizeInventory(
+                          event.target.value
+                        )
+                      }
+                      placeholder="Unlimited"
+                      style={{
+                        width: "100%",
+                        padding: "12px",
+                        border:
+                          "1px solid #d1d5db",
+                        borderRadius:
+                          "9px",
+                        boxSizing:
+                          "border-box",
+                      }}
+                    />
+
+                    <div
+                      style={{
+                        marginTop: "6px",
+                        fontSize: "12px",
+                        color: "#6b7280",
+                      }}
+                    >
+                      Leave empty for unlimited.
+                    </div>
+                  </div>
+                </div>
+
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={prizeActive}
+                    onChange={(event) =>
+                      setPrizeActive(
+                        event.target.checked
+                      )
+                    }
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                    }}
+                  />
+
+                  <span
+                    style={{
+                      fontWeight: 700,
+                    }}
+                  >
+                    Prize is active
+                  </span>
+                </label>
+              </div>
+
+              <div
+                style={{
+                  padding: "18px 24px",
+                  borderTop:
+                    "1px solid #e5e7eb",
+                  display: "flex",
+                  justifyContent:
+                    "flex-end",
+                  gap: "12px",
+                }}
+              >
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={
+                    closeAddPrize
+                  }
+                  disabled={addingPrize}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-btn"
+                  disabled={addingPrize}
+                >
+                  {addingPrize
+                    ? "Adding..."
+                    : "Add Prize"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }
