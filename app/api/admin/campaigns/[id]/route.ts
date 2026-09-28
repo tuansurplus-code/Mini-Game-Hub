@@ -16,14 +16,22 @@ const allowedStatuses = [
   "archived",
 ];
 
+const allowedSchedulingModes = [
+  "manual",
+  "automatic",
+];
+
 export async function PATCH(
   request: Request,
   { params }: RouteContext
 ) {
   try {
-    const { user, workspaceId, role } = await requireAdmin();
+    const { user, workspaceId, role } =
+      await requireAdmin();
 
-    if (!["owner", "admin", "editor"].includes(role)) {
+    if (
+      !["owner", "admin", "editor"].includes(role)
+    ) {
       return NextResponse.json(
         {
           error:
@@ -37,28 +45,63 @@ export async function PATCH(
 
     if (!id) {
       return NextResponse.json(
-        { error: "Campaign ID is required." },
+        {
+          error: "Campaign ID is required.",
+        },
         { status: 400 }
       );
     }
 
     const body = await request.json();
 
-    const name = String(body.name ?? "").trim();
-    const startsAt = body.starts_at || null;
-    const endsAt = body.ends_at || null;
-    const status = String(body.status ?? "").trim();
+    const name = String(
+      body.name ?? ""
+    ).trim();
+
+    const startsAt =
+      body.starts_at || null;
+
+    const endsAt =
+      body.ends_at || null;
+
+    const status = String(
+      body.status ?? ""
+    ).trim();
+
+    const schedulingMode = String(
+      body.scheduling_mode ?? "manual"
+    ).trim();
 
     if (!name) {
       return NextResponse.json(
-        { error: "Campaign name is required." },
+        {
+          error:
+            "Campaign name is required.",
+        },
         { status: 400 }
       );
     }
 
     if (!allowedStatuses.includes(status)) {
       return NextResponse.json(
-        { error: "Invalid campaign status." },
+        {
+          error:
+            "Invalid campaign status.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !allowedSchedulingModes.includes(
+        schedulingMode
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid scheduling mode.",
+        },
         { status: 400 }
       );
     }
@@ -72,7 +115,10 @@ export async function PATCH(
         Number.isNaN(end.getTime())
       ) {
         return NextResponse.json(
-          { error: "Invalid campaign date or time." },
+          {
+            error:
+              "Invalid campaign date or time.",
+          },
           { status: 400 }
         );
       }
@@ -107,13 +153,17 @@ export async function PATCH(
     const supabase =
       await createSupabaseServerClient();
 
-    const { data: campaign, error: campaignError } =
-      await supabase
-        .from("campaigns")
-        .select("id, name, slug, status")
-        .eq("id", id)
-        .eq("workspace_id", workspaceId)
-        .maybeSingle();
+    const {
+      data: campaign,
+      error: campaignError,
+    } = await supabase
+      .from("campaigns")
+      .select(
+        "id, name, slug, status, scheduling_mode"
+      )
+      .eq("id", id)
+      .eq("workspace_id", workspaceId)
+      .maybeSingle();
 
     if (campaignError) {
       console.error(
@@ -122,26 +172,34 @@ export async function PATCH(
       );
 
       return NextResponse.json(
-        { error: "Unable to load campaign." },
+        {
+          error:
+            "Unable to load campaign.",
+        },
         { status: 500 }
       );
     }
 
     if (!campaign) {
       return NextResponse.json(
-        { error: "Campaign not found." },
+        {
+          error:
+            "Campaign not found.",
+        },
         { status: 404 }
       );
     }
 
-    const { data: existingCampaign, error: slugError } =
-      await supabase
-        .from("campaigns")
-        .select("id")
-        .eq("workspace_id", workspaceId)
-        .eq("slug", slug)
-        .neq("id", id)
-        .maybeSingle();
+    const {
+      data: existingCampaign,
+      error: slugError,
+    } = await supabase
+      .from("campaigns")
+      .select("id")
+      .eq("workspace_id", workspaceId)
+      .eq("slug", slug)
+      .neq("id", id)
+      .maybeSingle();
 
     if (slugError) {
       console.error(
@@ -150,7 +208,10 @@ export async function PATCH(
       );
 
       return NextResponse.json(
-        { error: "Unable to validate campaign name." },
+        {
+          error:
+            "Unable to validate campaign name.",
+        },
         { status: 500 }
       );
     }
@@ -172,6 +233,7 @@ export async function PATCH(
           name,
           slug,
           status,
+          scheduling_mode: schedulingMode,
           starts_at: startsAt,
           ends_at: endsAt,
         })
@@ -183,6 +245,7 @@ export async function PATCH(
             name,
             slug,
             status,
+            scheduling_mode,
             starts_at,
             ends_at,
             created_at
@@ -197,7 +260,9 @@ export async function PATCH(
       );
 
       return NextResponse.json(
-        { error: error.message },
+        {
+          error: error.message,
+        },
         { status: 400 }
       );
     }
