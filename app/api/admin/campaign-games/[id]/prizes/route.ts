@@ -8,13 +8,35 @@ type RouteContext = {
   }>;
 };
 
+type PrizeInput = {
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  weight: number;
+  inventory: number | null;
+  active: boolean;
+  metadata: Record<string, unknown>;
+};
+
+type PrizeValidationResult =
+  | {
+      value: PrizeInput;
+      error?: never;
+    }
+  | {
+      value?: never;
+      error: string;
+    };
+
 function isValidUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
     value
   );
 }
 
-function validatePrizeInput(body: Record<string, unknown>) {
+function validatePrizeInput(
+  body: Record<string, unknown>
+): PrizeValidationResult {
   const name = String(body.name ?? "").trim();
 
   const description =
@@ -45,7 +67,7 @@ function validatePrizeInput(body: Record<string, unknown>) {
     body.metadata &&
     typeof body.metadata === "object" &&
     !Array.isArray(body.metadata)
-      ? body.metadata
+      ? (body.metadata as Record<string, unknown>)
       : {};
 
   if (!name) {
@@ -88,7 +110,8 @@ async function verifyCampaignGame(
   campaignGameId: string,
   workspaceId: string
 ) {
-  const supabase = await createSupabaseServerClient();
+  const supabase =
+    await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from("campaign_games")
@@ -103,7 +126,10 @@ async function verifyCampaignGame(
       `
     )
     .eq("id", campaignGameId)
-    .eq("campaigns.workspace_id", workspaceId)
+    .eq(
+      "campaigns.workspace_id",
+      workspaceId
+    )
     .maybeSingle();
 
   if (error) {
@@ -114,7 +140,8 @@ async function verifyCampaignGame(
 
     return {
       campaignGame: null,
-      error: "Failed to verify campaign game.",
+      error:
+        "Failed to verify campaign game.",
     };
   }
 
@@ -129,13 +156,21 @@ export async function GET(
   context: RouteContext
 ) {
   try {
-    const { workspaceId } = await requireAdmin();
-    const { id: campaignGameId } = await context.params;
+    const { workspaceId } =
+      await requireAdmin();
 
-    if (!campaignGameId || !isValidUuid(campaignGameId)) {
+    const {
+      id: campaignGameId,
+    } = await context.params;
+
+    if (
+      !campaignGameId ||
+      !isValidUuid(campaignGameId)
+    ) {
       return NextResponse.json(
         {
-          error: "Invalid campaign game ID.",
+          error:
+            "Invalid campaign game ID.",
         },
         { status: 400 }
       );
@@ -144,32 +179,37 @@ export async function GET(
     const supabase =
       await createSupabaseServerClient();
 
-    const { data: campaignGame, error: campaignGameError } =
-      await supabase
-        .from("campaign_games")
-        .select(
-          `
+    const {
+      data: campaignGame,
+      error: campaignGameError,
+    } = await supabase
+      .from("campaign_games")
+      .select(
+        `
+          id,
+          campaign_id,
+          game_id,
+          public_slug,
+          status,
+          campaigns!inner (
             id,
-            campaign_id,
-            game_id,
-            public_slug,
-            status,
-            campaigns!inner (
-              id,
-              workspace_id,
-              name,
-              slug
-            ),
-            games (
-              id,
-              name,
-              type
-            )
-          `
-        )
-        .eq("id", campaignGameId)
-        .eq("campaigns.workspace_id", workspaceId)
-        .maybeSingle();
+            workspace_id,
+            name,
+            slug
+          ),
+          games (
+            id,
+            name,
+            type
+          )
+        `
+      )
+      .eq("id", campaignGameId)
+      .eq(
+        "campaigns.workspace_id",
+        workspaceId
+      )
+      .maybeSingle();
 
     if (campaignGameError) {
       console.error(
@@ -179,7 +219,8 @@ export async function GET(
 
       return NextResponse.json(
         {
-          error: "Failed to verify campaign game.",
+          error:
+            "Failed to verify campaign game.",
         },
         { status: 400 }
       );
@@ -188,34 +229,40 @@ export async function GET(
     if (!campaignGame) {
       return NextResponse.json(
         {
-          error: "Campaign game not found.",
+          error:
+            "Campaign game not found.",
         },
         { status: 404 }
       );
     }
 
-    const { data: prizes, error: prizesError } =
-      await supabase
-        .from("prizes")
-        .select(
-          `
-            id,
-            campaign_game_id,
-            name,
-            description,
-            image_url,
-            weight,
-            inventory,
-            active,
-            metadata,
-            created_at,
-            updated_at
-          `
-        )
-        .eq("campaign_game_id", campaignGameId)
-        .order("created_at", {
-          ascending: true,
-        });
+    const {
+      data: prizes,
+      error: prizesError,
+    } = await supabase
+      .from("prizes")
+      .select(
+        `
+          id,
+          campaign_game_id,
+          name,
+          description,
+          image_url,
+          weight,
+          inventory,
+          active,
+          metadata,
+          created_at,
+          updated_at
+        `
+      )
+      .eq(
+        "campaign_game_id",
+        campaignGameId
+      )
+      .order("created_at", {
+        ascending: true,
+      });
 
     if (prizesError) {
       console.error(
@@ -243,7 +290,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        error: "Unable to load prizes.",
+        error:
+          "Unable to load prizes.",
       },
       { status: 500 }
     );
@@ -255,11 +303,17 @@ export async function POST(
   context: RouteContext
 ) {
   try {
-    const { workspaceId, role } =
-      await requireAdmin();
+    const {
+      workspaceId,
+      role,
+    } = await requireAdmin();
 
     if (
-      !["owner", "admin", "editor"].includes(role)
+      ![
+        "owner",
+        "admin",
+        "editor",
+      ].includes(role)
     ) {
       return NextResponse.json(
         {
@@ -270,8 +324,9 @@ export async function POST(
       );
     }
 
-    const { id: campaignGameId } =
-      await context.params;
+    const {
+      id: campaignGameId,
+    } = await context.params;
 
     if (
       !campaignGameId ||
@@ -279,7 +334,8 @@ export async function POST(
     ) {
       return NextResponse.json(
         {
-          error: "Invalid campaign game ID.",
+          error:
+            "Invalid campaign game ID.",
         },
         { status: 400 }
       );
@@ -294,7 +350,7 @@ export async function POST(
     const validation =
       validatePrizeInput(body);
 
-    if (validation.error) {
+    if ("error" in validation) {
       return NextResponse.json(
         {
           error: validation.error,
@@ -321,7 +377,8 @@ export async function POST(
     if (!verified.campaignGame) {
       return NextResponse.json(
         {
-          error: "Campaign game not found.",
+          error:
+            "Campaign game not found.",
         },
         { status: 404 }
       );
@@ -330,29 +387,32 @@ export async function POST(
     const supabase =
       await createSupabaseServerClient();
 
-    const { data: prize, error: prizeError } =
-      await supabase
-        .from("prizes")
-        .insert({
-          campaign_game_id: campaignGameId,
-          ...validation.value,
-        })
-        .select(
-          `
-            id,
-            campaign_game_id,
-            name,
-            description,
-            image_url,
-            weight,
-            inventory,
-            active,
-            metadata,
-            created_at,
-            updated_at
-          `
-        )
-        .single();
+    const {
+      data: prize,
+      error: prizeError,
+    } = await supabase
+      .from("prizes")
+      .insert({
+        campaign_game_id:
+          campaignGameId,
+        ...validation.value,
+      })
+      .select(
+        `
+          id,
+          campaign_game_id,
+          name,
+          description,
+          image_url,
+          weight,
+          inventory,
+          active,
+          metadata,
+          created_at,
+          updated_at
+        `
+      )
+      .single();
 
     if (prizeError) {
       console.error(
@@ -382,7 +442,8 @@ export async function POST(
 
     return NextResponse.json(
       {
-        error: "Unable to create prize.",
+        error:
+          "Unable to create prize.",
       },
       { status: 500 }
     );
@@ -394,11 +455,17 @@ export async function PATCH(
   context: RouteContext
 ) {
   try {
-    const { workspaceId, role } =
-      await requireAdmin();
+    const {
+      workspaceId,
+      role,
+    } = await requireAdmin();
 
     if (
-      !["owner", "admin", "editor"].includes(role)
+      ![
+        "owner",
+        "admin",
+        "editor",
+      ].includes(role)
     ) {
       return NextResponse.json(
         {
@@ -409,8 +476,9 @@ export async function PATCH(
       );
     }
 
-    const { id: campaignGameId } =
-      await context.params;
+    const {
+      id: campaignGameId,
+    } = await context.params;
 
     if (
       !campaignGameId ||
@@ -418,7 +486,8 @@ export async function PATCH(
     ) {
       return NextResponse.json(
         {
-          error: "Invalid campaign game ID.",
+          error:
+            "Invalid campaign game ID.",
         },
         { status: 400 }
       );
@@ -434,7 +503,10 @@ export async function PATCH(
       body.prize_id ?? ""
     ).trim();
 
-    if (!prizeId || !isValidUuid(prizeId)) {
+    if (
+      !prizeId ||
+      !isValidUuid(prizeId)
+    ) {
       return NextResponse.json(
         {
           error: "Invalid prize ID.",
@@ -446,7 +518,7 @@ export async function PATCH(
     const validation =
       validatePrizeInput(body);
 
-    if (validation.error) {
+    if ("error" in validation) {
       return NextResponse.json(
         {
           error: validation.error,
@@ -473,7 +545,8 @@ export async function PATCH(
     if (!verified.campaignGame) {
       return NextResponse.json(
         {
-          error: "Campaign game not found.",
+          error:
+            "Campaign game not found.",
         },
         { status: 404 }
       );
@@ -503,7 +576,8 @@ export async function PATCH(
 
       return NextResponse.json(
         {
-          error: "Failed to verify prize.",
+          error:
+            "Failed to verify prize.",
         },
         { status: 400 }
       );
@@ -518,31 +592,33 @@ export async function PATCH(
       );
     }
 
-    const { data: prize, error: prizeError } =
-      await supabase
-        .from("prizes")
-        .update(validation.value)
-        .eq("id", prizeId)
-        .eq(
-          "campaign_game_id",
-          campaignGameId
-        )
-        .select(
-          `
-            id,
-            campaign_game_id,
-            name,
-            description,
-            image_url,
-            weight,
-            inventory,
-            active,
-            metadata,
-            created_at,
-            updated_at
-          `
-        )
-        .single();
+    const {
+      data: prize,
+      error: prizeError,
+    } = await supabase
+      .from("prizes")
+      .update(validation.value)
+      .eq("id", prizeId)
+      .eq(
+        "campaign_game_id",
+        campaignGameId
+      )
+      .select(
+        `
+          id,
+          campaign_game_id,
+          name,
+          description,
+          image_url,
+          weight,
+          inventory,
+          active,
+          metadata,
+          created_at,
+          updated_at
+        `
+      )
+      .single();
 
     if (prizeError) {
       console.error(
@@ -569,7 +645,8 @@ export async function PATCH(
 
     return NextResponse.json(
       {
-        error: "Unable to update prize.",
+        error:
+          "Unable to update prize.",
       },
       { status: 500 }
     );
@@ -581,11 +658,17 @@ export async function DELETE(
   context: RouteContext
 ) {
   try {
-    const { workspaceId, role } =
-      await requireAdmin();
+    const {
+      workspaceId,
+      role,
+    } = await requireAdmin();
 
     if (
-      !["owner", "admin", "editor"].includes(role)
+      ![
+        "owner",
+        "admin",
+        "editor",
+      ].includes(role)
     ) {
       return NextResponse.json(
         {
@@ -596,8 +679,9 @@ export async function DELETE(
       );
     }
 
-    const { id: campaignGameId } =
-      await context.params;
+    const {
+      id: campaignGameId,
+    } = await context.params;
 
     if (
       !campaignGameId ||
@@ -605,7 +689,8 @@ export async function DELETE(
     ) {
       return NextResponse.json(
         {
-          error: "Invalid campaign game ID.",
+          error:
+            "Invalid campaign game ID.",
         },
         { status: 400 }
       );
@@ -621,7 +706,10 @@ export async function DELETE(
       body.prize_id ?? ""
     ).trim();
 
-    if (!prizeId || !isValidUuid(prizeId)) {
+    if (
+      !prizeId ||
+      !isValidUuid(prizeId)
+    ) {
       return NextResponse.json(
         {
           error: "Invalid prize ID.",
@@ -648,7 +736,8 @@ export async function DELETE(
     if (!verified.campaignGame) {
       return NextResponse.json(
         {
-          error: "Campaign game not found.",
+          error:
+            "Campaign game not found.",
         },
         { status: 404 }
       );
@@ -678,7 +767,8 @@ export async function DELETE(
 
       return NextResponse.json(
         {
-          error: "Failed to verify prize.",
+          error:
+            "Failed to verify prize.",
         },
         { status: 400 }
       );
@@ -693,15 +783,16 @@ export async function DELETE(
       );
     }
 
-    const { error: deleteError } =
-      await supabase
-        .from("prizes")
-        .delete()
-        .eq("id", prizeId)
-        .eq(
-          "campaign_game_id",
-          campaignGameId
-        );
+    const {
+      error: deleteError,
+    } = await supabase
+      .from("prizes")
+      .delete()
+      .eq("id", prizeId)
+      .eq(
+        "campaign_game_id",
+        campaignGameId
+      );
 
     if (deleteError) {
       console.error(
@@ -729,7 +820,8 @@ export async function DELETE(
 
     return NextResponse.json(
       {
-        error: "Unable to delete prize.",
+        error:
+          "Unable to delete prize.",
       },
       { status: 500 }
     );
