@@ -114,7 +114,8 @@ function getAppearanceSettings(
         : defaultAppearance.button_color,
 
     button_text_color:
-      typeof appearance?.button_text_color === "string"
+      typeof appearance?.button_text_color ===
+      "string"
         ? appearance.button_text_color
         : defaultAppearance.button_text_color,
   };
@@ -198,10 +199,20 @@ export default function CampaignGameConfigurationPage() {
   const [saving, setSaving] = useState(false);
   const [loadingPrizes, setLoadingPrizes] =
     useState(false);
+
   const [addingPrize, setAddingPrize] =
     useState(false);
 
+  const [editingPrize, setEditingPrize] =
+    useState(false);
+
+  const [deletingPrizeId, setDeletingPrizeId] =
+    useState<string | null>(null);
+
   const [showAddPrize, setShowAddPrize] =
+    useState(false);
+
+  const [showEditPrize, setShowEditPrize] =
     useState(false);
 
   const [error, setError] = useState("");
@@ -220,6 +231,9 @@ export default function CampaignGameConfigurationPage() {
     useState("");
   const [prizeActive, setPrizeActive] =
     useState(true);
+
+  const [selectedPrizeId, setSelectedPrizeId] =
+    useState("");
 
   async function loadConfiguration() {
     if (!campaignGameId) {
@@ -340,6 +354,7 @@ export default function CampaignGameConfigurationPage() {
     setPrizeInventory("");
     setPrizeActive(true);
     setPrizeError("");
+    setSelectedPrizeId("");
   }
 
   function openAddPrize() {
@@ -356,18 +371,45 @@ export default function CampaignGameConfigurationPage() {
     resetPrizeForm();
   }
 
-  async function handleAddPrize(
-    event: FormEvent<HTMLFormElement>
-  ) {
-    event.preventDefault();
-
-    setAddingPrize(true);
+  function openEditPrize(prize: Prize) {
+    setSelectedPrizeId(prize.id);
+    setPrizeName(prize.name);
+    setPrizeDescription(
+      prize.description ?? ""
+    );
+    setPrizeImageUrl(
+      prize.image_url ?? ""
+    );
+    setPrizeWeight(
+      prize.weight.toString()
+    );
+    setPrizeInventory(
+      prize.inventory === null
+        ? ""
+        : prize.inventory.toString()
+    );
+    setPrizeActive(prize.active);
     setPrizeError("");
+    setShowEditPrize(true);
+  }
 
+  function closeEditPrize() {
+    if (editingPrize) {
+      return;
+    }
+
+    setShowEditPrize(false);
+    resetPrizeForm();
+  }
+
+  function validatePrizeForm() {
     const name = prizeName.trim();
+
     const description =
       prizeDescription.trim();
-    const imageUrl = prizeImageUrl.trim();
+
+    const imageUrl =
+      prizeImageUrl.trim();
 
     const weight = Number(prizeWeight);
 
@@ -377,22 +419,19 @@ export default function CampaignGameConfigurationPage() {
         : Number(prizeInventory);
 
     if (!name) {
-      setPrizeError(
-        "Prize name is required."
-      );
-      setAddingPrize(false);
-      return;
+      return {
+        error: "Prize name is required.",
+      };
     }
 
     if (
       !Number.isFinite(weight) ||
       weight < 0
     ) {
-      setPrizeError(
-        "Weight must be a number greater than or equal to 0."
-      );
-      setAddingPrize(false);
-      return;
+      return {
+        error:
+          "Weight must be a number greater than or equal to 0.",
+      };
     }
 
     if (
@@ -400,9 +439,40 @@ export default function CampaignGameConfigurationPage() {
       (!Number.isInteger(inventory) ||
         inventory < 0)
     ) {
-      setPrizeError(
-        "Inventory must be a whole number greater than or equal to 0."
-      );
+      return {
+        error:
+          "Inventory must be a whole number greater than or equal to 0.",
+      };
+    }
+
+    return {
+      error: "",
+      value: {
+        name,
+        description:
+          description || null,
+        image_url:
+          imageUrl || null,
+        weight,
+        inventory,
+        active: prizeActive,
+      },
+    };
+  }
+
+  async function handleAddPrize(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    setAddingPrize(true);
+    setPrizeError("");
+
+    const validation =
+      validatePrizeForm();
+
+    if (validation.error) {
+      setPrizeError(validation.error);
       setAddingPrize(false);
       return;
     }
@@ -415,16 +485,9 @@ export default function CampaignGameConfigurationPage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            name,
-            description:
-              description || null,
-            image_url:
-              imageUrl || null,
-            weight,
-            inventory,
-            active: prizeActive,
-          }),
+          body: JSON.stringify(
+            validation.value
+          ),
         }
       );
 
@@ -449,6 +512,7 @@ export default function CampaignGameConfigurationPage() {
 
       setShowAddPrize(false);
       resetPrizeForm();
+
       setSuccess(
         "Prize added successfully."
       );
@@ -459,6 +523,138 @@ export default function CampaignGameConfigurationPage() {
     }
 
     setAddingPrize(false);
+  }
+
+  async function handleEditPrize(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    if (!selectedPrizeId) {
+      setPrizeError("Prize ID is missing.");
+      return;
+    }
+
+    setEditingPrize(true);
+    setPrizeError("");
+
+    const validation =
+      validatePrizeForm();
+
+    if (validation.error) {
+      setPrizeError(validation.error);
+      setEditingPrize(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/admin/campaign-games/${campaignGameId}/prizes`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            prize_id: selectedPrizeId,
+            ...validation.value,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setPrizeError(
+          result.error ||
+            "Failed to update prize."
+        );
+        setEditingPrize(false);
+        return;
+      }
+
+      const updatedPrize =
+        result.prize as Prize;
+
+      setPrizes((current) =>
+        current.map((prize) =>
+          prize.id === updatedPrize.id
+            ? updatedPrize
+            : prize
+        )
+      );
+
+      setShowEditPrize(false);
+      resetPrizeForm();
+
+      setSuccess(
+        "Prize updated successfully."
+      );
+    } catch {
+      setPrizeError(
+        "Unable to update prize."
+      );
+    }
+
+    setEditingPrize(false);
+  }
+
+  async function handleDeletePrize(
+    prize: Prize
+  ) {
+    const confirmed = window.confirm(
+      `Delete "${prize.name}"?\n\nThis action cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingPrizeId(prize.id);
+    setPrizeError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch(
+        `/api/admin/campaign-games/${campaignGameId}/prizes`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            prize_id: prize.id,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setPrizeError(
+          result.error ||
+            "Failed to delete prize."
+        );
+        setDeletingPrizeId(null);
+        return;
+      }
+
+      setPrizes((current) =>
+        current.filter(
+          (item) => item.id !== prize.id
+        )
+      );
+
+      setSuccess(
+        "Prize deleted successfully."
+      );
+    } catch {
+      setPrizeError(
+        "Unable to delete prize."
+      );
+    }
+
+    setDeletingPrizeId(null);
   }
 
   async function handleSave(
@@ -863,14 +1059,44 @@ export default function CampaignGameConfigurationPage() {
                   marginBottom: "8px",
                 }}
               >
+                Subtitle
+              </label>
+
+              <input
+                type="text"
+                value={appearance.subtitle}
+                onChange={(event) =>
+                  updateAppearance(
+                    "subtitle",
+                    event.target.value
+                  )
+                }
+                placeholder="Spin daily and win exciting rewards!"
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  border:
+                    "1px solid #d1d5db",
+                  borderRadius: "9px",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontWeight: 700,
+                  marginBottom: "8px",
+                }}
+              >
                 Button Text
               </label>
 
               <input
                 type="text"
-                value={
-                  appearance.button_text
-                }
+                value={appearance.button_text}
                 onChange={(event) =>
                   updateAppearance(
                     "button_text",
@@ -889,11 +1115,7 @@ export default function CampaignGameConfigurationPage() {
               />
             </div>
 
-            <div
-              style={{
-                gridColumn: "1 / -1",
-              }}
-            >
+            <div>
               <label
                 style={{
                   display: "block",
@@ -901,257 +1123,175 @@ export default function CampaignGameConfigurationPage() {
                   marginBottom: "8px",
                 }}
               >
-                Subtitle
+                Page Background
               </label>
 
-              <input
-                type="text"
-                value={
-                  appearance.subtitle
-                }
-                onChange={(event) =>
-                  updateAppearance(
-                    "subtitle",
-                    event.target.value
-                  )
-                }
-                placeholder="Spin daily and win exciting rewards!"
+              <div
                 style={{
-                  width: "100%",
-                  padding: "12px",
-                  border:
-                    "1px solid #d1d5db",
-                  borderRadius: "9px",
-                  boxSizing: "border-box",
+                  display: "flex",
+                  gap: "10px",
                 }}
-              />
+              >
+                <input
+                  type="color"
+                  value={
+                    appearance.page_background_color
+                  }
+                  onChange={(event) =>
+                    updateAppearance(
+                      "page_background_color",
+                      event.target.value
+                    )
+                  }
+                  style={{
+                    width: "52px",
+                    height: "44px",
+                    padding: "2px",
+                  }}
+                />
+
+                <input
+                  type="text"
+                  value={
+                    appearance.page_background_color
+                  }
+                  onChange={(event) =>
+                    updateAppearance(
+                      "page_background_color",
+                      event.target.value
+                    )
+                  }
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    border:
+                      "1px solid #d1d5db",
+                    borderRadius: "9px",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontWeight: 700,
+                  marginBottom: "8px",
+                }}
+              >
+                Button Color
+              </label>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                }}
+              >
+                <input
+                  type="color"
+                  value={
+                    appearance.button_color
+                  }
+                  onChange={(event) =>
+                    updateAppearance(
+                      "button_color",
+                      event.target.value
+                    )
+                  }
+                  style={{
+                    width: "52px",
+                    height: "44px",
+                    padding: "2px",
+                  }}
+                />
+
+                <input
+                  type="text"
+                  value={
+                    appearance.button_color
+                  }
+                  onChange={(event) =>
+                    updateAppearance(
+                      "button_color",
+                      event.target.value
+                    )
+                  }
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    border:
+                      "1px solid #d1d5db",
+                    borderRadius: "9px",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontWeight: 700,
+                  marginBottom: "8px",
+                }}
+              >
+                Button Text Color
+              </label>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                }}
+              >
+                <input
+                  type="color"
+                  value={
+                    appearance.button_text_color
+                  }
+                  onChange={(event) =>
+                    updateAppearance(
+                      "button_text_color",
+                      event.target.value
+                    )
+                  }
+                  style={{
+                    width: "52px",
+                    height: "44px",
+                    padding: "2px",
+                  }}
+                />
+
+                <input
+                  type="text"
+                  value={
+                    appearance.button_text_color
+                  }
+                  onChange={(event) =>
+                    updateAppearance(
+                      "button_text_color",
+                      event.target.value
+                    )
+                  }
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    border:
+                      "1px solid #d1d5db",
+                    borderRadius: "9px",
+                  }}
+                />
+              </div>
             </div>
           </div>
 
           <div
             style={{
               marginTop: "24px",
-              paddingTop: "24px",
-              borderTop:
-                "1px solid #e5e7eb",
-            }}
-          >
-            <div
-              style={{
-                fontWeight: 700,
-                marginBottom: "16px",
-              }}
-            >
-              Colors
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "20px",
-              }}
-            >
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontWeight: 700,
-                    marginBottom: "8px",
-                  }}
-                >
-                  Page Background
-                </label>
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    alignItems: "center",
-                  }}
-                >
-                  <input
-                    type="color"
-                    value={
-                      appearance.page_background_color
-                    }
-                    onChange={(event) =>
-                      updateAppearance(
-                        "page_background_color",
-                        event.target.value
-                      )
-                    }
-                    style={{
-                      width: "48px",
-                      height: "42px",
-                      padding: "2px",
-                      border:
-                        "1px solid #d1d5db",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                    }}
-                  />
-
-                  <input
-                    type="text"
-                    value={
-                      appearance.page_background_color
-                    }
-                    onChange={(event) =>
-                      updateAppearance(
-                        "page_background_color",
-                        event.target.value
-                      )
-                    }
-                    style={{
-                      flex: 1,
-                      padding: "12px",
-                      border:
-                        "1px solid #d1d5db",
-                      borderRadius: "9px",
-                      boxSizing:
-                        "border-box",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontWeight: 700,
-                    marginBottom: "8px",
-                  }}
-                >
-                  Button Color
-                </label>
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    alignItems: "center",
-                  }}
-                >
-                  <input
-                    type="color"
-                    value={
-                      appearance.button_color
-                    }
-                    onChange={(event) =>
-                      updateAppearance(
-                        "button_color",
-                        event.target.value
-                      )
-                    }
-                    style={{
-                      width: "48px",
-                      height: "42px",
-                      padding: "2px",
-                      border:
-                        "1px solid #d1d5db",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                    }}
-                  />
-
-                  <input
-                    type="text"
-                    value={
-                      appearance.button_color
-                    }
-                    onChange={(event) =>
-                      updateAppearance(
-                        "button_color",
-                        event.target.value
-                      )
-                    }
-                    style={{
-                      flex: 1,
-                      padding: "12px",
-                      border:
-                        "1px solid #d1d5db",
-                      borderRadius: "9px",
-                      boxSizing:
-                        "border-box",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontWeight: 700,
-                    marginBottom: "8px",
-                  }}
-                >
-                  Button Text Color
-                </label>
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    alignItems: "center",
-                  }}
-                >
-                  <input
-                    type="color"
-                    value={
-                      appearance.button_text_color
-                    }
-                    onChange={(event) =>
-                      updateAppearance(
-                        "button_text_color",
-                        event.target.value
-                      )
-                    }
-                    style={{
-                      width: "48px",
-                      height: "42px",
-                      padding: "2px",
-                      border:
-                        "1px solid #d1d5db",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                    }}
-                  />
-
-                  <input
-                    type="text"
-                    value={
-                      appearance.button_text_color
-                    }
-                    onChange={(event) =>
-                      updateAppearance(
-                        "button_text_color",
-                        event.target.value
-                      )
-                    }
-                    style={{
-                      flex: 1,
-                      padding: "12px",
-                      border:
-                        "1px solid #d1d5db",
-                      borderRadius: "9px",
-                      boxSizing:
-                        "border-box",
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              marginTop: "28px",
-              padding: "18px",
-              borderRadius: "10px",
+              padding: "28px",
+              borderRadius: "12px",
               background:
                 appearance.page_background_color,
               border:
@@ -1161,9 +1301,9 @@ export default function CampaignGameConfigurationPage() {
           >
             <div
               style={{
-                fontSize: "22px",
+                fontSize: "28px",
                 fontWeight: 800,
-                marginBottom: "6px",
+                marginBottom: "8px",
               }}
             >
               {appearance.title ||
@@ -1173,28 +1313,30 @@ export default function CampaignGameConfigurationPage() {
             <div
               style={{
                 color: "#6b7280",
-                marginBottom: "16px",
+                marginBottom: "20px",
               }}
             >
               {appearance.subtitle ||
                 "Spin daily and win exciting rewards!"}
             </div>
 
-            <span
+            <button
+              type="button"
               style={{
-                display: "inline-block",
-                padding: "11px 20px",
-                borderRadius: "9px",
+                border: "none",
+                borderRadius: "999px",
+                padding: "12px 24px",
                 background:
                   appearance.button_color,
                 color:
                   appearance.button_text_color,
-                fontWeight: 700,
+                fontWeight: 800,
+                cursor: "default",
               }}
             >
               {appearance.button_text ||
                 "SPIN NOW"}
-            </span>
+            </button>
           </div>
         </div>
 
@@ -1202,50 +1344,49 @@ export default function CampaignGameConfigurationPage() {
           className="admin-panel"
           style={{ marginTop: "20px" }}
         >
-          <div style={{ marginBottom: "18px" }}>
-            <div className="eyebrow">
-              PRIZES
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent:
-                  "space-between",
-                alignItems: "flex-start",
-                gap: "16px",
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <h2
-                  style={{
-                    margin: "4px 0 6px",
-                  }}
-                >
-                  Prize Management
-                </h2>
-
-                <p
-                  style={{
-                    margin: 0,
-                    color: "#6b7280",
-                    lineHeight: 1.6,
-                  }}
-                >
-                  Add the rewards that customers
-                  can win in this campaign game.
-                </p>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "16px",
+              flexWrap: "wrap",
+              marginBottom: "22px",
+            }}
+          >
+            <div>
+              <div className="eyebrow">
+                PRIZES
               </div>
 
-              <button
-                type="button"
-                className="primary-btn"
-                onClick={openAddPrize}
+              <h2
+                style={{
+                  margin: "4px 0 6px",
+                }}
               >
-                + Add Prize
-              </button>
+                Prize Management
+              </h2>
+
+              <p
+                style={{
+                  margin: 0,
+                  color: "#6b7280",
+                  lineHeight: 1.6,
+                }}
+              >
+                Add, edit, activate, deactivate,
+                or delete the rewards customers
+                can win in this campaign game.
+              </p>
             </div>
+
+            <button
+              type="button"
+              className="primary-btn"
+              onClick={openAddPrize}
+            >
+              + Add Prize
+            </button>
           </div>
 
           {prizeError && (
@@ -1305,7 +1446,7 @@ export default function CampaignGameConfigurationPage() {
                   style={{
                     display: "grid",
                     gridTemplateColumns:
-                      "minmax(0, 1fr) auto",
+                      "minmax(0, 1fr) auto auto",
                     gap: "16px",
                     alignItems: "center",
                     padding: "16px",
@@ -1417,6 +1558,50 @@ export default function CampaignGameConfigurationPage() {
                         No image
                       </span>
                     )}
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      flexWrap: "wrap",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      onClick={() =>
+                        openEditPrize(prize)
+                      }
+                      disabled={
+                        deletingPrizeId ===
+                        prize.id
+                      }
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      onClick={() =>
+                        handleDeletePrize(prize)
+                      }
+                      disabled={
+                        deletingPrizeId ===
+                        prize.id
+                      }
+                      style={{
+                        color: "#b91c1c",
+                        borderColor: "#fecaca",
+                      }}
+                    >
+                      {deletingPrizeId ===
+                      prize.id
+                        ? "Deleting..."
+                        : "Delete"}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -1607,240 +1792,40 @@ export default function CampaignGameConfigurationPage() {
                   </div>
                 )}
 
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontWeight: 700,
-                      marginBottom: "8px",
-                    }}
-                  >
-                    Prize Name *
-                  </label>
-
-                  <input
-                    type="text"
-                    value={prizeName}
-                    onChange={(event) =>
-                      setPrizeName(
-                        event.target.value
-                      )
-                    }
-                    placeholder="Example: Rs. 1,000 Voucher"
-                    autoFocus
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border:
-                        "1px solid #d1d5db",
-                      borderRadius: "9px",
-                      boxSizing:
-                        "border-box",
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontWeight: 700,
-                      marginBottom: "8px",
-                    }}
-                  >
-                    Description
-                  </label>
-
-                  <textarea
-                    value={
-                      prizeDescription
-                    }
-                    onChange={(event) =>
-                      setPrizeDescription(
-                        event.target.value
-                      )
-                    }
-                    placeholder="Optional prize description"
-                    rows={3}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border:
-                        "1px solid #d1d5db",
-                      borderRadius: "9px",
-                      boxSizing:
-                        "border-box",
-                      resize: "vertical",
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontWeight: 700,
-                      marginBottom: "8px",
-                    }}
-                  >
-                    Image URL
-                  </label>
-
-                  <input
-                    type="url"
-                    value={prizeImageUrl}
-                    onChange={(event) =>
-                      setPrizeImageUrl(
-                        event.target.value
-                      )
-                    }
-                    placeholder="https://..."
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border:
-                        "1px solid #d1d5db",
-                      borderRadius: "9px",
-                      boxSizing:
-                        "border-box",
-                    }}
-                  />
-                </div>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "1fr 1fr",
-                    gap: "16px",
-                  }}
-                >
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: 700,
-                        marginBottom: "8px",
-                      }}
-                    >
-                      Weight *
-                    </label>
-
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={
-                        prizeWeight
-                      }
-                      onChange={(event) =>
-                        setPrizeWeight(
-                          event.target.value
-                        )
-                      }
-                      placeholder="1"
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        border:
-                          "1px solid #d1d5db",
-                        borderRadius:
-                          "9px",
-                        boxSizing:
-                          "border-box",
-                      }}
-                    />
-
-                    <div
-                      style={{
-                        marginTop: "6px",
-                        fontSize: "12px",
-                        color: "#6b7280",
-                      }}
-                    >
-                      Higher weight means a
-                      higher relative chance.
-                    </div>
-                  </div>
-
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: 700,
-                        marginBottom: "8px",
-                      }}
-                    >
-                      Inventory
-                    </label>
-
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={
-                        prizeInventory
-                      }
-                      onChange={(event) =>
-                        setPrizeInventory(
-                          event.target.value
-                        )
-                      }
-                      placeholder="Unlimited"
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        border:
-                          "1px solid #d1d5db",
-                        borderRadius:
-                          "9px",
-                        boxSizing:
-                          "border-box",
-                      }}
-                    />
-
-                    <div
-                      style={{
-                        marginTop: "6px",
-                        fontSize: "12px",
-                        color: "#6b7280",
-                      }}
-                    >
-                      Leave empty for unlimited.
-                    </div>
-                  </div>
-                </div>
-
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    cursor: "pointer",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={prizeActive}
-                    onChange={(event) =>
-                      setPrizeActive(
-                        event.target.checked
-                      )
-                    }
-                    style={{
-                      width: "18px",
-                      height: "18px",
-                    }}
-                  />
-
-                  <span
-                    style={{
-                      fontWeight: 700,
-                    }}
-                  >
-                    Prize is active
-                  </span>
-                </label>
+                <PrizeFormFields
+                  prizeName={prizeName}
+                  setPrizeName={setPrizeName}
+                  prizeDescription={
+                    prizeDescription
+                  }
+                  setPrizeDescription={
+                    setPrizeDescription
+                  }
+                  prizeImageUrl={
+                    prizeImageUrl
+                  }
+                  setPrizeImageUrl={
+                    setPrizeImageUrl
+                  }
+                  prizeWeight={
+                    prizeWeight
+                  }
+                  setPrizeWeight={
+                    setPrizeWeight
+                  }
+                  prizeInventory={
+                    prizeInventory
+                  }
+                  setPrizeInventory={
+                    setPrizeInventory
+                  }
+                  prizeActive={
+                    prizeActive
+                  }
+                  setPrizeActive={
+                    setPrizeActive
+                  }
+                />
               </div>
 
               <div
@@ -1879,6 +1864,416 @@ export default function CampaignGameConfigurationPage() {
           </div>
         </div>
       )}
+
+      {showEditPrize && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background:
+              "rgba(17, 24, 39, 0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "620px",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              background: "#ffffff",
+              borderRadius: "14px",
+              boxShadow:
+                "0 20px 50px rgba(0,0,0,0.2)",
+            }}
+          >
+            <div
+              style={{
+                padding: "22px 24px",
+                borderBottom:
+                  "1px solid #e5e7eb",
+              }}
+            >
+              <div className="eyebrow">
+                EDIT PRIZE
+              </div>
+
+              <h2
+                style={{
+                  margin: "4px 0 6px",
+                }}
+              >
+                Edit Prize
+              </h2>
+
+              <p
+                style={{
+                  margin: 0,
+                  color: "#6b7280",
+                  lineHeight: 1.5,
+                }}
+              >
+                Update the reward details for
+                this campaign game.
+              </p>
+            </div>
+
+            <form
+              onSubmit={handleEditPrize}
+            >
+              <div
+                style={{
+                  padding: "24px",
+                  display: "grid",
+                  gap: "18px",
+                }}
+              >
+                {prizeError && (
+                  <div className="error-box">
+                    {prizeError}
+                  </div>
+                )}
+
+                <PrizeFormFields
+                  prizeName={prizeName}
+                  setPrizeName={setPrizeName}
+                  prizeDescription={
+                    prizeDescription
+                  }
+                  setPrizeDescription={
+                    setPrizeDescription
+                  }
+                  prizeImageUrl={
+                    prizeImageUrl
+                  }
+                  setPrizeImageUrl={
+                    setPrizeImageUrl
+                  }
+                  prizeWeight={
+                    prizeWeight
+                  }
+                  setPrizeWeight={
+                    setPrizeWeight
+                  }
+                  prizeInventory={
+                    prizeInventory
+                  }
+                  setPrizeInventory={
+                    setPrizeInventory
+                  }
+                  prizeActive={
+                    prizeActive
+                  }
+                  setPrizeActive={
+                    setPrizeActive
+                  }
+                />
+              </div>
+
+              <div
+                style={{
+                  padding: "18px 24px",
+                  borderTop:
+                    "1px solid #e5e7eb",
+                  display: "flex",
+                  justifyContent:
+                    "flex-end",
+                  gap: "12px",
+                }}
+              >
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={
+                    closeEditPrize
+                  }
+                  disabled={editingPrize}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-btn"
+                  disabled={editingPrize}
+                >
+                  {editingPrize
+                    ? "Saving..."
+                    : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+type PrizeFormFieldsProps = {
+  prizeName: string;
+  setPrizeName: (value: string) => void;
+  prizeDescription: string;
+  setPrizeDescription: (
+    value: string
+  ) => void;
+  prizeImageUrl: string;
+  setPrizeImageUrl: (
+    value: string
+  ) => void;
+  prizeWeight: string;
+  setPrizeWeight: (value: string) => void;
+  prizeInventory: string;
+  setPrizeInventory: (
+    value: string
+  ) => void;
+  prizeActive: boolean;
+  setPrizeActive: (
+    value: boolean
+  ) => void;
+};
+
+function PrizeFormFields({
+  prizeName,
+  setPrizeName,
+  prizeDescription,
+  setPrizeDescription,
+  prizeImageUrl,
+  setPrizeImageUrl,
+  prizeWeight,
+  setPrizeWeight,
+  prizeInventory,
+  setPrizeInventory,
+  prizeActive,
+  setPrizeActive,
+}: PrizeFormFieldsProps) {
+  return (
+    <>
+      <div>
+        <label
+          style={{
+            display: "block",
+            fontWeight: 700,
+            marginBottom: "8px",
+          }}
+        >
+          Prize Name *
+        </label>
+
+        <input
+          type="text"
+          value={prizeName}
+          onChange={(event) =>
+            setPrizeName(
+              event.target.value
+            )
+          }
+          placeholder="Example: Rs. 1,000 Voucher"
+          autoFocus
+          style={{
+            width: "100%",
+            padding: "12px",
+            border:
+              "1px solid #d1d5db",
+            borderRadius: "9px",
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
+
+      <div>
+        <label
+          style={{
+            display: "block",
+            fontWeight: 700,
+            marginBottom: "8px",
+          }}
+        >
+          Description
+        </label>
+
+        <textarea
+          value={prizeDescription}
+          onChange={(event) =>
+            setPrizeDescription(
+              event.target.value
+            )
+          }
+          placeholder="Optional prize description"
+          rows={3}
+          style={{
+            width: "100%",
+            padding: "12px",
+            border:
+              "1px solid #d1d5db",
+            borderRadius: "9px",
+            boxSizing: "border-box",
+            resize: "vertical",
+          }}
+        />
+      </div>
+
+      <div>
+        <label
+          style={{
+            display: "block",
+            fontWeight: 700,
+            marginBottom: "8px",
+          }}
+        >
+          Image URL
+        </label>
+
+        <input
+          type="url"
+          value={prizeImageUrl}
+          onChange={(event) =>
+            setPrizeImageUrl(
+              event.target.value
+            )
+          }
+          placeholder="https://..."
+          style={{
+            width: "100%",
+            padding: "12px",
+            border:
+              "1px solid #d1d5db",
+            borderRadius: "9px",
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns:
+            "1fr 1fr",
+          gap: "16px",
+        }}
+      >
+        <div>
+          <label
+            style={{
+              display: "block",
+              fontWeight: 700,
+              marginBottom: "8px",
+            }}
+          >
+            Weight *
+          </label>
+
+          <input
+            type="number"
+            min="0"
+            step="any"
+            value={prizeWeight}
+            onChange={(event) =>
+              setPrizeWeight(
+                event.target.value
+              )
+            }
+            placeholder="1"
+            style={{
+              width: "100%",
+              padding: "12px",
+              border:
+                "1px solid #d1d5db",
+              borderRadius: "9px",
+              boxSizing: "border-box",
+            }}
+          />
+
+          <div
+            style={{
+              marginTop: "6px",
+              fontSize: "12px",
+              color: "#6b7280",
+            }}
+          >
+            Higher weight means a higher
+            relative chance.
+          </div>
+        </div>
+
+        <div>
+          <label
+            style={{
+              display: "block",
+              fontWeight: 700,
+              marginBottom: "8px",
+            }}
+          >
+            Inventory
+          </label>
+
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={prizeInventory}
+            onChange={(event) =>
+              setPrizeInventory(
+                event.target.value
+              )
+            }
+            placeholder="Unlimited"
+            style={{
+              width: "100%",
+              padding: "12px",
+              border:
+                "1px solid #d1d5db",
+              borderRadius: "9px",
+              boxSizing: "border-box",
+            }}
+          />
+
+          <div
+            style={{
+              marginTop: "6px",
+              fontSize: "12px",
+              color: "#6b7280",
+            }}
+          >
+            Leave empty for unlimited.
+          </div>
+        </div>
+      </div>
+
+      <label
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          cursor: "pointer",
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={prizeActive}
+          onChange={(event) =>
+            setPrizeActive(
+              event.target.checked
+            )
+          }
+          style={{
+            width: "18px",
+            height: "18px",
+          }}
+        />
+
+        <span
+          style={{
+            fontWeight: 700,
+          }}
+        >
+          Prize is active
+        </span>
+      </label>
     </>
   );
 }
