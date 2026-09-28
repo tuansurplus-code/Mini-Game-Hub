@@ -18,7 +18,7 @@ type Props = {
   campaign: Campaign;
 };
 
-function toDateTimeLocal(value: string | null) {
+function utcToColomboDateTimeLocal(value: string | null) {
   if (!value) {
     return "";
   }
@@ -29,457 +29,393 @@ function toDateTimeLocal(value: string | null) {
     return "";
   }
 
-  const offset = date.getTimezoneOffset();
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Colombo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
 
-  const localDate = new Date(
-    date.getTime() - offset * 60 * 1000
+  const values = Object.fromEntries(
+    parts.map((part) => [part.type, part.value])
   );
 
-  return localDate.toISOString().slice(0, 16);
+  return `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}`;
+}
+
+function colomboDateTimeToUtc(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(`${value}:00+05:30`);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toISOString();
 }
 
 function formatStatus(status: string) {
-  if (!status) {
-    return "—";
-  }
+  switch (status) {
+    case "draft":
+      return "Draft";
 
-  return (
-    status.charAt(0).toUpperCase() +
-    status.slice(1)
-  );
+    case "scheduled":
+      return "Scheduled";
+
+    case "active":
+      return "Active";
+
+    case "ended":
+      return "Ended";
+
+    case "archived":
+      return "Archived";
+
+    default:
+      return status
+        .replace(/[_-]/g, " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
 }
 
-export default function CampaignEditForm({
-  campaign,
-}: Props) {
+export default function CampaignEditForm({ campaign }: Props) {
   const router = useRouter();
 
   const [name, setName] = useState(campaign.name);
 
-  const [schedulingMode, setSchedulingMode] = useState(
-    campaign.scheduling_mode || "manual"
+  const [schedulingMode, setSchedulingMode] = useState<
+    "manual" | "automatic"
+  >(
+    campaign.scheduling_mode === "automatic"
+      ? "automatic"
+      : "manual"
   );
 
   const [startsAt, setStartsAt] = useState(
-    toDateTimeLocal(campaign.starts_at)
+    utcToColomboDateTimeLocal(campaign.starts_at)
   );
 
   const [endsAt, setEndsAt] = useState(
-    toDateTimeLocal(campaign.ends_at)
+    utcToColomboDateTimeLocal(campaign.ends_at)
   );
 
-  const [status, setStatus] = useState(
-    campaign.status
-  );
-
+  const [status, setStatus] = useState(campaign.status);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    setError("");
-    setMessage("");
-
     if (!name.trim()) {
-      setError("Please enter a campaign name.");
-      return;
-    }
-
-    if (
-      !["manual", "automatic"].includes(
-        schedulingMode
-      )
-    ) {
-      setError("Invalid scheduling mode.");
+      setError("Campaign name is required.");
       return;
     }
 
     if (startsAt && endsAt) {
-      const start = new Date(startsAt);
-      const end = new Date(endsAt);
+      const start = new Date(`${startsAt}:00+05:30`);
+      const end = new Date(`${endsAt}:00+05:30`);
 
-      if (
-        Number.isNaN(start.getTime()) ||
-        Number.isNaN(end.getTime())
-      ) {
-        setError("Invalid campaign date or time.");
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+        setError("Please enter valid start and end dates.");
         return;
       }
 
       if (end <= start) {
-        setError(
-          "End date must be after the start date."
-        );
+        setError("End date must be after the start date.");
         return;
       }
     }
 
     setSaving(true);
+    setError("");
 
     try {
-      const response = await fetch(
-        `/api/admin/campaigns/${campaign.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: name.trim(),
-            starts_at: startsAt || null,
-            ends_at: endsAt || null,
-            status,
-            scheduling_mode: schedulingMode,
-          }),
-        }
-      );
+      const response = await fetch(`/api/admin/campaigns/${campaign.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          starts_at: colomboDateTimeToUtc(startsAt || null),
+          ends_at: colomboDateTimeToUtc(endsAt || null),
+          status,
+          scheduling_mode: schedulingMode,
+        }),
+      });
 
       const result = await response.json();
 
       if (!response.ok) {
-        setError(
-          result.error ||
-            "Failed to update campaign."
-        );
-
+        setError(result.error || "Failed to update campaign.");
         setSaving(false);
         return;
       }
 
-      setMessage(
-        "Campaign updated successfully."
-      );
-
       setSaving(false);
-
       router.refresh();
     } catch {
-      setError(
-        "Unable to update campaign."
-      );
-
+      setError("Unable to update campaign.");
       setSaving(false);
     }
   }
 
-  const automaticMode =
-    schedulingMode === "automatic";
+  const automaticMode = schedulingMode === "automatic";
 
   return (
-    <div
-      className="admin-panel"
-      style={{
-        maxWidth: "720px",
-      }}
-    >
-      <form onSubmit={handleSubmit}>
-        {error && (
-          <div
-            className="error-box"
-            style={{
-              marginBottom: "18px",
-            }}
-          >
-            {error}
-          </div>
-        )}
+    <form onSubmit={handleSubmit}>
+      {error && (
+        <div className="error-box" style={{ marginBottom: "16px" }}>
+          {error}
+        </div>
+      )}
 
-        {message && (
-          <div
-            className="success-box"
-            style={{
-              marginBottom: "18px",
-            }}
-          >
-            {message}
-          </div>
-        )}
-
-        <div
+      <div style={{ marginBottom: "16px" }}>
+        <label
+          htmlFor="campaign-name"
           style={{
-            marginBottom: "18px",
+            display: "block",
+            marginBottom: "6px",
+            fontWeight: 600,
           }}
         >
-          <label
-            htmlFor="campaign-name"
-            style={{
-              display: "block",
-              marginBottom: "7px",
-              fontWeight: 600,
-            }}
-          >
-            Campaign Name
-          </label>
+          Campaign Name
+        </label>
 
-          <input
-            id="campaign-name"
-            type="text"
-            value={name}
-            onChange={(event) =>
-              setName(event.target.value)
-            }
-            disabled={saving}
+        <input
+          id="campaign-name"
+          type="text"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          disabled={saving}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            fontSize: "14px",
+          }}
+        />
+      </div>
+
+      <div style={{ marginBottom: "16px" }}>
+        <label
+          htmlFor="campaign-scheduling-mode"
+          style={{
+            display: "block",
+            marginBottom: "6px",
+            fontWeight: 600,
+          }}
+        >
+          Scheduling Mode
+        </label>
+
+        <select
+          id="campaign-scheduling-mode"
+          value={schedulingMode}
+          onChange={(event) =>
+            setSchedulingMode(
+              event.target.value as "manual" | "automatic"
+            )
+          }
+          disabled={saving}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            fontSize: "14px",
+            background: "#fff",
+          }}
+        >
+          <option value="automatic">Automatic</option>
+          <option value="manual">Manual</option>
+        </select>
+
+        <small
+          style={{
+            display: "block",
+            marginTop: "6px",
+            color: "#666",
+          }}
+        >
+          Automatic mode controls the campaign status using the start and end
+          dates.
+        </small>
+      </div>
+
+      <div style={{ marginBottom: "16px" }}>
+        <label
+          style={{
+            display: "block",
+            marginBottom: "6px",
+            fontWeight: 600,
+          }}
+        >
+          Current Status
+        </label>
+
+        {automaticMode ? (
+          <div
             style={{
               width: "100%",
-              padding: "11px 13px",
-              border: "1px solid #d8dde5",
-              borderRadius: "9px",
+              padding: "10px 12px",
+              border: "1px solid #ddd",
+              borderRadius: "8px",
               fontSize: "14px",
-            }}
-          />
-        </div>
-
-        <div
-          style={{
-            marginBottom: "18px",
-          }}
-        >
-          <label
-            htmlFor="campaign-scheduling-mode"
-            style={{
-              display: "block",
-              marginBottom: "7px",
-              fontWeight: 600,
+              background: "#f7f7f7",
+              color: "#555",
             }}
           >
-            Scheduling Mode
-          </label>
-
+            {formatStatus(status)}
+          </div>
+        ) : (
           <select
-            id="campaign-scheduling-mode"
-            value={schedulingMode}
-            onChange={(event) =>
-              setSchedulingMode(event.target.value)
-            }
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
             disabled={saving}
             style={{
               width: "100%",
-              padding: "11px 13px",
-              border: "1px solid #d8dde5",
-              borderRadius: "9px",
-              background: "#ffffff",
+              padding: "10px 12px",
+              border: "1px solid #ddd",
+              borderRadius: "8px",
               fontSize: "14px",
+              background: "#fff",
             }}
           >
-            <option value="automatic">
-              Automatic
-            </option>
-
-            <option value="manual">
-              Manual
-            </option>
+            <option value="draft">Draft</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="active">Active</option>
+            <option value="ended">Ended</option>
+            <option value="archived">Archived</option>
           </select>
+        )}
 
-          <p
-            style={{
-              marginTop: "7px",
-              marginBottom: 0,
-              color: "#697386",
-              fontSize: "13px",
-              lineHeight: 1.5,
-            }}
-          >
-            {automaticMode
-              ? "The campaign status will be automatically controlled using the start and end dates."
-              : "You control the campaign status manually."}
-          </p>
-        </div>
-
-        <div
-          style={{
-            marginBottom: "18px",
-          }}
-        >
-          <label
-            htmlFor="campaign-status"
+        {automaticMode && (
+          <small
             style={{
               display: "block",
-              marginBottom: "7px",
-              fontWeight: 600,
+              marginTop: "6px",
+              color: "#666",
             }}
           >
-            Campaign Status
-          </label>
+            Status is managed automatically from the campaign schedule.
+          </small>
+        )}
+      </div>
 
-          {automaticMode ? (
-            <>
-              <div
-                id="campaign-status"
-                style={{
-                  width: "100%",
-                  padding: "11px 13px",
-                  border: "1px solid #d8dde5",
-                  borderRadius: "9px",
-                  background: "#f3f4f6",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  boxSizing: "border-box",
-                }}
-              >
-                {formatStatus(status)}
-              </div>
-
-              <p
-                style={{
-                  marginTop: "7px",
-                  marginBottom: 0,
-                  color: "#697386",
-                  fontSize: "13px",
-                  lineHeight: 1.5,
-                }}
-              >
-                Automatic mode controls this status
-                from the campaign start and end
-                dates.
-              </p>
-            </>
-          ) : (
-            <select
-              id="campaign-status"
-              value={status}
-              onChange={(event) =>
-                setStatus(event.target.value)
-              }
-              disabled={saving}
-              style={{
-                width: "100%",
-                padding: "11px 13px",
-                border: "1px solid #d8dde5",
-                borderRadius: "9px",
-                background: "#ffffff",
-                fontSize: "14px",
-              }}
-            >
-              <option value="draft">
-                Draft
-              </option>
-
-              <option value="scheduled">
-                Scheduled
-              </option>
-
-              <option value="active">
-                Active
-              </option>
-
-              <option value="ended">
-                Ended
-              </option>
-
-              <option value="archived">
-                Archived
-              </option>
-            </select>
-          )}
-        </div>
-
-        <div
+      <div style={{ marginBottom: "16px" }}>
+        <label
+          htmlFor="campaign-start"
           style={{
-            marginBottom: "18px",
+            display: "block",
+            marginBottom: "6px",
+            fontWeight: 600,
           }}
         >
-          <label
-            htmlFor="campaign-start"
-            style={{
-              display: "block",
-              marginBottom: "7px",
-              fontWeight: 600,
-            }}
-          >
-            Start Date &amp; Time
-          </label>
+          Start Date & Time
+        </label>
 
-          <input
-            id="campaign-start"
-            type="datetime-local"
-            value={startsAt}
-            onChange={(event) =>
-              setStartsAt(event.target.value)
-            }
-            disabled={saving}
-            style={{
-              width: "100%",
-              padding: "11px 13px",
-              border: "1px solid #d8dde5",
-              borderRadius: "9px",
-              fontSize: "14px",
-            }}
-          />
-        </div>
-
-        <div
+        <input
+          id="campaign-start"
+          type="datetime-local"
+          value={startsAt}
+          onChange={(event) => setStartsAt(event.target.value)}
+          disabled={saving}
           style={{
-            marginBottom: "24px",
+            width: "100%",
+            padding: "10px 12px",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            fontSize: "14px",
+          }}
+        />
+
+        <small
+          style={{
+            display: "block",
+            marginTop: "6px",
+            color: "#666",
           }}
         >
-          <label
-            htmlFor="campaign-end"
-            style={{
-              display: "block",
-              marginBottom: "7px",
-              fontWeight: 600,
-            }}
-          >
-            End Date &amp; Time
-          </label>
+          Time is shown and edited in Sri Lanka time.
+        </small>
+      </div>
 
-          <input
-            id="campaign-end"
-            type="datetime-local"
-            value={endsAt}
-            onChange={(event) =>
-              setEndsAt(event.target.value)
-            }
-            disabled={saving}
-            style={{
-              width: "100%",
-              padding: "11px 13px",
-              border: "1px solid #d8dde5",
-              borderRadius: "9px",
-              fontSize: "14px",
-            }}
-          />
-        </div>
-
-        <div
+      <div style={{ marginBottom: "20px" }}>
+        <label
+          htmlFor="campaign-end"
           style={{
-            display: "flex",
-            gap: "10px",
-            justifyContent: "flex-end",
+            display: "block",
+            marginBottom: "6px",
+            fontWeight: 600,
           }}
         >
-          <button
-            type="button"
-            onClick={() =>
-              router.push("/admin/campaigns")
-            }
-            disabled={saving}
-            style={{
-              padding: "10px 16px",
-              border: "1px solid #d8dde5",
-              borderRadius: "9px",
-              background: "#ffffff",
-              cursor: "pointer",
-            }}
-          >
-            Cancel
-          </button>
+          End Date & Time
+        </label>
 
-          <button
-            type="submit"
-            className="primary-btn"
-            disabled={saving}
-          >
-            {saving
-              ? "Saving..."
-              : "Save Changes"}
-          </button>
-        </div>
-      </form>
-    </div>
+        <input
+          id="campaign-end"
+          type="datetime-local"
+          value={endsAt}
+          onChange={(event) => setEndsAt(event.target.value)}
+          disabled={saving}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            fontSize: "14px",
+          }}
+        />
+
+        <small
+          style={{
+            display: "block",
+            marginTop: "6px",
+            color: "#666",
+          }}
+        >
+          Time is shown and edited in Sri Lanka time.
+        </small>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          gap: "10px",
+          justifyContent: "flex-end",
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => router.back()}
+          disabled={saving}
+          style={{
+            padding: "10px 16px",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            background: "#fff",
+            cursor: "pointer",
+          }}
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          className="primary-btn"
+          disabled={saving}
+        >
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
+    </form>
   );
 }
