@@ -109,6 +109,33 @@ function formatStatus(status: string) {
   }
 }
 
+function formatGameType(type: string) {
+  switch (type) {
+    case "spin":
+      return "Spin & Win";
+
+    case "scratch":
+      return "Scratch Card";
+
+    case "pick-card":
+      return "Pick a Card";
+
+    case "slot":
+      return "Slot";
+
+    case "quiz":
+      return "Quiz";
+
+    case "lucky-draw":
+      return "Lucky Draw";
+
+    default:
+      return type
+        .replace(/[_-]/g, " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
+}
+
 export default function CampaignEditForm({
   campaign,
   campaignGames,
@@ -209,122 +236,66 @@ export default function CampaignEditForm({
   const automaticMode = schedulingMode === "automatic";
 
   return (
-    <form onSubmit={handleSubmit}>
-      {error && (
-        <div
-          className="error-box"
-          style={{ marginBottom: "16px" }}
-        >
-          {error}
-        </div>
-      )}
-
-      <div style={{ marginBottom: "16px" }}>
-        <label
-          htmlFor="campaign-name"
-          style={{
-            display: "block",
-            marginBottom: "6px",
-            fontWeight: 600,
-          }}
-        >
-          Campaign Name
-        </label>
-
-        <input
-          id="campaign-name"
-          type="text"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          disabled={saving}
-          style={{
-            width: "100%",
-            padding: "10px 12px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            fontSize: "14px",
-          }}
-        />
-      </div>
-
-      <div style={{ marginBottom: "16px" }}>
-        <label
-          htmlFor="campaign-scheduling-mode"
-          style={{
-            display: "block",
-            marginBottom: "6px",
-            fontWeight: 600,
-          }}
-        >
-          Scheduling Mode
-        </label>
-
-        <select
-          id="campaign-scheduling-mode"
-          value={schedulingMode}
-          onChange={(event) =>
-            setSchedulingMode(
-              event.target.value as
-                | "manual"
-                | "automatic"
-            )
-          }
-          disabled={saving}
-          style={{
-            width: "100%",
-            padding: "10px 12px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            fontSize: "14px",
-            background: "#fff",
-          }}
-        >
-          <option value="automatic">Automatic</option>
-          <option value="manual">Manual</option>
-        </select>
-
-        <small
-          style={{
-            display: "block",
-            marginTop: "6px",
-            color: "#666",
-          }}
-        >
-          Automatic mode controls the campaign status using
-          the start and end dates.
-        </small>
-      </div>
-
-      <div style={{ marginBottom: "16px" }}>
-        <label
-          style={{
-            display: "block",
-            marginBottom: "6px",
-            fontWeight: 600,
-          }}
-        >
-          Current Status
-        </label>
-
-        {automaticMode ? (
+    <div>
+      <form onSubmit={handleSubmit}>
+        {error && (
           <div
+            className="error-box"
+            style={{ marginBottom: "16px" }}
+          >
+            {error}
+          </div>
+        )}
+
+        <div style={{ marginBottom: "16px" }}>
+          <label
+            htmlFor="campaign-name"
+            style={{
+              display: "block",
+              marginBottom: "6px",
+              fontWeight: 600,
+            }}
+          >
+            Campaign Name
+          </label>
+
+          <input
+            id="campaign-name"
+            type="text"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            disabled={saving}
             style={{
               width: "100%",
               padding: "10px 12px",
               border: "1px solid #ddd",
               borderRadius: "8px",
               fontSize: "14px",
-              background: "#f7f7f7",
-              color: "#555",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: "16px" }}>
+          <label
+            htmlFor="campaign-scheduling-mode"
+            style={{
+              display: "block",
+              marginBottom: "6px",
+              fontWeight: 600,
             }}
           >
-            {formatStatus(status)}
-          </div>
-        ) : (
+            Scheduling Mode
+          </label>
+
           <select
-            value={status}
+            id="campaign-scheduling-mode"
+            value={schedulingMode}
             onChange={(event) =>
-              setStatus(event.target.value)
+              setSchedulingMode(
+                event.target.value as
+                  | "manual"
+                  | "automatic"
+              )
             }
             disabled={saving}
             style={{
@@ -336,15 +307,10 @@ export default function CampaignEditForm({
               background: "#fff",
             }}
           >
-            <option value="draft">Draft</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="active">Active</option>
-            <option value="ended">Ended</option>
-            <option value="archived">Archived</option>
+            <option value="automatic">Automatic</option>
+            <option value="manual">Manual</option>
           </select>
-        )}
 
-        {automaticMode && (
           <small
             style={{
               display: "block",
@@ -352,122 +318,441 @@ export default function CampaignEditForm({
               color: "#666",
             }}
           >
-            Status is managed automatically from the
-            campaign schedule.
+            Automatic mode controls the campaign status using
+            the start and end dates.
           </small>
-        )}
-      </div>
+        </div>
 
-      <div style={{ marginBottom: "16px" }}>
-        <label
-          htmlFor="campaign-start"
+        <div style={{ marginBottom: "16px" }}>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "6px",
+              fontWeight: 600,
+            }}
+          >
+            Current Status
+          </label>
+
+          {automaticMode ? (
+            <div
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+                fontSize: "14px",
+                background: "#f7f7f7",
+                color: "#555",
+              }}
+            >
+              {formatStatus(status)}
+            </div>
+          ) : (
+            <select
+              value={status}
+              onChange={(event) =>
+                setStatus(event.target.value)
+              }
+              disabled={saving}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+                fontSize: "14px",
+                background: "#fff",
+              }}
+            >
+              <option value="draft">Draft</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="active">Active</option>
+              <option value="ended">Ended</option>
+              <option value="archived">Archived</option>
+            </select>
+          )}
+
+          {automaticMode && (
+            <small
+              style={{
+                display: "block",
+                marginTop: "6px",
+                color: "#666",
+              }}
+            >
+              Status is managed automatically from the
+              campaign schedule.
+            </small>
+          )}
+        </div>
+
+        <div style={{ marginBottom: "16px" }}>
+          <label
+            htmlFor="campaign-start"
+            style={{
+              display: "block",
+              marginBottom: "6px",
+              fontWeight: 600,
+            }}
+          >
+            Start Date & Time
+          </label>
+
+          <input
+            id="campaign-start"
+            type="datetime-local"
+            value={startsAt}
+            onChange={(event) =>
+              setStartsAt(event.target.value)
+            }
+            disabled={saving}
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              border: "1px solid #ddd",
+              borderRadius: "8px",
+              fontSize: "14px",
+            }}
+          />
+
+          <small
+            style={{
+              display: "block",
+              marginTop: "6px",
+              color: "#666",
+            }}
+          >
+            Time is shown and edited in Sri Lanka time.
+          </small>
+        </div>
+
+        <div style={{ marginBottom: "20px" }}>
+          <label
+            htmlFor="campaign-end"
+            style={{
+              display: "block",
+              marginBottom: "6px",
+              fontWeight: 600,
+            }}
+          >
+            End Date & Time
+          </label>
+
+          <input
+            id="campaign-end"
+            type="datetime-local"
+            value={endsAt}
+            onChange={(event) =>
+              setEndsAt(event.target.value)
+            }
+            disabled={saving}
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              border: "1px solid #ddd",
+              borderRadius: "8px",
+              fontSize: "14px",
+            }}
+          />
+
+          <small
+            style={{
+              display: "block",
+              marginTop: "6px",
+              color: "#666",
+            }}
+          >
+            Time is shown and edited in Sri Lanka time.
+          </small>
+        </div>
+
+        <div
           style={{
-            display: "block",
-            marginBottom: "6px",
-            fontWeight: 600,
+            display: "flex",
+            gap: "10px",
+            justifyContent: "flex-end",
           }}
         >
-          Start Date & Time
-        </label>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            disabled={saving}
+            style={{
+              padding: "10px 16px",
+              border: "1px solid #ddd",
+              borderRadius: "8px",
+              background: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            Cancel
+          </button>
 
-        <input
-          id="campaign-start"
-          type="datetime-local"
-          value={startsAt}
-          onChange={(event) =>
-            setStartsAt(event.target.value)
-          }
-          disabled={saving}
-          style={{
-            width: "100%",
-            padding: "10px 12px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            fontSize: "14px",
-          }}
-        />
+          <button
+            type="submit"
+            className="primary-btn"
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </form>
 
-        <small
-          style={{
-            display: "block",
-            marginTop: "6px",
-            color: "#666",
-          }}
-        >
-          Time is shown and edited in Sri Lanka time.
-        </small>
-      </div>
-
-      <div style={{ marginBottom: "20px" }}>
-        <label
-          htmlFor="campaign-end"
-          style={{
-            display: "block",
-            marginBottom: "6px",
-            fontWeight: 600,
-          }}
-        >
-          End Date & Time
-        </label>
-
-        <input
-          id="campaign-end"
-          type="datetime-local"
-          value={endsAt}
-          onChange={(event) =>
-            setEndsAt(event.target.value)
-          }
-          disabled={saving}
-          style={{
-            width: "100%",
-            padding: "10px 12px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            fontSize: "14px",
-          }}
-        />
-
-        <small
-          style={{
-            display: "block",
-            marginTop: "6px",
-            color: "#666",
-          }}
-        >
-          Time is shown and edited in Sri Lanka time.
-        </small>
-      </div>
-
-      <div
+      {/* Campaign Games */}
+      <section
         style={{
-          display: "flex",
-          gap: "10px",
-          justifyContent: "flex-end",
+          marginTop: "32px",
+          paddingTop: "24px",
+          borderTop: "1px solid #e5e5e5",
         }}
       >
-        <button
-          type="button"
-          onClick={() => router.back()}
-          disabled={saving}
+        <div
           style={{
-            padding: "10px 16px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            background: "#fff",
-            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            marginBottom: "16px",
           }}
         >
-          Cancel
-        </button>
+          <div>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: "20px",
+                fontWeight: 700,
+              }}
+            >
+              Games
+            </h2>
 
-        <button
-          type="submit"
-          className="primary-btn"
-          disabled={saving}
-        >
-          {saving ? "Saving..." : "Save Changes"}
-        </button>
-      </div>
-    </form>
+            <p
+              style={{
+                margin: "6px 0 0",
+                color: "#666",
+                fontSize: "14px",
+              }}
+            >
+              Games assigned to this campaign.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              alert("Add Game will be available in the next step.");
+            }}
+            style={{
+              padding: "10px 14px",
+              border: "1px solid #ddd",
+              borderRadius: "8px",
+              background: "#fff",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            + Add Game
+          </button>
+        </div>
+
+        {campaignGames.length === 0 ? (
+          <div
+            style={{
+              padding: "24px",
+              border: "1px dashed #ccc",
+              borderRadius: "10px",
+              textAlign: "center",
+              color: "#666",
+              background: "#fafafa",
+            }}
+          >
+            No games have been added to this campaign yet.
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gap: "12px",
+            }}
+          >
+            {campaignGames.map((campaignGame) => {
+              const game = Array.isArray(campaignGame.games)
+                ? campaignGame.games[0]
+                : campaignGame.games;
+
+              if (!game) {
+                return (
+                  <div
+                    key={campaignGame.id}
+                    style={{
+                      padding: "16px",
+                      border: "1px solid #eee",
+                      borderRadius: "10px",
+                      background: "#fff",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        marginBottom: "4px",
+                      }}
+                    >
+                      Game unavailable
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        color: "#777",
+                      }}
+                    >
+                      The assigned game could not be loaded.
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={campaignGame.id}
+                  style={{
+                    padding: "18px",
+                    border: "1px solid #e5e5e5",
+                    borderRadius: "10px",
+                    background: "#fff",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
+                      gap: "16px",
+                    }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <h3
+                          style={{
+                            margin: 0,
+                            fontSize: "17px",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {game.name}
+                        </h3>
+
+                        <span
+                          style={{
+                            padding: "3px 8px",
+                            borderRadius: "999px",
+                            background: "#f3f3f3",
+                            color: "#555",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {formatGameType(game.type)}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          fontSize: "14px",
+                          color: "#666",
+                        }}
+                      >
+                        Status:{" "}
+                        <strong
+                          style={{
+                            color: "#333",
+                          }}
+                        >
+                          {formatStatus(campaignGame.status)}
+                        </strong>
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: "5px",
+                          fontSize: "14px",
+                          color: "#666",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        Public URL:{" "}
+                        <span
+                          style={{
+                            color: "#333",
+                            fontFamily:
+                              "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                          }}
+                        >
+                          /play/{campaignGame.public_slug}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "8px",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          alert(
+                            "Game configuration will be available in the next step."
+                          );
+                        }}
+                        style={{
+                          padding: "9px 12px",
+                          border: "1px solid #ddd",
+                          borderRadius: "8px",
+                          background: "#fff",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Configure
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          alert(
+                            "Game publishing will be available in a later step."
+                          );
+                        }}
+                        style={{
+                          padding: "9px 12px",
+                          border: "1px solid #ddd",
+                          borderRadius: "8px",
+                          background: "#fff",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Publish
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
