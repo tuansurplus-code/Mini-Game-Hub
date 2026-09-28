@@ -14,8 +14,31 @@ type Campaign = {
   created_at: string;
 };
 
+type CampaignGame = {
+  id: string;
+  campaign_id: string;
+  game_id: string;
+  public_slug: string;
+  status: string;
+  display_order: number;
+  appearance: Record<string, unknown> | null;
+  rules: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+  games: {
+    id: string;
+    name: string;
+    slug: string;
+    type: string;
+    description: string | null;
+    status: string;
+    default_config: Record<string, unknown> | null;
+  } | null;
+};
+
 type Props = {
   campaign: Campaign;
+  campaignGames: CampaignGame[];
 };
 
 function utcToColomboDateTimeLocal(value: string | null) {
@@ -84,7 +107,10 @@ function formatStatus(status: string) {
   }
 }
 
-export default function CampaignEditForm({ campaign }: Props) {
+export default function CampaignEditForm({
+  campaign,
+  campaignGames,
+}: Props) {
   const router = useRouter();
 
   const [name, setName] = useState(campaign.name);
@@ -121,7 +147,10 @@ export default function CampaignEditForm({ campaign }: Props) {
       const start = new Date(`${startsAt}:00+05:30`);
       const end = new Date(`${endsAt}:00+05:30`);
 
-      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      if (
+        Number.isNaN(start.getTime()) ||
+        Number.isNaN(end.getTime())
+      ) {
         setError("Please enter valid start and end dates.");
         return;
       }
@@ -136,24 +165,33 @@ export default function CampaignEditForm({ campaign }: Props) {
     setError("");
 
     try {
-      const response = await fetch(`/api/admin/campaigns/${campaign.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-          starts_at: colomboDateTimeToUtc(startsAt || null),
-          ends_at: colomboDateTimeToUtc(endsAt || null),
-          status,
-          scheduling_mode: schedulingMode,
-        }),
-      });
+      const response = await fetch(
+        `/api/admin/campaigns/${campaign.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: name.trim(),
+            starts_at: colomboDateTimeToUtc(
+              startsAt || null
+            ),
+            ends_at: colomboDateTimeToUtc(
+              endsAt || null
+            ),
+            status,
+            scheduling_mode: schedulingMode,
+          }),
+        }
+      );
 
       const result = await response.json();
 
       if (!response.ok) {
-        setError(result.error || "Failed to update campaign.");
+        setError(
+          result.error || "Failed to update campaign."
+        );
         setSaving(false);
         return;
       }
@@ -171,7 +209,10 @@ export default function CampaignEditForm({ campaign }: Props) {
   return (
     <form onSubmit={handleSubmit}>
       {error && (
-        <div className="error-box" style={{ marginBottom: "16px" }}>
+        <div
+          className="error-box"
+          style={{ marginBottom: "16px" }}
+        >
           {error}
         </div>
       )}
@@ -221,7 +262,9 @@ export default function CampaignEditForm({ campaign }: Props) {
           value={schedulingMode}
           onChange={(event) =>
             setSchedulingMode(
-              event.target.value as "manual" | "automatic"
+              event.target.value as
+                | "manual"
+                | "automatic"
             )
           }
           disabled={saving}
@@ -245,8 +288,8 @@ export default function CampaignEditForm({ campaign }: Props) {
             color: "#666",
           }}
         >
-          Automatic mode controls the campaign status using the start and end
-          dates.
+          Automatic mode controls the campaign status using
+          the start and end dates.
         </small>
       </div>
 
@@ -278,7 +321,9 @@ export default function CampaignEditForm({ campaign }: Props) {
         ) : (
           <select
             value={status}
-            onChange={(event) => setStatus(event.target.value)}
+            onChange={(event) =>
+              setStatus(event.target.value)
+            }
             disabled={saving}
             style={{
               width: "100%",
@@ -305,7 +350,8 @@ export default function CampaignEditForm({ campaign }: Props) {
               color: "#666",
             }}
           >
-            Status is managed automatically from the campaign schedule.
+            Status is managed automatically from the
+            campaign schedule.
           </small>
         )}
       </div>
@@ -326,7 +372,9 @@ export default function CampaignEditForm({ campaign }: Props) {
           id="campaign-start"
           type="datetime-local"
           value={startsAt}
-          onChange={(event) => setStartsAt(event.target.value)}
+          onChange={(event) =>
+            setStartsAt(event.target.value)
+          }
           disabled={saving}
           style={{
             width: "100%",
@@ -364,7 +412,9 @@ export default function CampaignEditForm({ campaign }: Props) {
           id="campaign-end"
           type="datetime-local"
           value={endsAt}
-          onChange={(event) => setEndsAt(event.target.value)}
+          onChange={(event) =>
+            setEndsAt(event.target.value)
+          }
           disabled={saving}
           style={{
             width: "100%",
