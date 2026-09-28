@@ -10,6 +10,9 @@ export default function CampaignForm() {
   const [name, setName] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
+  const [schedulingMode, setSchedulingMode] = useState<"manual" | "automatic">(
+    "automatic"
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -34,6 +37,7 @@ export default function CampaignForm() {
           name,
           starts_at: startsAt || null,
           ends_at: endsAt || null,
+          scheduling_mode: schedulingMode,
         }),
       });
 
@@ -48,6 +52,7 @@ export default function CampaignForm() {
       setName("");
       setStartsAt("");
       setEndsAt("");
+      setSchedulingMode("automatic");
       setOpen(false);
       setSaving(false);
 
@@ -65,6 +70,7 @@ export default function CampaignForm() {
         onClick={() => {
           setOpen(true);
           setError("");
+          setSchedulingMode("automatic");
         }}
       >
         + New Campaign
@@ -130,6 +136,52 @@ export default function CampaignForm() {
                     fontSize: "14px",
                   }}
                 />
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label
+                  htmlFor="campaign-scheduling-mode"
+                  style={{
+                    display: "block",
+                    marginBottom: "6px",
+                    fontWeight: 600,
+                  }}
+                >
+                  Scheduling Mode
+                </label>
+
+                <select
+                  id="campaign-scheduling-mode"
+                  value={schedulingMode}
+                  onChange={(event) =>
+                    setSchedulingMode(
+                      event.target.value as "manual" | "automatic"
+                    )
+                  }
+                  disabled={saving}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    background: "#fff",
+                  }}
+                >
+                  <option value="automatic">Automatic</option>
+                  <option value="manual">Manual</option>
+                </select>
+
+                <small
+                  style={{
+                    display: "block",
+                    marginTop: "6px",
+                    color: "#666",
+                  }}
+                >
+                  Automatic mode changes the campaign status based on the
+                  start and end dates.
+                </small>
               </div>
 
               <div style={{ marginBottom: "16px" }}>
