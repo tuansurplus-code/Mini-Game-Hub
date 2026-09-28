@@ -25,6 +25,7 @@ export default async function CampaignEditPage({
         name,
         slug,
         status,
+        scheduling_mode,
         starts_at,
         ends_at,
         created_at
@@ -49,7 +50,8 @@ export default async function CampaignEditPage({
           <h1>Edit Campaign</h1>
 
           <p>
-            Update the campaign name, schedule and status.
+            Update the campaign name, scheduling mode,
+            schedule and status.
           </p>
         </div>
       </div>
