@@ -39,6 +39,39 @@ export default async function CampaignEditPage({
     notFound();
   }
 
+  const { data: campaignGames, error: campaignGamesError } =
+    await supabase
+      .from("campaign_games")
+      .select(
+        `
+          id,
+          campaign_id,
+          game_id,
+          public_slug,
+          status,
+          display_order,
+          appearance,
+          rules,
+          created_at,
+          updated_at,
+          games (
+            id,
+            name,
+            slug,
+            type,
+            description,
+            status,
+            default_config
+          )
+        `
+      )
+      .eq("campaign_id", id)
+      .order("display_order", { ascending: true });
+
+  if (campaignGamesError) {
+    throw new Error("Failed to load campaign games.");
+  }
+
   return (
     <>
       <div className="admin-header">
@@ -56,7 +89,10 @@ export default async function CampaignEditPage({
         </div>
       </div>
 
-      <CampaignEditForm campaign={campaign} />
+      <CampaignEditForm
+        campaign={campaign}
+        campaignGames={campaignGames ?? []}
+      />
     </>
   );
 }
