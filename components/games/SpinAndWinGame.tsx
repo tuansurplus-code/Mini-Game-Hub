@@ -251,10 +251,21 @@ export default function SpinAndWinGame({
       availablePrizes.length
     );
 
-  const prizeLabelWidth =
-    getPrizeLabelWidth(
-      availablePrizes.length
-    );
+  function getPrizeLabelWidth(prizeCount: number): string {
+  if (prizeCount <= 3) {
+    return "30%";
+  }
+
+  if (prizeCount <= 5) {
+    return "27%";
+  }
+
+  if (prizeCount <= 7) {
+    return "24%";
+  }
+
+  return "21%";
+}
 
   return (
     <main
