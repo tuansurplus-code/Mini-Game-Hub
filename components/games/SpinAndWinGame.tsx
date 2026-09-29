@@ -347,22 +347,23 @@ export default function SpinAndWinGame({
                   boxSizing: "border-box",
                 }}
               >
-               {/* Prize labels */}
-
-{availablePrizes.map((prize, index) => {
+              {availablePrizes.map((prize, index) => {
   const centerAngle =
     index * segmentAngle +
     segmentAngle / 2;
 
-  /*
-   * Text starts near the wheel center and
-   * extends outward along the segment.
-   *
-   * CSS 0deg points to the right, while our
-   * wheel segment 0deg starts at the top.
-   * Therefore we subtract 90deg.
-   */
+  // CSS 0deg points right.
+  // The wheel's 0deg starts at the top.
   const textAngle = centerAngle - 90;
+
+  const labelWidth =
+    availablePrizes.length <= 3
+      ? "38%"
+      : availablePrizes.length <= 5
+      ? "34%"
+      : availablePrizes.length <= 7
+      ? "30%"
+      : "26%";
 
   return (
     <div
@@ -371,13 +372,13 @@ export default function SpinAndWinGame({
         position: "absolute",
         top: "50%",
         left: "50%",
-        width: "42%",
-        height: "24px",
-        transform: `rotate(${textAngle}deg)`,
+        width: labelWidth,
+        minHeight: "30px",
+        transform: `translateY(-50%) rotate(${textAngle}deg)`,
         transformOrigin: "0 50%",
         display: "flex",
         alignItems: "center",
-        justifyContent: "flex-start",
+        justifyContent: "center",
         pointerEvents: "none",
         zIndex: 2,
       }}
@@ -385,24 +386,15 @@ export default function SpinAndWinGame({
       <div
         style={{
           width: "100%",
-          paddingLeft:
-            availablePrizes.length <= 3
-              ? "18px"
-              : availablePrizes.length <= 5
-              ? "16px"
-              : "12px",
-          paddingRight: "4px",
-          boxSizing: "border-box",
-          textAlign: "left",
+          textAlign: "center",
           color: "#ffffff",
           fontSize: prizeFontSize,
           fontWeight: 900,
-          lineHeight: 1.1,
-          whiteSpace: "normal",
-          overflowWrap: "anywhere",
-          wordBreak: "break-word",
+          lineHeight: 1.15,
           textShadow:
             "0 2px 3px rgba(0,0,0,0.55)",
+          overflowWrap: "anywhere",
+          wordBreak: "break-word",
         }}
       >
         {prize.name}
@@ -410,7 +402,6 @@ export default function SpinAndWinGame({
     </div>
   );
 })}
-
                 {/* Center button */}
 
                 <div
