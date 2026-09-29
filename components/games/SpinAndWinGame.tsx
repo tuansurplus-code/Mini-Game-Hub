@@ -99,7 +99,8 @@ export default function SpinAndWinGame({
   const [mobile, setMobile] = useState("");
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
-  const [result, setResult] = useState<SpinResult | null>(null);
+  const [result, setResult] =
+    useState<SpinResult | null>(null);
   const [error, setError] = useState("");
 
   const availablePrizes = useMemo(
@@ -116,7 +117,8 @@ export default function SpinAndWinGame({
     setError("");
     setResult(null);
 
-    const normalizedMobile = normalizeMobile(mobile);
+    const normalizedMobile =
+      normalizeMobile(mobile);
 
     if (!normalizedMobile) {
       setError(
@@ -126,38 +128,46 @@ export default function SpinAndWinGame({
     }
 
     if (availablePrizes.length === 0) {
-      setError("No prizes are currently available.");
+      setError(
+        "No prizes are currently available."
+      );
       return;
     }
 
     setSpinning(true);
 
     try {
-      const response = await fetch(`/api/play/${slug}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mobile,
-        }),
-      });
+      const response = await fetch(
+        `/api/play/${slug}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            mobile,
+          }),
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
         setError(
-          data.error || "Unable to play the game."
+          data.error ||
+            "Unable to play the game."
         );
         setSpinning(false);
         return;
       }
 
-      const spinResult = data.result as SpinResult;
+      const spinResult =
+        data.result as SpinResult;
 
       const winningPrizeIndex =
         availablePrizes.findIndex(
-          (prize) => prize.id === spinResult.prize_id
+          (prize) =>
+            prize.id === spinResult.prize_id
         );
 
       const safePrizeIndex =
@@ -174,14 +184,18 @@ export default function SpinAndWinGame({
         safePrizeIndex * segmentAngle -
         segmentAngle / 2;
 
-      const currentRotation = rotation % 360;
+      const currentRotation =
+        rotation % 360;
 
       const normalizedTarget =
-        ((targetAngle % 360) + 360) % 360;
+        ((targetAngle % 360) + 360) %
+        360;
 
       const additionalRotation =
         360 * 6 +
-        ((normalizedTarget - currentRotation + 360) %
+        ((normalizedTarget -
+          currentRotation +
+          360) %
           360);
 
       setRotation(
@@ -204,8 +218,10 @@ export default function SpinAndWinGame({
     availablePrizes.length > 0
       ? `conic-gradient(${availablePrizes
           .map((_, index) => {
-            const start = index * segmentAngle;
-            const end = (index + 1) * segmentAngle;
+            const start =
+              index * segmentAngle;
+            const end =
+              (index + 1) * segmentAngle;
 
             return `${getSegmentColor(
               index
@@ -214,9 +230,10 @@ export default function SpinAndWinGame({
           .join(", ")})`
       : "#e5e7eb";
 
-  const prizeFontSize = getPrizeFontSize(
-    availablePrizes.length
-  );
+  const prizeFontSize =
+    getPrizeFontSize(
+      availablePrizes.length
+    );
 
   return (
     <main
@@ -245,8 +262,6 @@ export default function SpinAndWinGame({
             textAlign: "center",
           }}
         >
-          {/* Header */}
-
           <div
             style={{
               fontSize: "34px",
@@ -256,7 +271,8 @@ export default function SpinAndWinGame({
               marginBottom: "10px",
             }}
           >
-            {appearance.title || "SPIN & WIN"}
+            {appearance.title ||
+              "SPIN & WIN"}
           </div>
 
           <div
@@ -282,7 +298,6 @@ export default function SpinAndWinGame({
           </div>
 
           {/* Wheel */}
-
           <div
             style={{
               position: "relative",
@@ -292,7 +307,6 @@ export default function SpinAndWinGame({
             }}
           >
             {/* Pointer */}
-
             <div
               style={{
                 position: "absolute",
@@ -314,8 +328,7 @@ export default function SpinAndWinGame({
               }}
             />
 
-            {/* Wheel outer frame */}
-
+            {/* Outer wheel */}
             <div
               style={{
                 width: "100%",
@@ -328,14 +341,14 @@ export default function SpinAndWinGame({
                   "0 12px 35px rgba(0,0,0,0.22)",
               }}
             >
-              {/* Actual wheel */}
-
+              {/* Spinning wheel */}
               <div
                 style={{
                   width: "100%",
                   height: "100%",
                   borderRadius: "50%",
-                  background: wheelBackground,
+                  background:
+                    wheelBackground,
                   position: "relative",
                   overflow: "hidden",
                   transform: `rotate(${rotation}deg)`,
@@ -347,78 +360,100 @@ export default function SpinAndWinGame({
                   boxSizing: "border-box",
                 }}
               >
-              {availablePrizes.map((prize, index) => {
-  const centerAngle =
-    index * segmentAngle +
-    segmentAngle / 2;
+                {/* Radial prize labels */}
+                {availablePrizes.map(
+                  (prize, index) => {
+                    const centerAngle =
+                      index * segmentAngle +
+                      segmentAngle / 2;
 
-  // CSS 0deg points right.
-  // The wheel's 0deg starts at the top.
-  const textAngle = centerAngle - 90;
+                    /*
+                     * CSS 0deg points right.
+                     * The wheel's 0deg starts at top.
+                     * Therefore subtract 90deg.
+                     */
+                    const textAngle =
+                      centerAngle - 90;
 
-  const labelWidth =
-    availablePrizes.length <= 3
-      ? "38%"
-      : availablePrizes.length <= 5
-      ? "34%"
-      : availablePrizes.length <= 7
-      ? "30%"
-      : "26%";
+                    const labelWidth =
+                      availablePrizes.length <= 3
+                        ? "38%"
+                        : availablePrizes.length <= 5
+                        ? "34%"
+                        : availablePrizes.length <= 7
+                        ? "30%"
+                        : "26%";
 
-  return (
-    <div
-      key={prize.id}
-      style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        width: labelWidth,
-        minHeight: "30px",
-        transform: `translateY(-50%) rotate(${textAngle}deg)`,
-        transformOrigin: "0 50%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        pointerEvents: "none",
-        zIndex: 2,
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          textAlign: "center",
-          color: "#ffffff",
-          fontSize: prizeFontSize,
-          fontWeight: 900,
-          lineHeight: 1.15,
-          textShadow:
-            "0 2px 3px rgba(0,0,0,0.55)",
-          overflowWrap: "anywhere",
-          wordBreak: "break-word",
-        }}
-      >
-        {prize.name}
-      </div>
-    </div>
-  );
-})}
-                {/* Center button */}
+                    return (
+                      <div
+                        key={prize.id}
+                        style={{
+                          position:
+                            "absolute",
+                          top: "50%",
+                          left: "55%",
+                          width:
+                            labelWidth,
+                          minHeight:
+                            "30px",
+                          transform: `translateY(-50%) rotate(${textAngle}deg)`,
+                          transformOrigin:
+                            "0 50%",
+                          display: "flex",
+                          alignItems:
+                            "center",
+                          justifyContent:
+                            "center",
+                          pointerEvents:
+                            "none",
+                          zIndex: 2,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "100%",
+                            textAlign:
+                              "center",
+                            color:
+                              "#ffffff",
+                            fontSize:
+                              prizeFontSize,
+                            fontWeight: 900,
+                            lineHeight:
+                              1.15,
+                            textShadow:
+                              "0 2px 3px rgba(0,0,0,0.55)",
+                            overflowWrap:
+                              "anywhere",
+                            wordBreak:
+                              "break-word",
+                          }}
+                        >
+                          {prize.name}
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
 
+                {/* Center circle */}
                 <div
                   style={{
-                    position: "absolute",
+                    position:
+                      "absolute",
                     top: "50%",
                     left: "50%",
-                    width: "70px",
-                    height: "70px",
+                    width: "50px",
+                    height: "50px",
                     transform:
                       "translate(-50%, -50%)",
-                    borderRadius: "50%",
+                    borderRadius:
+                      "50%",
                     background:
                       appearance.button_color ||
                       "#e31b23",
                     border:
-                      "6px solid #ffffff",
+                      "5px solid #ffffff",
                     boxShadow:
                       "0 5px 15px rgba(0,0,0,0.30)",
                     zIndex: 5,
@@ -428,8 +463,7 @@ export default function SpinAndWinGame({
             </div>
           </div>
 
-          {/* Mobile number */}
-
+          {/* Mobile input and spin button */}
           <div
             style={{
               maxWidth: "420px",
@@ -458,7 +492,9 @@ export default function SpinAndWinGame({
               placeholder="07XXXXXXXX"
               value={mobile}
               onChange={(event) =>
-                setMobile(event.target.value)
+                setMobile(
+                  event.target.value
+                )
               }
               disabled={spinning}
               style={{
@@ -467,11 +503,15 @@ export default function SpinAndWinGame({
                 border:
                   "1px solid #d1d5db",
                 borderRadius: "12px",
-                padding: "14px 16px",
+                padding:
+                  "14px 16px",
                 fontSize: "16px",
                 outline: "none",
-                marginBottom: "12px",
-                opacity: spinning ? 0.6 : 1,
+                marginBottom:
+                  "12px",
+                opacity: spinning
+                  ? 0.6
+                  : 1,
               }}
             />
 
@@ -479,14 +519,19 @@ export default function SpinAndWinGame({
               <div
                 style={{
                   color: "#b91c1c",
-                  background: "#fef2f2",
+                  background:
+                    "#fef2f2",
                   border:
                     "1px solid #fecaca",
-                  borderRadius: "10px",
-                  padding: "11px 12px",
+                  borderRadius:
+                    "10px",
+                  padding:
+                    "11px 12px",
                   fontSize: "14px",
-                  marginBottom: "12px",
-                  textAlign: "left",
+                  marginBottom:
+                    "12px",
+                  textAlign:
+                    "left",
                 }}
               >
                 {error}
@@ -503,8 +548,10 @@ export default function SpinAndWinGame({
               style={{
                 width: "100%",
                 border: "none",
-                borderRadius: "12px",
-                padding: "15px 20px",
+                borderRadius:
+                  "12px",
+                padding:
+                  "15px 20px",
                 fontSize: "17px",
                 fontWeight: 800,
                 cursor:
@@ -545,14 +592,15 @@ export default function SpinAndWinGame({
           </div>
 
           {/* Result */}
-
           {result && (
             <div
               style={{
                 marginTop: "28px",
                 borderRadius: "18px",
-                padding: "24px 18px",
-                background: "#f9fafb",
+                padding:
+                  "24px 18px",
+                background:
+                  "#f9fafb",
                 border:
                   "1px solid #e5e7eb",
               }}
@@ -562,7 +610,8 @@ export default function SpinAndWinGame({
                   fontSize: "14px",
                   fontWeight: 700,
                   color: "#6b7280",
-                  marginBottom: "6px",
+                  marginBottom:
+                    "6px",
                 }}
               >
                 {result.replayed
@@ -572,7 +621,9 @@ export default function SpinAndWinGame({
 
               {result.prize_image_url && (
                 <img
-                  src={result.prize_image_url}
+                  src={
+                    result.prize_image_url
+                  }
                   alt={
                     result.prize_name ||
                     "Prize"
@@ -580,11 +631,13 @@ export default function SpinAndWinGame({
                   style={{
                     width: "100px",
                     height: "100px",
-                    objectFit: "contain",
+                    objectFit:
+                      "contain",
                     margin:
                       "8px auto 12px",
                     display: "block",
-                    borderRadius: "12px",
+                    borderRadius:
+                      "12px",
                   }}
                 />
               )}
@@ -594,7 +647,8 @@ export default function SpinAndWinGame({
                   fontSize: "28px",
                   fontWeight: 900,
                   color: "#111827",
-                  marginBottom: "8px",
+                  marginBottom:
+                    "8px",
                 }}
               >
                 {result.prize_name ||
@@ -606,20 +660,25 @@ export default function SpinAndWinGame({
                   style={{
                     fontSize: "15px",
                     color: "#4b5563",
-                    marginBottom: "18px",
+                    marginBottom:
+                      "18px",
                   }}
                 >
-                  {result.prize_description}
+                  {
+                    result.prize_description
+                  }
                 </div>
               )}
 
               {result.coupon_code && (
                 <div
                   style={{
-                    background: "#ffffff",
+                    background:
+                      "#ffffff",
                     border:
                       "2px dashed #d1d5db",
-                    borderRadius: "12px",
+                    borderRadius:
+                      "12px",
                     padding: "14px",
                   }}
                 >
@@ -627,8 +686,10 @@ export default function SpinAndWinGame({
                     style={{
                       fontSize: "12px",
                       fontWeight: 700,
-                      color: "#6b7280",
-                      marginBottom: "5px",
+                      color:
+                        "#6b7280",
+                      marginBottom:
+                        "5px",
                     }}
                   >
                     YOUR COUPON CODE
@@ -638,13 +699,16 @@ export default function SpinAndWinGame({
                     style={{
                       fontSize: "22px",
                       fontWeight: 900,
-                      letterSpacing: "1px",
+                      letterSpacing:
+                        "1px",
                       color:
                         appearance.button_color ||
                         "#e31b23",
                     }}
                   >
-                    {result.coupon_code}
+                    {
+                      result.coupon_code
+                    }
                   </div>
                 </div>
               )}
