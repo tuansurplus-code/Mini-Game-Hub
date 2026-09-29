@@ -92,18 +92,18 @@ function getPrizeFontSize(prizeCount: number): string {
 
 function getPrizeLabelWidth(prizeCount: number): string {
   if (prizeCount <= 3) {
-    return "32%";
+    return "30%";
   }
 
   if (prizeCount <= 5) {
-    return "29%";
+    return "27%";
   }
 
   if (prizeCount <= 7) {
-    return "26%";
+    return "24%";
   }
 
-  return "23%";
+  return "21%";
 }
 
 export default function SpinAndWinGame({
@@ -191,10 +191,6 @@ export default function SpinAndWinGame({
           ? winningPrizeIndex
           : 0;
 
-      /*
-       * The pointer is at the top of the wheel.
-       * Each prize occupies one equal segment.
-       */
       const targetAngle =
         360 -
         safePrizeIndex * segmentAngle -
@@ -251,22 +247,6 @@ export default function SpinAndWinGame({
       availablePrizes.length
     );
 
-  function getPrizeLabelWidth(prizeCount: number): string {
-  if (prizeCount <= 3) {
-    return "30%";
-  }
-
-  if (prizeCount <= 5) {
-    return "27%";
-  }
-
-  if (prizeCount <= 7) {
-    return "24%";
-  }
-
-  return "21%";
-}
-
   return (
     <main
       style={{
@@ -294,7 +274,6 @@ export default function SpinAndWinGame({
             textAlign: "center",
           }}
         >
-          {/* Title */}
           <div
             style={{
               fontSize: "34px",
@@ -308,7 +287,6 @@ export default function SpinAndWinGame({
               "SPIN & WIN"}
           </div>
 
-          {/* Subtitle */}
           <div
             style={{
               fontSize: "16px",
@@ -320,7 +298,6 @@ export default function SpinAndWinGame({
               "Spin daily and win exciting rewards!"}
           </div>
 
-          {/* Game name */}
           <div
             style={{
               fontSize: "14px",
@@ -332,7 +309,6 @@ export default function SpinAndWinGame({
             {gameName}
           </div>
 
-          {/* Wheel */}
           <div
             style={{
               position: "relative",
@@ -341,7 +317,6 @@ export default function SpinAndWinGame({
               margin: "0 auto 30px",
             }}
           >
-            {/* Pointer */}
             <div
               style={{
                 position: "absolute",
@@ -363,7 +338,6 @@ export default function SpinAndWinGame({
               }}
             />
 
-            {/* Outer wheel frame */}
             <div
               style={{
                 width: "100%",
@@ -376,7 +350,6 @@ export default function SpinAndWinGame({
                   "0 12px 35px rgba(0,0,0,0.22)",
               }}
             >
-              {/* Spinning wheel */}
               <div
                 style={{
                   width: "100%",
@@ -395,23 +368,12 @@ export default function SpinAndWinGame({
                   boxSizing: "border-box",
                 }}
               >
-                {/* Prize labels */}
                 {availablePrizes.map(
                   (prize, index) => {
-                    /*
-                     * Center of the prize segment.
-                     */
                     const centerAngle =
                       index * segmentAngle +
                       segmentAngle / 2;
 
-                    /*
-                     * CSS 0deg points to the right.
-                     * Wheel 0deg starts at the top.
-                     *
-                     * Subtracting 90deg aligns the
-                     * text with the wheel segment.
-                     */
                     const textAngle =
                       centerAngle - 90;
 
@@ -421,47 +383,23 @@ export default function SpinAndWinGame({
                         style={{
                           position:
                             "absolute",
-
-                          /*
-                           * Start from the center
-                           * of the wheel.
-                           */
                           top: "50%",
                           left: "60%",
-
-                          /*
-                           * This is the radial
-                           * distance occupied by
-                           * the prize text.
-                           */
                           width:
-                            getPrizeLabelWidth,
-
+                            getPrizeLabelWidth(
+                              availablePrizes.length
+                            ),
                           height: "36px",
-
-                          /*
-                           * Move the whole label
-                           * outward from the center
-                           * before rotating it.
-                           */
                           transform: `translateY(-50%) rotate(${textAngle}deg)`,
-
-                          /*
-                           * Rotation happens from
-                           * the inner/center side.
-                           */
                           transformOrigin:
                             "0 50%",
-
                           display: "flex",
                           alignItems:
                             "center",
                           justifyContent:
                             "center",
-
                           pointerEvents:
                             "none",
-
                           zIndex: 2,
                         }}
                       >
@@ -477,24 +415,15 @@ export default function SpinAndWinGame({
                             fontWeight: 900,
                             lineHeight:
                               1.1,
-
-                            /*
-                             * Keep the prize name
-                             * readable while following
-                             * the radial direction.
-                             */
                             whiteSpace:
                               availablePrizes.length <=
                               5
                                 ? "nowrap"
                                 : "normal",
-
                             overflowWrap:
                               "anywhere",
-
                             wordBreak:
                               "break-word",
-
                             textShadow:
                               "0 2px 3px rgba(0,0,0,0.55)",
                           }}
@@ -506,36 +435,25 @@ export default function SpinAndWinGame({
                   }
                 )}
 
-                {/* Center circle */}
                 <div
                   style={{
                     position:
                       "absolute",
                     top: "50%",
                     left: "50%",
-
-                    /*
-                     * Reduced center circle.
-                     */
                     width: "50px",
                     height: "50px",
-
                     transform:
                       "translate(-50%, -50%)",
-
                     borderRadius:
                       "50%",
-
                     background:
                       appearance.button_color ||
                       "#e31b23",
-
                     border:
                       "5px solid #ffffff",
-
                     boxShadow:
                       "0 5px 15px rgba(0,0,0,0.30)",
-
                     zIndex: 5,
                   }}
                 />
@@ -543,7 +461,6 @@ export default function SpinAndWinGame({
             </div>
           </div>
 
-          {/* Mobile input and spin button */}
           <div
             style={{
               maxWidth: "420px",
@@ -597,7 +514,6 @@ export default function SpinAndWinGame({
               }}
             />
 
-            {/* Error */}
             {error && (
               <div
                 style={{
@@ -621,7 +537,6 @@ export default function SpinAndWinGame({
               </div>
             )}
 
-            {/* Spin button */}
             <button
               type="button"
               onClick={handleSpin}
@@ -675,7 +590,6 @@ export default function SpinAndWinGame({
             </div>
           </div>
 
-          {/* Result */}
           {result && (
             <div
               style={{
