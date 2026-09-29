@@ -109,6 +109,9 @@ function formatStatus(status: string) {
     case "archived":
       return "Archived";
 
+    case "published":
+      return "Published";
+
     default:
       return status
         .replace(/[_-]/g, " ")
@@ -179,6 +182,10 @@ export default function CampaignEditForm({
   const [loadingGames, setLoadingGames] = useState(false);
   const [addingGame, setAddingGame] = useState(false);
   const [gameError, setGameError] = useState("");
+
+  const [publishingGameId, setPublishingGameId] =
+    useState<string | null>(null);
+  const [publishError, setPublishError] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -354,6 +361,61 @@ export default function CampaignEditForm({
         "Unable to add game to campaign."
       );
       setAddingGame(false);
+    }
+  }
+
+  async function handlePublishGame(
+    campaignGame: CampaignGame
+  ) {
+    if (campaignGame.status === "published") {
+      return;
+    }
+
+    const game = Array.isArray(campaignGame.games)
+      ? campaignGame.games[0]
+      : campaignGame.games;
+
+    const confirmed = window.confirm(
+      `Publish "${game?.name ?? "this game"}" to this campaign?\n\nThe game will become publicly available when the campaign is active and within its schedule.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setPublishingGameId(campaignGame.id);
+    setPublishError("");
+
+    try {
+      const response = await fetch(
+        `/api/admin/campaign-games/${campaignGame.id}/publish`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setPublishError(
+          result.error || "Failed to publish game."
+        );
+        setPublishingGameId(null);
+        return;
+      }
+
+      setPublishingGameId(null);
+      setPublishError("");
+
+      router.refresh();
+    } catch {
+      setPublishError(
+        "Unable to publish game."
+      );
+      setPublishingGameId(null);
     }
   }
 
@@ -678,6 +740,15 @@ export default function CampaignEditForm({
           </button>
         </div>
 
+        {publishError && (
+          <div
+            className="error-box"
+            style={{ marginBottom: "16px" }}
+          >
+            {publishError}
+          </div>
+        )}
+
         {campaignGames.length === 0 ? (
           <div
             style={{
@@ -734,6 +805,12 @@ export default function CampaignEditForm({
                   </div>
                 );
               }
+
+              const isPublished =
+                campaignGame.status === "published";
+
+              const isPublishing =
+                publishingGameId === campaignGame.id;
 
               return (
                 <div
@@ -852,21 +929,36 @@ export default function CampaignEditForm({
 
                       <button
                         type="button"
-                        onClick={() => {
-                          alert(
-                            "Game publishing will be available in a later step."
-                          );
-                        }}
+                        onClick={() =>
+                          handlePublishGame(campaignGame)
+                        }
+                        disabled={
+                          isPublished ||
+                          publishingGameId !== null
+                        }
                         style={{
                           padding: "9px 12px",
                           border: "1px solid #ddd",
                           borderRadius: "8px",
-                          background: "#fff",
-                          cursor: "pointer",
+                          background: isPublished
+                            ? "#f3f3f3"
+                            : "#fff",
+                          color: isPublished
+                            ? "#777"
+                            : "#222",
+                          cursor:
+                            isPublished ||
+                            publishingGameId !== null
+                              ? "default"
+                              : "pointer",
                           fontWeight: 600,
                         }}
                       >
-                        Publish
+                        {isPublishing
+                          ? "Publishing..."
+                          : isPublished
+                            ? "Published"
+                            : "Publish"}
                       </button>
                     </div>
                   </div>
