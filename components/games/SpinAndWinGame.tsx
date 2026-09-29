@@ -416,7 +416,7 @@ export default function SpinAndWinGame({
                            * of the wheel.
                            */
                           top: "50%",
-                          left: "50%",
+                          left: "60%",
 
                           /*
                            * This is the radial
@@ -433,7 +433,7 @@ export default function SpinAndWinGame({
                            * outward from the center
                            * before rotating it.
                            */
-                          transform: `translateX(12%) translateY(-50%) rotate(${textAngle}deg)`,
+                          transform: `translateY(-50%) rotate(${textAngle}deg)`,
 
                           /*
                            * Rotation happens from
