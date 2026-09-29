@@ -435,7 +435,7 @@ export default function SpinAndWinGame({
                            * the prize text.
                            */
                           width:
-                            prizeLabelWidth,
+                            getPrizeLabelWidth,
 
                           height: "36px",
 
