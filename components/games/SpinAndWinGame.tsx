@@ -347,67 +347,69 @@ export default function SpinAndWinGame({
                   boxSizing: "border-box",
                 }}
               >
-                {/* Prize labels */}
+               {/* Prize labels */}
 
-                {availablePrizes.map(
-                  (prize, index) => {
-                    const centerAngle =
-                      index * segmentAngle +
-                      segmentAngle / 2;
+{availablePrizes.map((prize, index) => {
+  const centerAngle =
+    index * segmentAngle +
+    segmentAngle / 2;
 
-                    return (
-                      <div
-                        key={prize.id}
-                        style={{
-                          position: "absolute",
-                          top: "7%",
-                          left: "50%",
-                          width:
-                            availablePrizes.length <=
-                            3
-                              ? "34%"
-                              : availablePrizes.length <=
-                                5
-                              ? "31%"
-                              : "27%",
-                          transform: `translateX(-50%) rotate(${centerAngle}deg)`,
-                          transformOrigin:
-                            "50% 93%",
-                          height: "43%",
-                          display: "flex",
-                          justifyContent:
-                            "center",
-                          alignItems:
-                            "flex-start",
-                          pointerEvents:
-                            "none",
-                          zIndex: 2,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "100%",
-                            textAlign: "center",
-                            color: "#ffffff",
-                            fontSize:
-                              prizeFontSize,
-                            fontWeight: 900,
-                            lineHeight: 1.15,
-                            textShadow:
-                              "0 2px 3px rgba(0,0,0,0.55)",
-                            overflowWrap:
-                              "anywhere",
-                            wordBreak:
-                              "break-word",
-                            transform: `rotate(${-centerAngle}deg)`,
-                          }}
-                        >
-                          {prize.name}
-                        </div>
-                      </div>
-                    );
-                  }
-                )}
+  /*
+   * Text starts near the wheel center and
+   * extends outward along the segment.
+   *
+   * CSS 0deg points to the right, while our
+   * wheel segment 0deg starts at the top.
+   * Therefore we subtract 90deg.
+   */
+  const textAngle = centerAngle - 90;
+
+  return (
+    <div
+      key={prize.id}
+      style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        width: "42%",
+        height: "24px",
+        transform: `rotate(${textAngle}deg)`,
+        transformOrigin: "0 50%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        pointerEvents: "none",
+        zIndex: 2,
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          paddingLeft:
+            availablePrizes.length <= 3
+              ? "18px"
+              : availablePrizes.length <= 5
+              ? "16px"
+              : "12px",
+          paddingRight: "4px",
+          boxSizing: "border-box",
+          textAlign: "left",
+          color: "#ffffff",
+          fontSize: prizeFontSize,
+          fontWeight: 900,
+          lineHeight: 1.1,
+          whiteSpace: "normal",
+          overflowWrap: "anywhere",
+          wordBreak: "break-word",
+          textShadow:
+            "0 2px 3px rgba(0,0,0,0.55)",
+        }}
+      >
+        {prize.name}
+      </div>
+    </div>
+  );
+})}
 
                 {/* Center button */}
 
