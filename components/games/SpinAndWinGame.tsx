@@ -74,6 +74,22 @@ function getSegmentColor(index: number): string {
   return colors[index % colors.length];
 }
 
+function getPrizeFontSize(prizeCount: number): string {
+  if (prizeCount <= 3) {
+    return "15px";
+  }
+
+  if (prizeCount <= 5) {
+    return "13px";
+  }
+
+  if (prizeCount <= 7) {
+    return "11px";
+  }
+
+  return "9px";
+}
+
 export default function SpinAndWinGame({
   slug,
   gameName,
@@ -150,17 +166,15 @@ export default function SpinAndWinGame({
           : 0;
 
       /*
-       * The wheel starts with segment 0 at the top.
-       * We rotate enough full rounds for a visible animation,
-       * then stop with the winning segment at the pointer.
+       * The pointer is at the top of the wheel.
+       * Each prize occupies one equal segment.
        */
       const targetAngle =
         360 -
         safePrizeIndex * segmentAngle -
         segmentAngle / 2;
 
-      const currentRotation =
-        rotation % 360;
+      const currentRotation = rotation % 360;
 
       const normalizedTarget =
         ((targetAngle % 360) + 360) % 360;
@@ -192,12 +206,17 @@ export default function SpinAndWinGame({
           .map((_, index) => {
             const start = index * segmentAngle;
             const end = (index + 1) * segmentAngle;
+
             return `${getSegmentColor(
               index
             )} ${start}deg ${end}deg`;
           })
           .join(", ")})`
       : "#e5e7eb";
+
+  const prizeFontSize = getPrizeFontSize(
+    availablePrizes.length
+  );
 
   return (
     <main
@@ -226,6 +245,8 @@ export default function SpinAndWinGame({
             textAlign: "center",
           }}
         >
+          {/* Header */}
+
           <div
             style={{
               fontSize: "34px",
@@ -260,125 +281,161 @@ export default function SpinAndWinGame({
             {gameName}
           </div>
 
+          {/* Wheel */}
+
           <div
             style={{
               position: "relative",
-              width: "min(82vw, 380px)",
-              height: "min(82vw, 380px)",
-              margin: "0 auto 28px",
+              width: "min(82vw, 400px)",
+              height: "min(82vw, 400px)",
+              margin: "0 auto 30px",
             }}
           >
+            {/* Pointer */}
+
             <div
               style={{
                 position: "absolute",
-                top: "-10px",
+                top: "-4px",
                 left: "50%",
                 transform:
                   "translateX(-50%)",
-                zIndex: 5,
+                zIndex: 10,
                 width: 0,
                 height: 0,
                 borderLeft:
-                  "16px solid transparent",
+                  "18px solid transparent",
                 borderRight:
-                  "16px solid transparent",
+                  "18px solid transparent",
                 borderTop:
-                  "30px solid #111827",
+                  "34px solid #111827",
                 filter:
-                  "drop-shadow(0 3px 3px rgba(0,0,0,0.2))",
+                  "drop-shadow(0 3px 4px rgba(0,0,0,0.25))",
               }}
             />
+
+            {/* Wheel outer frame */}
 
             <div
               style={{
                 width: "100%",
                 height: "100%",
+                boxSizing: "border-box",
                 borderRadius: "50%",
-                background:
-                  wheelBackground,
-                border:
-                  "10px solid #111827",
+                padding: "8px",
+                background: "#111827",
                 boxShadow:
-                  "0 10px 30px rgba(0,0,0,0.18)",
-                transform: `rotate(${rotation}deg)`,
-                transition: spinning
-                  ? "transform 4.2s cubic-bezier(0.12, 0.72, 0.16, 1)"
-                  : "none",
-                position: "relative",
-                overflow: "hidden",
+                  "0 12px 35px rgba(0,0,0,0.22)",
               }}
             >
-              {availablePrizes.map(
-                (prize, index) => {
-                  const angle =
-                    index * segmentAngle +
-                    segmentAngle / 2;
-
-                  return (
-                    <div
-                      key={prize.id}
-                      style={{
-                        position: "absolute",
-                        left: "50%",
-                        top: "50%",
-                        transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-${Math.min(
-                          30,
-                          24
-                        )}%)`,
-                        transformOrigin:
-                          "center center",
-                        width: "45%",
-                        color: "#ffffff",
-                        fontSize:
-                          availablePrizes.length >
-                          6
-                            ? "10px"
-                            : "12px",
-                        fontWeight: 800,
-                        textAlign: "center",
-                        pointerEvents:
-                          "none",
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: "block",
-                          transform: `rotate(${-angle}deg)`,
-                          textShadow:
-                            "0 1px 2px rgba(0,0,0,0.35)",
-                          overflowWrap:
-                            "anywhere",
-                        }}
-                      >
-                        {prize.name}
-                      </span>
-                    </div>
-                  );
-                }
-              )}
+              {/* Actual wheel */}
 
               <div
                 style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  width: "64px",
-                  height: "64px",
-                  transform:
-                    "translate(-50%, -50%)",
+                  width: "100%",
+                  height: "100%",
                   borderRadius: "50%",
-                  background:
-                    appearance.button_color ||
-                    "#e31b23",
+                  background: wheelBackground,
+                  position: "relative",
+                  overflow: "hidden",
+                  transform: `rotate(${rotation}deg)`,
+                  transition: spinning
+                    ? "transform 4.2s cubic-bezier(0.12, 0.72, 0.16, 1)"
+                    : "none",
                   border:
-                    "6px solid #ffffff",
-                  boxShadow:
-                    "0 4px 12px rgba(0,0,0,0.25)",
-                  zIndex: 4,
+                    "3px solid #ffffff",
+                  boxSizing: "border-box",
                 }}
-              />
+              >
+                {/* Prize labels */}
+
+                {availablePrizes.map(
+                  (prize, index) => {
+                    const centerAngle =
+                      index * segmentAngle +
+                      segmentAngle / 2;
+
+                    return (
+                      <div
+                        key={prize.id}
+                        style={{
+                          position: "absolute",
+                          top: "7%",
+                          left: "50%",
+                          width:
+                            availablePrizes.length <=
+                            3
+                              ? "34%"
+                              : availablePrizes.length <=
+                                5
+                              ? "31%"
+                              : "27%",
+                          transform: `translateX(-50%) rotate(${centerAngle}deg)`,
+                          transformOrigin:
+                            "50% 93%",
+                          height: "43%",
+                          display: "flex",
+                          justifyContent:
+                            "center",
+                          alignItems:
+                            "flex-start",
+                          pointerEvents:
+                            "none",
+                          zIndex: 2,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "100%",
+                            textAlign: "center",
+                            color: "#ffffff",
+                            fontSize:
+                              prizeFontSize,
+                            fontWeight: 900,
+                            lineHeight: 1.15,
+                            textShadow:
+                              "0 2px 3px rgba(0,0,0,0.55)",
+                            overflowWrap:
+                              "anywhere",
+                            wordBreak:
+                              "break-word",
+                            transform: `rotate(${-centerAngle}deg)`,
+                          }}
+                        >
+                          {prize.name}
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+
+                {/* Center button */}
+
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    width: "70px",
+                    height: "70px",
+                    transform:
+                      "translate(-50%, -50%)",
+                    borderRadius: "50%",
+                    background:
+                      appearance.button_color ||
+                      "#e31b23",
+                    border:
+                      "6px solid #ffffff",
+                    boxShadow:
+                      "0 5px 15px rgba(0,0,0,0.30)",
+                    zIndex: 5,
+                  }}
+                />
+              </div>
             </div>
           </div>
+
+          {/* Mobile number */}
 
           <div
             style={{
@@ -494,6 +551,8 @@ export default function SpinAndWinGame({
             </div>
           </div>
 
+          {/* Result */}
+
           {result && (
             <div
               style={{
@@ -521,7 +580,10 @@ export default function SpinAndWinGame({
               {result.prize_image_url && (
                 <img
                   src={result.prize_image_url}
-                  alt={result.prize_name || "Prize"}
+                  alt={
+                    result.prize_name ||
+                    "Prize"
+                  }
                   style={{
                     width: "100px",
                     height: "100px",
@@ -595,88 +657,6 @@ export default function SpinAndWinGame({
               )}
             </div>
           )}
-        </section>
-
-        <section
-          style={{
-            marginTop: "24px",
-            background: "#ffffff",
-            borderRadius: "20px",
-            padding: "24px 18px",
-            boxShadow:
-              "0 8px 24px rgba(0,0,0,0.07)",
-          }}
-        >
-          <h2
-            style={{
-              margin: "0 0 16px",
-              fontSize: "22px",
-              fontWeight: 800,
-              color: "#111827",
-            }}
-          >
-            Prizes
-          </h2>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fit, minmax(150px, 1fr))",
-              gap: "12px",
-            }}
-          >
-            {availablePrizes.map((prize) => (
-              <div
-                key={prize.id}
-                style={{
-                  border:
-                    "1px solid #e5e7eb",
-                  borderRadius: "14px",
-                  padding: "14px",
-                  background: "#ffffff",
-                }}
-              >
-                {prize.image_url && (
-                  <img
-                    src={prize.image_url}
-                    alt={prize.name}
-                    style={{
-                      width: "70px",
-                      height: "70px",
-                      objectFit: "contain",
-                      display: "block",
-                      margin:
-                        "0 auto 10px",
-                      borderRadius: "8px",
-                    }}
-                  />
-                )}
-
-                <div
-                  style={{
-                    fontWeight: 800,
-                    color: "#111827",
-                    marginBottom: "5px",
-                  }}
-                >
-                  {prize.name}
-                </div>
-
-                {prize.description && (
-                  <div
-                    style={{
-                      fontSize: "13px",
-                      color: "#6b7280",
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    {prize.description}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
         </section>
       </div>
     </main>
