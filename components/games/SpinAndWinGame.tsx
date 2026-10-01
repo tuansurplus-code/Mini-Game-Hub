@@ -92,18 +92,18 @@ function getPrizeFontSize(prizeCount: number): string {
 
 function getPrizeLabelWidth(prizeCount: number): string {
   if (prizeCount <= 3) {
-    return "30%";
+    return "40%";
   }
 
   if (prizeCount <= 5) {
-    return "27%";
+    return "34%";
   }
 
   if (prizeCount <= 7) {
-    return "24%";
+    return "29%";
   }
 
-  return "21%";
+  return "24%";
 }
 
 export default function SpinAndWinGame({
@@ -377,6 +377,10 @@ export default function SpinAndWinGame({
                     const textAngle =
                       centerAngle - 90;
 
+                    const keepTextReadable =
+                      textAngle > 90 ||
+                      textAngle < -90;
+
                     return (
                       <div
                         key={prize.id}
@@ -384,7 +388,7 @@ export default function SpinAndWinGame({
                           position:
                             "absolute",
                           top: "50%",
-                          left: "60%",
+                          left: "50%",
                           width:
                             getPrizeLabelWidth(
                               availablePrizes.length
@@ -426,6 +430,10 @@ export default function SpinAndWinGame({
                               "break-word",
                             textShadow:
                               "0 2px 3px rgba(0,0,0,0.55)",
+                            transform:
+                              keepTextReadable
+                                ? "rotate(180deg)"
+                                : "none",
                           }}
                         >
                           {prize.name}
