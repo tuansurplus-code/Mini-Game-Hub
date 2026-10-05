@@ -53,6 +53,7 @@ type AppearanceSettings = {
 type PrizeType = "winning_prize" | "no_prize";
 type PlayFrequency = "once_per_campaign" | "once_per_day" | "unlimited";
 type WinningLimitMode = "unlimited" | "one" | "custom";
+type CustomerDetailMode = "off" | "optional" | "required";
 
 type Prize = {
   id: string;
@@ -176,6 +177,27 @@ function formatInventory(
     : inventory.toString();
 }
 
+function getCustomerDetailMode(
+  rules: Record<string, unknown>,
+  field: "name" | "email" | "address"
+): CustomerDetailMode {
+  const customerDetails = rules.customer_details;
+
+  if (
+    typeof customerDetails !== "object" ||
+    customerDetails === null ||
+    Array.isArray(customerDetails)
+  ) {
+    return "off";
+  }
+
+  const value = (customerDetails as Record<string, unknown>)[field];
+
+  return value === "optional" || value === "required"
+    ? value
+    : "off";
+}
+
 export default function CampaignGameConfigurationPage() {
   const params = useParams();
   const router = useRouter();
@@ -200,6 +222,12 @@ export default function CampaignGameConfigurationPage() {
     useState<WinningLimitMode>("unlimited");
   const [customWinningLimit, setCustomWinningLimit] =
     useState("2");
+  const [customerNameMode, setCustomerNameMode] =
+    useState<CustomerDetailMode>("off");
+  const [customerEmailMode, setCustomerEmailMode] =
+    useState<CustomerDetailMode>("off");
+  const [customerAddressMode, setCustomerAddressMode] =
+    useState<CustomerDetailMode>("off");
 
   const [prizes, setPrizes] = useState<Prize[]>(
     []
@@ -314,6 +342,16 @@ export default function CampaignGameConfigurationPage() {
         setWinningLimitMode("unlimited");
         setCustomWinningLimit("2");
       }
+
+      setCustomerNameMode(
+        getCustomerDetailMode(loadedRules, "name")
+      );
+      setCustomerEmailMode(
+        getCustomerDetailMode(loadedRules, "email")
+      );
+      setCustomerAddressMode(
+        getCustomerDetailMode(loadedRules, "address")
+      );
     } catch {
       setError(
         "Unable to load game configuration."
@@ -732,6 +770,11 @@ export default function CampaignGameConfigurationPage() {
           : winningLimitMode === "one"
           ? 1
           : customLimit,
+      customer_details: {
+        name: customerNameMode,
+        email: customerEmailMode,
+        address: customerAddressMode,
+      },
     };
 
     try {
@@ -805,6 +848,16 @@ export default function CampaignGameConfigurationPage() {
       } else {
         setWinningLimitMode("unlimited");
       }
+
+      setCustomerNameMode(
+        getCustomerDetailMode(savedRules, "name")
+      );
+      setCustomerEmailMode(
+        getCustomerDetailMode(savedRules, "email")
+      );
+      setCustomerAddressMode(
+        getCustomerDetailMode(savedRules, "address")
+      );
 
       setSuccess(
         "Game configuration saved successfully."
@@ -1780,6 +1833,64 @@ export default function CampaignGameConfigurationPage() {
                 : winningLimitMode === "one"
                 ? "Each customer can receive a maximum of one winning prize during this campaign game."
                 : `Each customer can receive a maximum of ${customWinningLimit || "0"} winning prizes during this campaign game.`}
+            </div>
+          </div>
+
+          <div style={{ marginTop: "30px", paddingTop: "24px", borderTop: "1px solid #e5e7eb" }}>
+            <div style={{ marginBottom: "18px" }}>
+              <h3 style={{ margin: "0 0 6px", fontSize: "17px" }}>
+                Customer Details for Prize Claim
+              </h3>
+              <p style={{ margin: 0, color: "#6b7280", fontSize: "14px", lineHeight: 1.6 }}>
+                Choose which customer details should be collected when a winner claims a coupon. The mobile number is already captured before the spin and will be reused automatically.
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: "16px",
+              }}
+            >
+              <div>
+                <label style={{ display: "block", fontWeight: 700, marginBottom: "8px" }}>Name</label>
+                <select
+                  value={customerNameMode}
+                  onChange={(event) => setCustomerNameMode(event.target.value as CustomerDetailMode)}
+                  style={{ width: "100%", padding: "12px", border: "1px solid #d1d5db", borderRadius: "9px", boxSizing: "border-box", background: "#ffffff" }}
+                >
+                  <option value="off">Off</option>
+                  <option value="optional">Optional</option>
+                  <option value="required">Required</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontWeight: 700, marginBottom: "8px" }}>Email Address</label>
+                <select
+                  value={customerEmailMode}
+                  onChange={(event) => setCustomerEmailMode(event.target.value as CustomerDetailMode)}
+                  style={{ width: "100%", padding: "12px", border: "1px solid #d1d5db", borderRadius: "9px", boxSizing: "border-box", background: "#ffffff" }}
+                >
+                  <option value="off">Off</option>
+                  <option value="optional">Optional</option>
+                  <option value="required">Required</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontWeight: 700, marginBottom: "8px" }}>Address</label>
+                <select
+                  value={customerAddressMode}
+                  onChange={(event) => setCustomerAddressMode(event.target.value as CustomerDetailMode)}
+                  style={{ width: "100%", padding: "12px", border: "1px solid #d1d5db", borderRadius: "9px", boxSizing: "border-box", background: "#ffffff" }}
+                >
+                  <option value="off">Off</option>
+                  <option value="optional">Optional</option>
+                  <option value="required">Required</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
