@@ -50,6 +50,8 @@ type AppearanceSettings = {
   button_text_color: string;
 };
 
+type PrizeType = "winning_prize" | "no_prize";
+
 type Prize = {
   id: string;
   campaign_game_id: string;
@@ -231,6 +233,10 @@ export default function CampaignGameConfigurationPage() {
     useState("");
   const [prizeActive, setPrizeActive] =
     useState(true);
+  const [prizeType, setPrizeType] =
+    useState<PrizeType>("winning_prize");
+  const [prizeMetadata, setPrizeMetadata] =
+    useState<Record<string, unknown>>({});
 
   const [selectedPrizeId, setSelectedPrizeId] =
     useState("");
@@ -353,6 +359,8 @@ export default function CampaignGameConfigurationPage() {
     setPrizeWeight("1");
     setPrizeInventory("");
     setPrizeActive(true);
+    setPrizeType("winning_prize");
+    setPrizeMetadata({});
     setPrizeError("");
     setSelectedPrizeId("");
   }
@@ -389,6 +397,12 @@ export default function CampaignGameConfigurationPage() {
         : prize.inventory.toString()
     );
     setPrizeActive(prize.active);
+    setPrizeType(
+      prize.metadata?.prize_type === "no_prize"
+        ? "no_prize"
+        : "winning_prize"
+    );
+    setPrizeMetadata(prize.metadata ?? {});
     setPrizeError("");
     setShowEditPrize(true);
   }
@@ -414,6 +428,7 @@ export default function CampaignGameConfigurationPage() {
     const weight = Number(prizeWeight);
 
     const inventory =
+      prizeType === "no_prize" ||
       prizeInventory.trim() === ""
         ? null
         : Number(prizeInventory);
@@ -456,6 +471,10 @@ export default function CampaignGameConfigurationPage() {
         weight,
         inventory,
         active: prizeActive,
+        metadata: {
+          ...prizeMetadata,
+          prize_type: prizeType,
+        },
       },
     };
   }
@@ -1825,6 +1844,8 @@ export default function CampaignGameConfigurationPage() {
                   setPrizeActive={
                     setPrizeActive
                   }
+                  prizeType={prizeType}
+                  setPrizeType={setPrizeType}
                 />
               </div>
 
@@ -1971,6 +1992,8 @@ export default function CampaignGameConfigurationPage() {
                   setPrizeActive={
                     setPrizeActive
                   }
+                  prizeType={prizeType}
+                  setPrizeType={setPrizeType}
                 />
               </div>
 
@@ -2035,6 +2058,8 @@ type PrizeFormFieldsProps = {
   setPrizeActive: (
     value: boolean
   ) => void;
+  prizeType: PrizeType;
+  setPrizeType: (value: PrizeType) => void;
 };
 
 function PrizeFormFields({
@@ -2050,9 +2075,51 @@ function PrizeFormFields({
   setPrizeInventory,
   prizeActive,
   setPrizeActive,
+  prizeType,
+  setPrizeType,
 }: PrizeFormFieldsProps) {
   return (
     <>
+      <div>
+        <label
+          style={{
+            display: "block",
+            fontWeight: 700,
+            marginBottom: "8px",
+          }}
+        >
+          Prize Type *
+        </label>
+
+        <select
+          value={prizeType}
+          onChange={(event) => {
+            const nextType = event.target.value as PrizeType;
+            setPrizeType(nextType);
+            if (nextType === "no_prize") {
+              setPrizeInventory("");
+            }
+          }}
+          style={{
+            width: "100%",
+            padding: "12px",
+            border: "1px solid #d1d5db",
+            borderRadius: "9px",
+            boxSizing: "border-box",
+            background: "#ffffff",
+          }}
+        >
+          <option value="winning_prize">Winning Prize</option>
+          <option value="no_prize">No Prize / Try Again</option>
+        </select>
+
+        <div style={{ marginTop: "6px", fontSize: "12px", color: "#6b7280" }}>
+          {prizeType === "no_prize"
+            ? "No coupon or inventory will be used for this result."
+            : "Winning prizes can generate a coupon and use inventory."}
+        </div>
+      </div>
+
       <div>
         <label
           style={{
@@ -2221,7 +2288,12 @@ function PrizeFormFields({
                 event.target.value
               )
             }
-            placeholder="Unlimited"
+            disabled={prizeType === "no_prize"}
+            placeholder={
+              prizeType === "no_prize"
+                ? "Not applicable"
+                : "Unlimited"
+            }
             style={{
               width: "100%",
               padding: "12px",
@@ -2239,7 +2311,9 @@ function PrizeFormFields({
               color: "#6b7280",
             }}
           >
-            Leave empty for unlimited.
+            {prizeType === "no_prize"
+              ? "Inventory is not used for no-prize results."
+              : "Leave empty for unlimited."}
           </div>
         </div>
       </div>
