@@ -51,6 +51,7 @@ type AppearanceSettings = {
 };
 
 type PrizeType = "winning_prize" | "no_prize";
+type PlayFrequency = "once_per_campaign" | "once_per_day" | "unlimited";
 
 type Prize = {
   id: string;
@@ -191,7 +192,9 @@ export default function CampaignGameConfigurationPage() {
       defaultAppearance
     );
 
-  const [rules, setRules] = useState("{}");
+  const [rules, setRules] = useState<Record<string, unknown>>({});
+  const [playFrequency, setPlayFrequency] =
+    useState<PlayFrequency>("once_per_campaign");
 
   const [prizes, setPrizes] = useState<Prize[]>(
     []
@@ -283,8 +286,13 @@ export default function CampaignGameConfigurationPage() {
         )
       );
 
-      setRules(
-        formatRules(loadedCampaignGame.rules)
+      const loadedRules = loadedCampaignGame.rules ?? {};
+      setRules(loadedRules);
+      setPlayFrequency(
+        loadedRules.play_frequency === "once_per_day" ||
+        loadedRules.play_frequency === "unlimited"
+          ? loadedRules.play_frequency
+          : "once_per_campaign"
       );
     } catch {
       setError(
@@ -685,19 +693,10 @@ export default function CampaignGameConfigurationPage() {
     setError("");
     setSuccess("");
 
-    let parsedRules: Record<string, unknown>;
-
-    try {
-      parsedRules = parseRules(rules);
-    } catch (rulesError) {
-      setError(
-        rulesError instanceof Error
-          ? rulesError.message
-          : "Rules contain invalid JSON."
-      );
-      setSaving(false);
-      return;
-    }
+    const parsedRules: Record<string, unknown> = {
+      ...rules,
+      play_frequency: playFrequency,
+    };
 
     try {
       const response = await fetch(
@@ -749,10 +748,13 @@ export default function CampaignGameConfigurationPage() {
         )
       );
 
-      setRules(
-        formatRules(
-          updatedCampaignGame.rules
-        )
+      const savedRules = updatedCampaignGame.rules ?? {};
+      setRules(savedRules);
+      setPlayFrequency(
+        savedRules.play_frequency === "once_per_day" ||
+        savedRules.play_frequency === "unlimited"
+          ? savedRules.play_frequency
+          : "once_per_campaign"
       );
 
       setSuccess(
@@ -1637,50 +1639,45 @@ export default function CampaignGameConfigurationPage() {
               RULES
             </div>
 
-            <h2
-              style={{
-                margin: "4px 0 6px",
-              }}
-            >
+            <h2 style={{ margin: "4px 0 6px" }}>
               Gameplay Rules
             </h2>
 
-            <p
-              style={{
-                margin: 0,
-                color: "#6b7280",
-                lineHeight: 1.6,
-              }}
-            >
-              Advanced campaign-specific rules
-              are stored as JSON. We will replace
-              this with dedicated rule controls once
-              the game rule structure is finalized.
+            <p style={{ margin: 0, color: "#6b7280", lineHeight: 1.6 }}>
+              Control how often a customer can play this campaign game using the same mobile number.
             </p>
           </div>
 
-          <textarea
-            value={rules}
-            onChange={(event) =>
-              setRules(event.target.value)
-            }
-            spellCheck={false}
-            rows={10}
-            style={{
-              width: "100%",
-              padding: "14px",
-              border:
-                "1px solid #d1d5db",
-              borderRadius: "9px",
-              boxSizing: "border-box",
-              fontFamily:
-                "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-              fontSize: "13px",
-              lineHeight: 1.6,
-              resize: "vertical",
-              background: "#fafafa",
-            }}
-          />
+          <div style={{ maxWidth: "520px" }}>
+            <label style={{ display: "block", fontWeight: 700, marginBottom: "8px" }}>
+              Play Frequency
+            </label>
+
+            <select
+              value={playFrequency}
+              onChange={(event) => setPlayFrequency(event.target.value as PlayFrequency)}
+              style={{
+                width: "100%",
+                padding: "12px",
+                border: "1px solid #d1d5db",
+                borderRadius: "9px",
+                boxSizing: "border-box",
+                background: "#ffffff",
+              }}
+            >
+              <option value="once_per_campaign">Once per Campaign</option>
+              <option value="once_per_day">Once per Day</option>
+              <option value="unlimited">Unlimited</option>
+            </select>
+
+            <div style={{ marginTop: "8px", fontSize: "13px", color: "#6b7280", lineHeight: 1.5 }}>
+              {playFrequency === "once_per_campaign"
+                ? "Each mobile number can play only once during this campaign."
+                : playFrequency === "once_per_day"
+                ? "Each mobile number can play once per day during this campaign."
+                : "Customers can play multiple times without a frequency restriction."}
+            </div>
+          </div>
         </div>
 
         {error && (
