@@ -394,7 +394,14 @@ export default function SpinAndWinGame({
                               availablePrizes.length
                             ),
                           height: "36px",
-                          transform: `translateY(-50%) rotate(${textAngle}deg)`,
+
+                          /*
+                           * Move the complete
+                           * prize label outward
+                           * from the center.
+                           */
+                          transform: `translateX(25%) translateY(-50%) rotate(${textAngle}deg)`,
+
                           transformOrigin:
                             "0 50%",
                           display: "flex",
