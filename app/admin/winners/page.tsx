@@ -8,6 +8,19 @@ type ReportRow = {
   result_type: string; prize_name: string | null; coupon_code: string | null; coupon_status: string | null;
 };
 
+type ExportField = "date" | "mobile" | "campaign" | "game" | "result" | "prize" | "coupon" | "couponStatus";
+
+const exportFieldOptions: { key: ExportField; label: string }[] = [
+  { key: "date", label: "Date & Time" },
+  { key: "mobile", label: "Mobile Number" },
+  { key: "campaign", label: "Campaign" },
+  { key: "game", label: "Game" },
+  { key: "result", label: "Result" },
+  { key: "prize", label: "Prize" },
+  { key: "coupon", label: "Coupon Code" },
+  { key: "couponStatus", label: "Coupon Status" },
+];
+
 export default function WinnersPage() {
   const [rows, setRows] = useState<ReportRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +30,8 @@ export default function WinnersPage() {
   const [resultFilter, setResultFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [showExportOptions, setShowExportOptions] = useState(false);
+  const [exportFields, setExportFields] = useState<ExportField[]>(exportFieldOptions.map((field) => field.key));
 
   useEffect(() => {
     async function loadReporting() {
@@ -51,20 +66,32 @@ export default function WinnersPage() {
     setCampaignFilter("all"); setGameFilter("all"); setResultFilter("all"); setDateFrom(""); setDateTo("");
   }
 
+  function toggleExportField(field: ExportField) {
+    setExportFields((current) => current.includes(field) ? current.filter((item) => item !== field) : [...current, field]);
+  }
+
   function exportCsv() {
-    const headers = ["Date & Time", "Mobile", "Campaign", "Game", "Result", "Prize", "Coupon", "Coupon Status"];
+    if (!exportFields.length || !filteredRows.length) return;
+    const selected = exportFieldOptions.filter((field) => exportFields.includes(field.key));
+    const valueFor = (row: ReportRow, field: ExportField): string | null => {
+      if (field === "date") return new Date(row.played_at).toLocaleString();
+      if (field === "mobile") return row.mobile;
+      if (field === "campaign") return row.campaign_name;
+      if (field === "game") return row.game_name;
+      if (field === "result") return row.result_type === "win" ? "Winning" : row.result_type === "no_prize" ? "No Prize" : row.result_type;
+      if (field === "prize") return row.prize_name;
+      if (field === "coupon") return row.coupon_code;
+      return row.coupon_status;
+    };
     const escapeCsv = (value: string | null) => `"${String(value ?? "").replace(/"/g, '""')}"`;
-    const lines = filteredRows.map((row) => [
-      new Date(row.played_at).toLocaleString(), row.mobile, row.campaign_name, row.game_name,
-      row.result_type === "win" ? "Winning" : row.result_type === "no_prize" ? "No Prize" : row.result_type,
-      row.prize_name, row.coupon_code, row.coupon_status,
-    ].map(escapeCsv).join(","));
-    const csv = "\uFEFF" + headers.map(escapeCsv).join(",") + "\n" + lines.join("\n");
+    const lines = filteredRows.map((row) => selected.map((field) => escapeCsv(valueFor(row, field.key))).join(","));
+    const csv = "\uFEFF" + selected.map((field) => escapeCsv(field.label)).join(",") + "\n" + lines.join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url; link.download = `game-report-${new Date().toISOString().slice(0, 10)}.csv`; link.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+    setShowExportOptions(false);
   }
 
   const cardStyle = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: "16px", padding: "20px", boxShadow: "0 4px 14px rgba(0,0,0,.05)" };
@@ -83,7 +110,7 @@ export default function WinnersPage() {
         <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={inputStyle} title="From date" />
         <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={inputStyle} title="To date" />
         <button onClick={clearFilters} style={buttonStyle}>Clear Filters</button>
-        <button onClick={exportCsv} disabled={!filteredRows.length} style={{ ...buttonStyle, background: "#111827", color: "#fff", opacity: filteredRows.length ? 1 : .5 }}>Export CSV</button>
+        <button onClick={() => setShowExportOptions(true)} disabled={!filteredRows.length} style={{ ...buttonStyle, background: "#111827", color: "#fff", opacity: filteredRows.length ? 1 : .5 }}>Export CSV</button>
       </div>
       <div style={{ fontSize: "13px", color: "#6b7280", marginBottom: "18px" }}>Showing {filteredRows.length} record{filteredRows.length === 1 ? "" : "s"}. CSV export uses the currently selected filters.</div>
 
@@ -100,5 +127,26 @@ export default function WinnersPage() {
           <tbody>{filteredRows.map((row) => <tr key={row.session_id}><td>{new Date(row.played_at).toLocaleString()}</td><td>{row.mobile}</td><td>{row.campaign_name}</td><td>{row.game_name}</td><td><strong>{row.result_type === "win" ? "Winning" : row.result_type === "no_prize" ? "No Prize" : row.result_type}</strong></td><td>{row.prize_name || "—"}</td><td>{row.coupon_code || "—"}</td><td>{row.coupon_status || "—"}</td></tr>)}</tbody>
         </table></div>}
     </div>
+
+    {showExportOptions && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000, padding: "20px" }} onClick={() => setShowExportOptions(false)}>
+      <div style={{ background: "#fff", borderRadius: "18px", padding: "24px", width: "100%", maxWidth: "460px", boxShadow: "0 20px 60px rgba(0,0,0,.2)" }} onClick={(e) => e.stopPropagation()}>
+        <h2 style={{ margin: "0 0 6px" }}>Export Options</h2>
+        <p style={{ margin: "0 0 18px", color: "#6b7280" }}>Choose the fields to include in your CSV report.</p>
+        <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
+          <button onClick={() => setExportFields(exportFieldOptions.map((field) => field.key))} style={buttonStyle}>Select All</button>
+          <button onClick={() => setExportFields([])} style={buttonStyle}>Clear All</button>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: "12px", marginBottom: "22px" }}>
+          {exportFieldOptions.map((field) => <label key={field.key} style={{ display: "flex", alignItems: "center", gap: "9px", padding: "10px", border: "1px solid #e5e7eb", borderRadius: "10px", cursor: "pointer" }}>
+            <input type="checkbox" checked={exportFields.includes(field.key)} onChange={() => toggleExportField(field.key)} />
+            <span>{field.label}</span>
+          </label>)}
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+          <button onClick={() => setShowExportOptions(false)} style={buttonStyle}>Cancel</button>
+          <button onClick={exportCsv} disabled={!exportFields.length} style={{ ...buttonStyle, background: "#111827", color: "#fff", opacity: exportFields.length ? 1 : .5 }}>Export {filteredRows.length} Records</button>
+        </div>
+      </div>
+    </div>}
   </div>;
 }
