@@ -400,7 +400,7 @@ export default function SpinAndWinGame({
                            * prize label outward
                            * from the center.
                            */
-                          transform: `translateX(25%) translateY(-50%) rotate(${textAngle}deg)`,
+                          transform: `translateY(-50%) rotate(${textAngle}deg)`,
 
                           transformOrigin:
                             "0 50%",
