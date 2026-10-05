@@ -43,7 +43,8 @@ export default function WinnersPage() {
     const completed = filteredRows.filter((r) => ["win", "no_prize", "completed"].includes(r.result_type));
     const wins = filteredRows.filter((r) => r.result_type === "win").length;
     const noPrize = filteredRows.filter((r) => r.result_type === "no_prize").length;
-    return { totalSpins: completed.length, wins, noPrize, winningRate: completed.length ? ((wins / completed.length) * 100).toFixed(1) : "0.0" };
+    const totalParticipants = new Set(filteredRows.map((r) => r.mobile).filter(Boolean)).size;
+    return { totalParticipants, totalSpins: completed.length, wins, noPrize, winningRate: completed.length ? ((wins / completed.length) * 100).toFixed(1) : "0.0" };
   }, [filteredRows]);
 
   function clearFilters() {
@@ -87,7 +88,7 @@ export default function WinnersPage() {
       <div style={{ fontSize: "13px", color: "#6b7280", marginBottom: "18px" }}>Showing {filteredRows.length} record{filteredRows.length === 1 ? "" : "s"}. CSV export uses the currently selected filters.</div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "14px", marginBottom: "20px" }}>
-        {[['TOTAL SPINS', summary.totalSpins], ['WINS', summary.wins], ['NO-PRIZE RESULTS', summary.noPrize], ['WINNING RATE', `${summary.winningRate}%`]].map(([label, value]) =>
+        {[["TOTAL PARTICIPANTS", summary.totalParticipants], ["TOTAL SPINS", summary.totalSpins], ["WINS", summary.wins], ["NO-PRIZE RESULTS", summary.noPrize], ["WINNING RATE", `${summary.winningRate}%`]].map(([label, value]) =>
           <div key={label} style={cardStyle}><div style={{ fontSize: "13px", color: "#6b7280", fontWeight: 700 }}>{label}</div><div style={{ fontSize: "30px", fontWeight: 900, marginTop: "6px" }}>{value}</div></div>)}
       </div>
     </>}
