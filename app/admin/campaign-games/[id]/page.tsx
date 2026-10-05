@@ -52,6 +52,7 @@ type AppearanceSettings = {
 
 type PrizeType = "winning_prize" | "no_prize";
 type PlayFrequency = "once_per_campaign" | "once_per_day" | "unlimited";
+type WinningLimitMode = "unlimited" | "one" | "custom";
 
 type Prize = {
   id: string;
@@ -195,6 +196,10 @@ export default function CampaignGameConfigurationPage() {
   const [rules, setRules] = useState<Record<string, unknown>>({});
   const [playFrequency, setPlayFrequency] =
     useState<PlayFrequency>("once_per_campaign");
+  const [winningLimitMode, setWinningLimitMode] =
+    useState<WinningLimitMode>("unlimited");
+  const [customWinningLimit, setCustomWinningLimit] =
+    useState("2");
 
   const [prizes, setPrizes] = useState<Prize[]>(
     []
@@ -294,6 +299,21 @@ export default function CampaignGameConfigurationPage() {
           ? loadedRules.play_frequency
           : "once_per_campaign"
       );
+      const loadedWinningLimit = loadedRules.winning_limit;
+      if (loadedWinningLimit === 1) {
+        setWinningLimitMode("one");
+        setCustomWinningLimit("2");
+      } else if (
+        typeof loadedWinningLimit === "number" &&
+        Number.isInteger(loadedWinningLimit) &&
+        loadedWinningLimit > 1
+      ) {
+        setWinningLimitMode("custom");
+        setCustomWinningLimit(String(loadedWinningLimit));
+      } else {
+        setWinningLimitMode("unlimited");
+        setCustomWinningLimit("2");
+      }
     } catch {
       setError(
         "Unable to load game configuration."
@@ -693,9 +713,25 @@ export default function CampaignGameConfigurationPage() {
     setError("");
     setSuccess("");
 
+    const customLimit = Number(customWinningLimit);
+    if (
+      winningLimitMode === "custom" &&
+      (!Number.isInteger(customLimit) || customLimit < 2)
+    ) {
+      setError("Custom winning limit must be a whole number of 2 or more.");
+      setSaving(false);
+      return;
+    }
+
     const parsedRules: Record<string, unknown> = {
       ...rules,
       play_frequency: playFrequency,
+      winning_limit:
+        winningLimitMode === "unlimited"
+          ? null
+          : winningLimitMode === "one"
+          ? 1
+          : customLimit,
     };
 
     try {
@@ -756,6 +792,19 @@ export default function CampaignGameConfigurationPage() {
           ? savedRules.play_frequency
           : "once_per_campaign"
       );
+      const savedWinningLimit = savedRules.winning_limit;
+      if (savedWinningLimit === 1) {
+        setWinningLimitMode("one");
+      } else if (
+        typeof savedWinningLimit === "number" &&
+        Number.isInteger(savedWinningLimit) &&
+        savedWinningLimit > 1
+      ) {
+        setWinningLimitMode("custom");
+        setCustomWinningLimit(String(savedWinningLimit));
+      } else {
+        setWinningLimitMode("unlimited");
+      }
 
       setSuccess(
         "Game configuration saved successfully."
@@ -1676,6 +1725,61 @@ export default function CampaignGameConfigurationPage() {
                 : playFrequency === "once_per_day"
                 ? "Each mobile number can play once per day during this campaign."
                 : "Customers can play multiple times without a frequency restriction."}
+            </div>
+          </div>
+
+          <div style={{ maxWidth: "520px", marginTop: "24px" }}>
+            <label style={{ display: "block", fontWeight: 700, marginBottom: "8px" }}>
+              Winning Limit per Customer
+            </label>
+
+            <select
+              value={winningLimitMode}
+              onChange={(event) =>
+                setWinningLimitMode(event.target.value as WinningLimitMode)
+              }
+              style={{
+                width: "100%",
+                padding: "12px",
+                border: "1px solid #d1d5db",
+                borderRadius: "9px",
+                boxSizing: "border-box",
+                background: "#ffffff",
+              }}
+            >
+              <option value="unlimited">Unlimited Wins</option>
+              <option value="one">Maximum 1 Win</option>
+              <option value="custom">Custom Maximum</option>
+            </select>
+
+            {winningLimitMode === "custom" && (
+              <div style={{ marginTop: "12px" }}>
+                <label style={{ display: "block", fontWeight: 600, marginBottom: "6px" }}>
+                  Maximum Wins
+                </label>
+                <input
+                  type="number"
+                  min="2"
+                  step="1"
+                  value={customWinningLimit}
+                  onChange={(event) => setCustomWinningLimit(event.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "9px",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+            )}
+
+            <div style={{ marginTop: "8px", fontSize: "13px", color: "#6b7280", lineHeight: 1.5 }}>
+              {winningLimitMode === "unlimited"
+                ? "There is no limit on how many times a customer can win."
+                : winningLimitMode === "one"
+                ? "Each customer can receive a maximum of one winning prize during this campaign game."
+                : `Each customer can receive a maximum of ${customWinningLimit || "0"} winning prizes during this campaign game.`}
             </div>
           </div>
         </div>
