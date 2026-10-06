@@ -7,13 +7,80 @@ type Campaign = { id:string; name:string; status:string; starts_at:string|null; 
 type Game = { id:string; name:string; type:string; description:string|null };
 type CampaignGame = { id:string; public_slug:string; status:string; appearance:Record<string,unknown>|null; rules:Record<string,unknown>|null; campaigns:Campaign|Campaign[]|null; games:Game|Game[]|null };
 type Prize = { id:string; name:string; description:string|null; image_url:string|null; weight:number; inventory:number|null; active:boolean; metadata:Record<string,unknown>|null };
-type AppearanceSettings = { title:string; subtitle:string; button_text:string; page_background_color:string; button_color:string; button_text_color:string };
+type AppearanceSettings = {
+  title:string;
+  subtitle:string;
+  button_text:string;
+  page_background_color:string;
+  button_color:string;
+  button_text_color:string;
+  wheel_style:string;
+  wheel_theme:string;
+  segment_sizing:"equal"|"weight";
+  min_visual_segments:number;
+  wheel_border_color:string;
+  wheel_border_thickness:number;
+  center_color:string;
+  center_size:number;
+  pointer_color:string;
+  prize_text_color:string;
+  prize_text_size:number;
+  text_orientation:"auto"|"radial"|"tangential"|"horizontal";
+  animation_duration:number;
+};
 type CustomerDetailMode = "off"|"optional"|"required";
 type CustomerDetailsSettings = { name:CustomerDetailMode; email:CustomerDetailMode; address:CustomerDetailMode };
 
-const defaultAppearance:AppearanceSettings={title:"SPIN & WIN",subtitle:"Spin daily and win exciting rewards!",button_text:"SPIN NOW",page_background_color:"#ffffff",button_color:"#e31b23",button_text_color:"#ffffff"};
+const defaultAppearance:AppearanceSettings={
+  title:"SPIN & WIN",
+  subtitle:"Spin daily and win exciting rewards!",
+  button_text:"SPIN NOW",
+  page_background_color:"#ffffff",
+  button_color:"#e31b23",
+  button_text_color:"#ffffff",
+  wheel_style:"classic",
+  wheel_theme:"multicolor",
+  segment_sizing:"equal",
+  min_visual_segments:8,
+  wheel_border_color:"#111827",
+  wheel_border_thickness:8,
+  center_color:"#e31b23",
+  center_size:50,
+  pointer_color:"#111827",
+  prize_text_color:"#ffffff",
+  prize_text_size:13,
+  text_orientation:"auto",
+  animation_duration:4.2,
+};
 function getSingleRecord<T>(value:T|T[]|null):T|null { return Array.isArray(value)?value[0]??null:value; }
-function getAppearance(a:Record<string,unknown>|null):AppearanceSettings { if(!a)return defaultAppearance; return {title:typeof a.title==="string"?a.title:defaultAppearance.title,subtitle:typeof a.subtitle==="string"?a.subtitle:defaultAppearance.subtitle,button_text:typeof a.button_text==="string"?a.button_text:defaultAppearance.button_text,page_background_color:typeof a.page_background_color==="string"?a.page_background_color:defaultAppearance.page_background_color,button_color:typeof a.button_color==="string"?a.button_color:defaultAppearance.button_color,button_text_color:typeof a.button_text_color==="string"?a.button_text_color:defaultAppearance.button_text_color}; }
+function textValue(a:Record<string,unknown>,key:string,fallback:string){return typeof a[key]==="string"?a[key] as string:fallback;}
+function numberValue(a:Record<string,unknown>,key:string,fallback:number,min:number,max:number){const v=a[key];return typeof v==="number"&&Number.isFinite(v)?Math.min(max,Math.max(min,v)):fallback;}
+function getAppearance(a:Record<string,unknown>|null):AppearanceSettings {
+  if(!a)return defaultAppearance;
+  const segmentSizing=a.segment_sizing==="weight"?"weight":"equal";
+  const orientation=a.text_orientation==="radial"||a.text_orientation==="tangential"||a.text_orientation==="horizontal"?a.text_orientation:"auto";
+  return {
+    title:textValue(a,"title",defaultAppearance.title),
+    subtitle:textValue(a,"subtitle",defaultAppearance.subtitle),
+    button_text:textValue(a,"button_text",defaultAppearance.button_text),
+    page_background_color:textValue(a,"page_background_color",defaultAppearance.page_background_color),
+    button_color:textValue(a,"button_color",defaultAppearance.button_color),
+    button_text_color:textValue(a,"button_text_color",defaultAppearance.button_text_color),
+    wheel_style:textValue(a,"wheel_style",defaultAppearance.wheel_style),
+    wheel_theme:textValue(a,"wheel_theme",defaultAppearance.wheel_theme),
+    segment_sizing:segmentSizing,
+    min_visual_segments:Math.round(numberValue(a,"min_visual_segments",defaultAppearance.min_visual_segments,1,24)),
+    wheel_border_color:textValue(a,"wheel_border_color",defaultAppearance.wheel_border_color),
+    wheel_border_thickness:numberValue(a,"wheel_border_thickness",defaultAppearance.wheel_border_thickness,0,20),
+    center_color:textValue(a,"center_color",defaultAppearance.center_color),
+    center_size:numberValue(a,"center_size",defaultAppearance.center_size,30,100),
+    pointer_color:textValue(a,"pointer_color",defaultAppearance.pointer_color),
+    prize_text_color:textValue(a,"prize_text_color",defaultAppearance.prize_text_color),
+    prize_text_size:numberValue(a,"prize_text_size",defaultAppearance.prize_text_size,8,24),
+    text_orientation:orientation,
+    animation_duration:numberValue(a,"animation_duration",defaultAppearance.animation_duration,2,10),
+  };
+}
 function getCustomerDetails(r:Record<string,unknown>|null):CustomerDetailsSettings { const raw=r?.customer_details; const d=typeof raw==="object"&&raw!==null&&!Array.isArray(raw)?raw as Record<string,unknown>:{}; const mode=(v:unknown):CustomerDetailMode=>v==="optional"||v==="required"?v:"off"; return {name:mode(d.name),email:mode(d.email),address:mode(d.address)}; }
 
 export default async function PlayGamePage({params}:PageProps){
