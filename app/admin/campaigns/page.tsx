@@ -139,6 +139,9 @@ export default async function CampaignsPage() {
                         <Link href={`/admin/campaigns/${campaign.id}`} className="secondary-btn" style={{ display: "block", textDecoration: "none", whiteSpace: "nowrap", textAlign: "center", width: "100%" }}>
                           Edit
                         </Link>
+                        <Link href={`/admin/winners?campaign=${encodeURIComponent(campaign.name)}`} className="secondary-btn" style={{ display: "block", textDecoration: "none", whiteSpace: "nowrap", textAlign: "center", width: "100%" }}>
+                          Report
+                        </Link>
                         <DuplicateCampaignButton campaignId={campaign.id} campaignName={campaign.name} />
                       </div>
                     </td>
