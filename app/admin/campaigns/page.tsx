@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireAdmin } from "../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../lib/supabase-server";
 import CampaignForm from "./CampaignForm";
+import DuplicateCampaignButton from "./DuplicateCampaignButton";
 
 function formatCampaignDate(value: string | null) {
   if (!value) return "—";
@@ -126,7 +127,7 @@ export default async function CampaignsPage() {
 
       <div className="admin-panel">
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1450px" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1530px" }}>
             <thead>
               <tr>
                 <th style={headerStyle}>Campaign</th>
@@ -231,13 +232,19 @@ export default async function CampaignsPage() {
                       </td>
 
                       <td style={cellStyle}>
-                        <Link
-                          href={`/admin/campaigns/${campaign.id}`}
-                          className="secondary-btn"
-                          style={{ display: "inline-block", textDecoration: "none", whiteSpace: "nowrap" }}
-                        >
-                          Edit
-                        </Link>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <Link
+                            href={`/admin/campaigns/${campaign.id}`}
+                            className="secondary-btn"
+                            style={{ display: "inline-block", textDecoration: "none", whiteSpace: "nowrap" }}
+                          >
+                            Edit
+                          </Link>
+                          <DuplicateCampaignButton
+                            campaignId={campaign.id}
+                            campaignName={campaign.name}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );
