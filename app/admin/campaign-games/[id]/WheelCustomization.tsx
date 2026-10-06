@@ -1,6 +1,286 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";import{createPortal}from"react-dom";
-type P={id:string;name:string;weight:number;active:boolean;metadata:Record<string,unknown>|null};type S={wheel_style:string;wheel_theme:string;segment_sizing:"equal"|"weight";min_visual_segments:number;wheel_border_color:string;wheel_border_thickness:number;center_color:string;center_size:number;pointer_color:string;prize_text_color:string;prize_text_size:number;text_orientation:string;animation_duration:number};
-const D:S={wheel_style:"classic",wheel_theme:"multicolor",segment_sizing:"equal",min_visual_segments:8,wheel_border_color:"#111827",wheel_border_thickness:8,center_color:"#e31b23",center_size:50,pointer_color:"#e31b23",prize_text_color:"#ffffff",prize_text_size:13,text_orientation:"auto",animation_duration:5.2};const palettes:Record<string,string[]>={"red-white":["#dc2626","#ffffff"],gold:["#d4a017","#fff7d6","#7c5b00"],blue:["#2563eb","#60a5fa","#1e3a8a"],green:["#16a34a","#86efac","#14532d"],multicolor:["#e31b23","#111827","#f59e0b","#2563eb","#16a34a","#7c3aed","#db2777","#0891b2"],custom:["#e31b23","#111827","#f59e0b","#2563eb"]};const hex=(v:unknown):v is string=>typeof v==="string"&&/^#[0-9a-fA-F]{6}$/.test(v);const n=(v:unknown,d:number,a:number,b:number)=>typeof v==="number"?Math.min(b,Math.max(a,v)):d;
-function parse(a:Record<string,unknown>):S{return{wheel_style:typeof a.wheel_style==="string"?a.wheel_style:D.wheel_style,wheel_theme:typeof a.wheel_theme==="string"?a.wheel_theme:D.wheel_theme,segment_sizing:a.segment_sizing==="weight"?"weight":"equal",min_visual_segments:n(a.min_visual_segments,D.min_visual_segments,0,24),wheel_border_color:hex(a.wheel_border_color)?a.wheel_border_color:D.wheel_border_color,wheel_border_thickness:n(a.wheel_border_thickness,D.wheel_border_thickness,0,24),center_color:hex(a.center_color)?a.center_color:D.center_color,center_size:n(a.center_size,D.center_size,24,120),pointer_color:hex(a.pointer_color)?a.pointer_color:D.pointer_color,prize_text_color:hex(a.prize_text_color)?a.prize_text_color:D.prize_text_color,prize_text_size:n(a.prize_text_size,D.prize_text_size,9,24),text_orientation:typeof a.text_orientation==="string"?a.text_orientation:D.text_orientation,animation_duration:n(a.animation_duration,D.animation_duration,2,10)}}
-export default function WheelCustomization({campaignGameId}:{campaignGameId:string}){const[target,setTarget]=useState<HTMLElement|null>(null),[base,setBase]=useState<Record<string,unknown>>({}),[s,setS]=useState<S>(D),[prizes,setPrizes]=useState<P[]>([]),[saving,setSaving]=useState(false),[msg,setMsg]=useState("");useEffect(()=>{Promise.all([fetch(`/api/admin/campaign-games/${campaignGameId}`,{cache:"no-store"}).then(r=>r.json()),fetch(`/api/admin/campaign-games/${campaignGameId}/prizes`,{cache:"no-store"}).then(r=>r.json())]).then(([c,p])=>{const a=(c.campaignGame?.appearance||{}) as Record<string,unknown>;setBase(a);setS(parse(a));setPrizes(Array.isArray(p.prizes)?p.prizes:[])})},[campaignGameId]);useEffect(()=>{const f=()=>{const h=[...document.querySelectorAll("h2")].find(x=>x.textContent?.trim()==="Customer View");setTarget(h?.closest(".admin-panel") as HTMLElement|null)};f();const o=new MutationObserver(f);o.observe(document.body,{childList:true,subtree:true});return()=>o.disconnect()},[]);const segs=useMemo(()=>{const p=prizes.filter(x=>x.active);if(!p.length)return[];const copies=Math.max(1,Math.ceil(Math.max(p.length,s.min_visual_segments||p.length)/p.length)),e=Array.from({length:p.length*copies},(_,i)=>({p:p[i%p.length],i:i%p.length,c:Math.floor(i/p.length)})),counts=new Map<string,number>();e.forEach(x=>counts.set(x.p.id,(counts.get(x.p.id)||0)+1));const u=e.map(x=>s.segment_sizing==="weight"?Math.max(0,x.p.weight)/(counts.get(x.p.id)||1):1),total=u.reduce((a,b)=>a+b,0)||e.length;let cur=0;return e.map((x,i)=>{const size=(u[i]||1)*360/total,start=cur,end=i===e.length-1?360:cur+size;cur=end;const own=x.p.metadata?.segment_color,pal=palettes[s.wheel_theme]||palettes.multicolor;return{...x,start,end,center:start+(end-start)/2,color:hex(own)?own:pal[x.i%pal.length]}})},[prizes,s]);const bg=segs.length?`conic-gradient(${segs.map(x=>`${x.color} ${x.start}deg ${x.end}deg`).join(",")})`:"#e5e7eb";const set=<K extends keyof S>(k:K,v:S[K])=>{setS(x=>({...x,[k]:v}));setMsg("")};async function save(){setSaving(true);setMsg("");try{const r=await fetch(`/api/admin/campaign-games/${campaignGameId}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({appearance:{...base,...s}})}),j=await r.json();if(!r.ok)throw new Error(j.error||"Save failed.");const a=(j.campaignGame?.appearance||{...base,...s}) as Record<string,unknown>;setBase(a);setS(parse(a));setMsg("Wheel customization saved.")}catch(e){setMsg(e instanceof Error?e.message:"Save failed.")}setSaving(false)}if(!target)return null;const st={width:"100%",padding:10,border:"1px solid #d1d5db",borderRadius:8,boxSizing:"border-box" as const,background:"#fff"};const cf=(label:string,k:"wheel_border_color"|"center_color"|"pointer_color"|"prize_text_color")=><div><b>{label}</b><div style={{display:"flex",gap:8,marginTop:6}}><input type="color" value={s[k]} onChange={e=>set(k,e.target.value)} style={{width:48,height:40}}/><input value={s[k]} readOnly style={st}/></div></div>;return createPortal(<div style={{marginTop:24,paddingTop:24,borderTop:"1px solid #e5e7eb"}}><h3 style={{margin:"0 0 6px"}}>Wheel Customization</h3><p style={{margin:"0 0 18px",color:"#6b7280",fontSize:14}}>Visual segment sizing does not change the backend winning probability.</p><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))",gap:16}}><div><b>Quick Theme</b><select value={s.wheel_theme} onChange={e=>set("wheel_theme",e.target.value)} style={{...st,marginTop:6}}><option value="red-white">Red & White</option><option value="gold">Gold</option><option value="blue">Blue</option><option value="green">Green</option><option value="multicolor">Multicolor</option><option value="custom">Custom</option></select></div><div><b>Wheel Style</b><select value={s.wheel_style} onChange={e=>set("wheel_style",e.target.value)} style={{...st,marginTop:6}}><option>classic</option><option>modern</option><option>bold</option><option>elegant</option><option>custom</option></select></div><div><b>Segment Sizing</b><select value={s.segment_sizing} onChange={e=>set("segment_sizing",e.target.value as S["segment_sizing"])} style={{...st,marginTop:6}}><option value="equal">Equal Size</option><option value="weight">Based on Prize Weight</option></select></div><div><b>Minimum Visual Segments</b><select value={s.min_visual_segments} onChange={e=>set("min_visual_segments",+e.target.value)} style={{...st,marginTop:6}}>{[[0,"Auto"],[4,"4"],[6,"6"],[8,"8"],[10,"10"],[12,"12"]].map(x=><option key={x[0]} value={x[0]}>{x[1]}</option>)}</select><small style={{color:"#6b7280"}}>4 prizes + 8 segments = each appears twice.</small></div>{cf("Wheel Border Color","wheel_border_color")}{cf("Center Circle Color","center_color")}{cf("Pointer Color","pointer_color")}{cf("Prize Text Color","prize_text_color")}<div><b>Border Thickness ({s.wheel_border_thickness}px)</b><input type="range" min={0} max={24} value={s.wheel_border_thickness} onChange={e=>set("wheel_border_thickness",+e.target.value)} style={{width:"100%"}}/></div><div><b>Center Size ({s.center_size}px)</b><input type="range" min={24} max={120} value={s.center_size} onChange={e=>set("center_size",+e.target.value)} style={{width:"100%"}}/></div><div><b>Prize Text Size ({s.prize_text_size}px)</b><input type="range" min={9} max={24} value={s.prize_text_size} onChange={e=>set("prize_text_size",+e.target.value)} style={{width:"100%"}}/></div><div><b>Text Orientation</b><select value={s.text_orientation} onChange={e=>set("text_orientation",e.target.value)} style={{...st,marginTop:6}}><option value="auto">Auto</option><option value="radial">Radial</option><option value="tangential">Tangential</option><option value="horizontal">Horizontal</option></select></div><div><b>Spin Duration ({s.animation_duration.toFixed(1)}s)</b><input type="range" min={2} max={10} step={.2} value={s.animation_duration} onChange={e=>set("animation_duration",+e.target.value)} style={{width:"100%"}}/></div></div><div style={{marginTop:24,padding:20,border:"1px solid #e5e7eb",borderRadius:12,background:"#f9fafb",textAlign:"center"}}><b>Live Wheel Preview</b><div style={{position:"relative",width:300,height:300,maxWidth:"75vw",maxHeight:"75vw",margin:"16px auto 0"}}><div style={{position:"absolute",top:-3,left:"50%",transform:"translateX(-50%)",zIndex:9,width:0,height:0,borderLeft:"14px solid transparent",borderRight:"14px solid transparent",borderTop:`27px solid ${s.pointer_color}`}}/><div style={{width:"100%",height:"100%",boxSizing:"border-box",borderRadius:"50%",padding:s.wheel_border_thickness,background:s.wheel_border_color}}><div style={{width:"100%",height:"100%",borderRadius:"50%",background:bg,position:"relative",overflow:"hidden",border:"3px solid #fff",boxSizing:"border-box"}}>{segs.map(x=>{const radial=x.center-90,flip=radial>90||radial<-90,outer=s.text_orientation==="tangential"?`translateY(-50%) rotate(${x.center}deg)`:`translateY(-50%) rotate(${radial}deg)`,inner=s.text_orientation==="horizontal"?`rotate(${-radial}deg)`:flip&&s.text_orientation!=="tangential"?"rotate(180deg)":"none";return <div key={`${x.p.id}-${x.c}`} style={{position:"absolute",top:"50%",left:"50%",width:"32%",height:30,transform:outer,transformOrigin:"0 50%",display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{width:"100%",color:s.prize_text_color,fontSize:s.prize_text_size,fontWeight:900,textAlign:"center",lineHeight:1,overflowWrap:"anywhere",textShadow:"0 1px 3px #000",transform:inner}}>{x.p.name}</span></div>})}<div style={{position:"absolute",top:"50%",left:"50%",width:s.center_size,height:s.center_size,transform:"translate(-50%,-50%)",borderRadius:"50%",background:s.center_color,border:"4px solid #fff",zIndex:5}}/></div></div></div></div><div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:12,marginTop:16}}>{msg&&<span style={{fontSize:13,color:msg.includes("saved")?"#065f46":"#b91c1c"}}>{msg}</span>}<button type="button" className="primary-btn" onClick={save} disabled={saving}>{saving?"Saving...":"Save Wheel Customization"}</button></div></div>,target)}
+
+import { useEffect, useMemo, useState } from "react";
+
+type Prize = {
+  id: string;
+  name: string;
+  weight: number;
+  active: boolean;
+  metadata: Record<string, unknown> | null;
+};
+
+type Settings = {
+  wheel_style: string;
+  wheel_theme: string;
+  segment_sizing: "equal" | "weight";
+  min_visual_segments: number;
+  wheel_border_color: string;
+  wheel_border_thickness: number;
+  center_color: string;
+  center_size: number;
+  pointer_color: string;
+  prize_text_color: string;
+  prize_text_size: number;
+  text_orientation: string;
+  animation_duration: number;
+};
+
+const defaults: Settings = {
+  wheel_style: "classic",
+  wheel_theme: "multicolor",
+  segment_sizing: "equal",
+  min_visual_segments: 8,
+  wheel_border_color: "#111827",
+  wheel_border_thickness: 8,
+  center_color: "#e31b23",
+  center_size: 50,
+  pointer_color: "#e31b23",
+  prize_text_color: "#ffffff",
+  prize_text_size: 13,
+  text_orientation: "auto",
+  animation_duration: 5.2,
+};
+
+const palettes: Record<string, string[]> = {
+  "red-white": ["#dc2626", "#ffffff"],
+  gold: ["#d4a017", "#fff7d6", "#7c5b00"],
+  blue: ["#2563eb", "#60a5fa", "#1e3a8a"],
+  green: ["#16a34a", "#86efac", "#14532d"],
+  multicolor: ["#e31b23", "#111827", "#f59e0b", "#2563eb", "#16a34a", "#7c3aed", "#db2777", "#0891b2"],
+  custom: ["#e31b23", "#111827", "#f59e0b", "#2563eb"],
+};
+
+const isHex = (value: unknown): value is string =>
+  typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value);
+
+const numberValue = (value: unknown, fallback: number, min: number, max: number) =>
+  typeof value === "number" ? Math.min(max, Math.max(min, value)) : fallback;
+
+function parseSettings(appearance: Record<string, unknown>): Settings {
+  return {
+    wheel_style: typeof appearance.wheel_style === "string" ? appearance.wheel_style : defaults.wheel_style,
+    wheel_theme: typeof appearance.wheel_theme === "string" ? appearance.wheel_theme : defaults.wheel_theme,
+    segment_sizing: appearance.segment_sizing === "weight" ? "weight" : "equal",
+    min_visual_segments: numberValue(appearance.min_visual_segments, defaults.min_visual_segments, 0, 24),
+    wheel_border_color: isHex(appearance.wheel_border_color) ? appearance.wheel_border_color : defaults.wheel_border_color,
+    wheel_border_thickness: numberValue(appearance.wheel_border_thickness, defaults.wheel_border_thickness, 0, 24),
+    center_color: isHex(appearance.center_color) ? appearance.center_color : defaults.center_color,
+    center_size: numberValue(appearance.center_size, defaults.center_size, 24, 120),
+    pointer_color: isHex(appearance.pointer_color) ? appearance.pointer_color : defaults.pointer_color,
+    prize_text_color: isHex(appearance.prize_text_color) ? appearance.prize_text_color : defaults.prize_text_color,
+    prize_text_size: numberValue(appearance.prize_text_size, defaults.prize_text_size, 9, 24),
+    text_orientation: typeof appearance.text_orientation === "string" ? appearance.text_orientation : defaults.text_orientation,
+    animation_duration: numberValue(appearance.animation_duration, defaults.animation_duration, 2, 10),
+  };
+}
+
+export default function WheelCustomization({ campaignGameId }: { campaignGameId: string }) {
+  const [base, setBase] = useState<Record<string, unknown>>({});
+  const [settings, setSettings] = useState<Settings>(defaults);
+  const [prizes, setPrizes] = useState<Prize[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`/api/admin/campaign-games/${campaignGameId}`, { cache: "no-store" }).then((response) => response.json()),
+      fetch(`/api/admin/campaign-games/${campaignGameId}/prizes`, { cache: "no-store" }).then((response) => response.json()),
+    ])
+      .then(([configuration, prizeResult]) => {
+        const appearance = (configuration.campaignGame?.appearance || {}) as Record<string, unknown>;
+        setBase(appearance);
+        setSettings(parseSettings(appearance));
+        setPrizes(Array.isArray(prizeResult.prizes) ? prizeResult.prizes : []);
+      })
+      .catch(() => setMessage("Unable to load wheel customization."));
+  }, [campaignGameId]);
+
+  const segments = useMemo(() => {
+    const activePrizes = prizes.filter((prize) => prize.active);
+    if (!activePrizes.length) return [];
+
+    const targetCount = Math.max(activePrizes.length, settings.min_visual_segments || activePrizes.length);
+    const copies = Math.max(1, Math.ceil(targetCount / activePrizes.length));
+    const entries = Array.from({ length: activePrizes.length * copies }, (_, index) => ({
+      prize: activePrizes[index % activePrizes.length],
+      prizeIndex: index % activePrizes.length,
+      copy: Math.floor(index / activePrizes.length),
+    }));
+
+    const counts = new Map<string, number>();
+    entries.forEach(({ prize }) => counts.set(prize.id, (counts.get(prize.id) || 0) + 1));
+
+    const units = entries.map(({ prize }) =>
+      settings.segment_sizing === "weight"
+        ? Math.max(0, prize.weight) / (counts.get(prize.id) || 1)
+        : 1
+    );
+    const total = units.reduce((sum, value) => sum + value, 0) || entries.length;
+    let current = 0;
+
+    return entries.map((entry, index) => {
+      const size = (units[index] || 1) * 360 / total;
+      const start = current;
+      const end = index === entries.length - 1 ? 360 : current + size;
+      current = end;
+      const prizeColor = entry.prize.metadata?.segment_color;
+      const palette = palettes[settings.wheel_theme] || palettes.multicolor;
+      return {
+        ...entry,
+        start,
+        end,
+        center: start + (end - start) / 2,
+        color: isHex(prizeColor) ? prizeColor : palette[entry.prizeIndex % palette.length],
+      };
+    });
+  }, [prizes, settings]);
+
+  const wheelBackground = segments.length
+    ? `conic-gradient(${segments.map((segment) => `${segment.color} ${segment.start}deg ${segment.end}deg`).join(",")})`
+    : "#e5e7eb";
+
+  function update<K extends keyof Settings>(key: K, value: Settings[K]) {
+    setSettings((current) => ({ ...current, [key]: value }));
+    setMessage("");
+  }
+
+  async function save() {
+    setSaving(true);
+    setMessage("");
+    try {
+      const response = await fetch(`/api/admin/campaign-games/${campaignGameId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appearance: { ...base, ...settings } }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Save failed.");
+      const appearance = (result.campaignGame?.appearance || { ...base, ...settings }) as Record<string, unknown>;
+      setBase(appearance);
+      setSettings(parseSettings(appearance));
+      setMessage("Wheel customization saved.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Save failed.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const inputStyle = {
+    width: "100%",
+    padding: "10px",
+    border: "1px solid #d1d5db",
+    borderRadius: "8px",
+    boxSizing: "border-box" as const,
+    background: "#ffffff",
+  };
+
+  const colorField = (
+    label: string,
+    key: "wheel_border_color" | "center_color" | "pointer_color" | "prize_text_color"
+  ) => (
+    <div>
+      <b>{label}</b>
+      <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+        <input type="color" value={settings[key]} onChange={(event) => update(key, event.target.value)} style={{ width: 48, height: 40 }} />
+        <input value={settings[key]} readOnly style={inputStyle} />
+      </div>
+    </div>
+  );
+
+  return (
+    <section className="admin-panel" style={{ marginTop: 20 }}>
+      <div className="eyebrow">APPEARANCE</div>
+      <h2 style={{ margin: "4px 0 6px" }}>Wheel Customization</h2>
+      <p style={{ margin: "0 0 20px", color: "#6b7280" }}>
+        Customize the campaign wheel. Visual segment sizing does not change backend winning probability.
+      </p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 16 }}>
+        <div>
+          <b>Quick Theme</b>
+          <select value={settings.wheel_theme} onChange={(event) => update("wheel_theme", event.target.value)} style={{ ...inputStyle, marginTop: 6 }}>
+            <option value="red-white">Red &amp; White</option>
+            <option value="gold">Gold</option>
+            <option value="blue">Blue</option>
+            <option value="green">Green</option>
+            <option value="multicolor">Multicolor</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div>
+          <b>Wheel Style</b>
+          <select value={settings.wheel_style} onChange={(event) => update("wheel_style", event.target.value)} style={{ ...inputStyle, marginTop: 6 }}>
+            <option value="classic">Classic</option>
+            <option value="modern">Modern</option>
+            <option value="bold">Bold</option>
+            <option value="elegant">Elegant</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div>
+          <b>Segment Sizing</b>
+          <select value={settings.segment_sizing} onChange={(event) => update("segment_sizing", event.target.value as Settings["segment_sizing"])} style={{ ...inputStyle, marginTop: 6 }}>
+            <option value="equal">Equal Size</option>
+            <option value="weight">Based on Prize Weight</option>
+          </select>
+        </div>
+        <div>
+          <b>Minimum Visual Segments</b>
+          <select value={settings.min_visual_segments} onChange={(event) => update("min_visual_segments", Number(event.target.value))} style={{ ...inputStyle, marginTop: 6 }}>
+            <option value={0}>Auto</option>
+            <option value={4}>4</option>
+            <option value={6}>6</option>
+            <option value={8}>8</option>
+            <option value={10}>10</option>
+            <option value={12}>12</option>
+          </select>
+          <small style={{ color: "#6b7280" }}>4 prizes + 8 segments = each prize appears twice visually.</small>
+        </div>
+        {colorField("Wheel Border Color", "wheel_border_color")}
+        {colorField("Center Circle Color", "center_color")}
+        {colorField("Pointer Color", "pointer_color")}
+        {colorField("Prize Text Color", "prize_text_color")}
+        <div><b>Border Thickness ({settings.wheel_border_thickness}px)</b><input type="range" min={0} max={24} value={settings.wheel_border_thickness} onChange={(event) => update("wheel_border_thickness", Number(event.target.value))} style={{ width: "100%" }} /></div>
+        <div><b>Center Size ({settings.center_size}px)</b><input type="range" min={24} max={120} value={settings.center_size} onChange={(event) => update("center_size", Number(event.target.value))} style={{ width: "100%" }} /></div>
+        <div><b>Prize Text Size ({settings.prize_text_size}px)</b><input type="range" min={9} max={24} value={settings.prize_text_size} onChange={(event) => update("prize_text_size", Number(event.target.value))} style={{ width: "100%" }} /></div>
+        <div>
+          <b>Text Orientation</b>
+          <select value={settings.text_orientation} onChange={(event) => update("text_orientation", event.target.value)} style={{ ...inputStyle, marginTop: 6 }}>
+            <option value="auto">Auto</option><option value="radial">Radial</option><option value="tangential">Tangential</option><option value="horizontal">Horizontal</option>
+          </select>
+        </div>
+        <div><b>Spin Duration ({settings.animation_duration.toFixed(1)}s)</b><input type="range" min={2} max={10} step={0.2} value={settings.animation_duration} onChange={(event) => update("animation_duration", Number(event.target.value))} style={{ width: "100%" }} /></div>
+      </div>
+
+      <div style={{ marginTop: 24, padding: 20, border: "1px solid #e5e7eb", borderRadius: 12, background: "#f9fafb", textAlign: "center" }}>
+        <b>Live Wheel Preview</b>
+        <div style={{ position: "relative", width: 300, height: 300, maxWidth: "75vw", maxHeight: "75vw", margin: "16px auto 0" }}>
+          <div style={{ position: "absolute", top: -3, left: "50%", transform: "translateX(-50%)", zIndex: 9, width: 0, height: 0, borderLeft: "14px solid transparent", borderRight: "14px solid transparent", borderTop: `27px solid ${settings.pointer_color}` }} />
+          <div style={{ width: "100%", height: "100%", boxSizing: "border-box", borderRadius: "50%", padding: settings.wheel_border_thickness, background: settings.wheel_border_color }}>
+            <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: wheelBackground, position: "relative", overflow: "hidden", border: "3px solid #fff", boxSizing: "border-box" }}>
+              {segments.map((segment) => {
+                const radial = segment.center - 90;
+                const flip = radial > 90 || radial < -90;
+                const outer = settings.text_orientation === "tangential" ? `translateY(-50%) rotate(${segment.center}deg)` : `translateY(-50%) rotate(${radial}deg)`;
+                const inner = settings.text_orientation === "horizontal" ? `rotate(${-radial}deg)` : flip && settings.text_orientation !== "tangential" ? "rotate(180deg)" : "none";
+                return (
+                  <div key={`${segment.prize.id}-${segment.copy}`} style={{ position: "absolute", top: "50%", left: "50%", width: "32%", height: 30, transform: outer, transformOrigin: "0 50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ width: "100%", color: settings.prize_text_color, fontSize: settings.prize_text_size, fontWeight: 900, textAlign: "center", lineHeight: 1, overflowWrap: "anywhere", textShadow: "0 1px 3px #000", transform: inner }}>{segment.prize.name}</span>
+                  </div>
+                );
+              })}
+              <div style={{ position: "absolute", top: "50%", left: "50%", width: settings.center_size, height: settings.center_size, transform: "translate(-50%,-50%)", borderRadius: "50%", background: settings.center_color, border: "4px solid #fff", zIndex: 5 }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12, marginTop: 16 }}>
+        {message && <span style={{ fontSize: 13, color: message.includes("saved") ? "#065f46" : "#b91c1c" }}>{message}</span>}
+        <button type="button" className="primary-btn" onClick={save} disabled={saving}>{saving ? "Saving..." : "Save Wheel Customization"}</button>
+      </div>
+    </section>
+  );
+}
