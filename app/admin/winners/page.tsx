@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
 type ReportRow = {
@@ -23,14 +24,17 @@ const exportFieldOptions = fieldOptions;
 const defaultTableFields: ReportField[] = ["date", "mobile", "name", "campaign", "game", "result", "prize", "coupon"];
 
 export default function WinnersPage() {
+  const searchParams = useSearchParams();
+  const campaignFromUrl = searchParams.get("campaign") || "all";
   const [rows, setRows] = useState<ReportRow[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState("");
-  const [campaignFilter, setCampaignFilter] = useState("all"); const [gameFilter, setGameFilter] = useState("all"); const [resultFilter, setResultFilter] = useState("all");
+  const [campaignFilter, setCampaignFilter] = useState(campaignFromUrl); const [gameFilter, setGameFilter] = useState("all"); const [resultFilter, setResultFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState(""); const [dateTo, setDateTo] = useState("");
   const [showExportOptions, setShowExportOptions] = useState(false); const [showTableOptions, setShowTableOptions] = useState(false);
   const [exportFields, setExportFields] = useState<ExportField[]>(exportFieldOptions.map((field) => field.key));
   const [tableFields, setTableFields] = useState<ReportField[]>(defaultTableFields);
 
   useEffect(() => { async function loadReporting() { const { data, error } = await supabase.rpc("get_game_reporting"); if (error) setError(error.message); else setRows(data ?? []); setLoading(false); } loadReporting(); }, []);
+  useEffect(() => { setCampaignFilter(campaignFromUrl); }, [campaignFromUrl]);
   const campaigns = useMemo(() => Array.from(new Set(rows.map((r) => r.campaign_name))).sort(), [rows]);
   const games = useMemo(() => Array.from(new Set(rows.map((r) => r.game_name))).sort(), [rows]);
   const filteredRows = useMemo(() => rows.filter((row) => { const played = new Date(row.played_at); const fromOk = !dateFrom || played >= new Date(`${dateFrom}T00:00:00`); const toOk = !dateTo || played <= new Date(`${dateTo}T23:59:59.999`); return (campaignFilter === "all" || row.campaign_name === campaignFilter) && (gameFilter === "all" || row.game_name === gameFilter) && (resultFilter === "all" || row.result_type === resultFilter) && fromOk && toOk; }), [rows, campaignFilter, gameFilter, resultFilter, dateFrom, dateTo]);
