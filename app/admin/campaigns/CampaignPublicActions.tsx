@@ -32,12 +32,12 @@ export default function CampaignPublicActions({ publicSlug }: Props) {
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: "6px", width: "100px" }}>
       <button
         type="button"
         onClick={openPreview}
         className="secondary-btn"
-        style={{ whiteSpace: "nowrap", cursor: "pointer" }}
+        style={{ whiteSpace: "nowrap", cursor: "pointer", width: "100%" }}
       >
         Preview
       </button>
@@ -45,7 +45,7 @@ export default function CampaignPublicActions({ publicSlug }: Props) {
         type="button"
         onClick={copyLink}
         className="secondary-btn"
-        style={{ whiteSpace: "nowrap", cursor: "pointer" }}
+        style={{ whiteSpace: "nowrap", cursor: "pointer", width: "100%" }}
       >
         {copied ? "Copied!" : "Copy Link"}
       </button>
