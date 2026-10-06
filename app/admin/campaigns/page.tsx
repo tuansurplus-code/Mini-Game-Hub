@@ -4,9 +4,7 @@ import { createSupabaseServerClient } from "../../../lib/supabase-server";
 import CampaignForm from "./CampaignForm";
 
 function formatCampaignDate(value: string | null) {
-  if (!value) {
-    return "—";
-  }
+  if (!value) return "—";
 
   return new Date(value).toLocaleString("en-LK", {
     timeZone: "Asia/Colombo",
@@ -22,25 +20,13 @@ function formatCampaignDate(value: string | null) {
 
 function formatStatus(status: string) {
   switch (status) {
-    case "draft":
-      return "Draft";
-
-    case "scheduled":
-      return "Scheduled";
-
-    case "active":
-      return "Active";
-
-    case "ended":
-      return "Ended";
-
-    case "archived":
-      return "Archived";
-
+    case "draft": return "Draft";
+    case "scheduled": return "Scheduled";
+    case "active": return "Active";
+    case "ended": return "Ended";
+    case "archived": return "Archived";
     default:
-      return status
-        .replace(/[_-]/g, " ")
-        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+      return status.replace(/[_-]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
 }
 
@@ -58,39 +44,65 @@ type CampaignGameRecord = {
   games: GameRecord | GameRecord[] | null;
 };
 
+type CampaignOverviewRecord = {
+  campaign_id: string;
+  total_participants: number | string;
+  total_spins: number | string;
+  total_winners: number | string;
+  winning_rate: number | string;
+};
+
 export default async function CampaignsPage() {
   await requireAdmin();
 
   const supabase = await createSupabaseServerClient();
 
-  const { data: campaigns, error } = await supabase
-    .from("campaigns")
-    .select(`
-      id,
-      name,
-      slug,
-      status,
-      scheduling_mode,
-      starts_at,
-      ends_at,
-      created_at,
-      campaign_games (
+  const [{ data: campaigns, error }, { data: overviewData, error: overviewError }] = await Promise.all([
+    supabase
+      .from("campaigns")
+      .select(`
         id,
+        name,
+        slug,
         status,
-        public_slug,
-        game_id,
-        games (
+        scheduling_mode,
+        starts_at,
+        ends_at,
+        created_at,
+        campaign_games (
           id,
-          name,
-          type
+          status,
+          public_slug,
+          game_id,
+          games (
+            id,
+            name,
+            type
+          )
         )
-      )
-    `)
-    .order("created_at", { ascending: false });
+      `)
+      .order("created_at", { ascending: false }),
+    supabase.rpc("get_campaign_overview_reporting"),
+  ]);
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
+  if (overviewError) throw new Error(overviewError.message);
+
+  const overviewByCampaign = new Map(
+    ((overviewData ?? []) as CampaignOverviewRecord[]).map((row) => [row.campaign_id, row])
+  );
+
+  const headerStyle = {
+    textAlign: "left" as const,
+    padding: "12px",
+    borderBottom: "1px solid #ddd",
+    whiteSpace: "nowrap" as const,
+  };
+
+  const cellStyle = {
+    padding: "12px",
+    borderBottom: "1px solid #eee",
+  };
 
   return (
     <div>
@@ -104,206 +116,78 @@ export default async function CampaignsPage() {
         }}
       >
         <div>
-          <h1 style={{ marginBottom: "6px" }}>
-            Campaigns
-          </h1>
-
+          <h1 style={{ marginBottom: "6px" }}>Campaigns</h1>
           <p style={{ margin: 0, color: "#666" }}>
-            Manage promotional campaigns and their schedules.
+            Manage promotional campaigns, schedules and performance.
           </p>
         </div>
-
         <CampaignForm />
       </div>
 
       <div className="admin-panel">
         <div style={{ overflowX: "auto" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              minWidth: "1050px",
-            }}
-          >
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1450px" }}>
             <thead>
               <tr>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "12px",
-                    borderBottom: "1px solid #ddd",
-                  }}
-                >
-                  Campaign
-                </th>
-
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "12px",
-                    borderBottom: "1px solid #ddd",
-                  }}
-                >
-                  Game
-                </th>
-
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "12px",
-                    borderBottom: "1px solid #ddd",
-                  }}
-                >
-                  Status
-                </th>
-
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "12px",
-                    borderBottom: "1px solid #ddd",
-                  }}
-                >
-                  Scheduling
-                </th>
-
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "12px",
-                    borderBottom: "1px solid #ddd",
-                  }}
-                >
-                  Public Slug
-                </th>
-
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "12px",
-                    borderBottom: "1px solid #ddd",
-                  }}
-                >
-                  Start
-                </th>
-
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "12px",
-                    borderBottom: "1px solid #ddd",
-                  }}
-                >
-                  End
-                </th>
-
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "12px",
-                    borderBottom: "1px solid #ddd",
-                  }}
-                >
-                  Action
-                </th>
+                <th style={headerStyle}>Campaign</th>
+                <th style={headerStyle}>Game</th>
+                <th style={headerStyle}>Status</th>
+                <th style={headerStyle}>Participants</th>
+                <th style={headerStyle}>Spins</th>
+                <th style={headerStyle}>Winners</th>
+                <th style={headerStyle}>Winning Rate</th>
+                <th style={headerStyle}>Scheduling</th>
+                <th style={headerStyle}>Public Slug</th>
+                <th style={headerStyle}>Start</th>
+                <th style={headerStyle}>End</th>
+                <th style={headerStyle}>Action</th>
               </tr>
             </thead>
 
             <tbody>
               {!campaigns || campaigns.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={8}
-                    style={{
-                      padding: "32px 12px",
-                      textAlign: "center",
-                      color: "#666",
-                    }}
-                  >
+                  <td colSpan={12} style={{ padding: "32px 12px", textAlign: "center", color: "#666" }}>
                     No campaigns found.
                   </td>
                 </tr>
               ) : (
                 campaigns.map((campaign) => {
-                  const campaignGames =
-                    Array.isArray(campaign.campaign_games)
-                      ? (campaign.campaign_games as CampaignGameRecord[])
-                      : [];
-
-                  const firstCampaignGame =
-                    campaignGames[0];
-
+                  const campaignGames = Array.isArray(campaign.campaign_games)
+                    ? (campaign.campaign_games as CampaignGameRecord[])
+                    : [];
+                  const firstCampaignGame = campaignGames[0];
                   const game = firstCampaignGame?.games;
-
-                  const gameRecord = Array.isArray(game)
-                    ? game[0]
-                    : game;
-
-                  const gameName =
-                    gameRecord?.name;
-
-                  const gameType =
-                    gameRecord?.type;
-
-                  const publicSlug =
-                    firstCampaignGame?.public_slug ||
-                    "—";
-
-                  const automatic =
-                    campaign.scheduling_mode ===
-                    "automatic";
+                  const gameRecord = Array.isArray(game) ? game[0] : game;
+                  const gameName = gameRecord?.name;
+                  const gameType = gameRecord?.type;
+                  const publicSlug = firstCampaignGame?.public_slug || "—";
+                  const automatic = campaign.scheduling_mode === "automatic";
+                  const overview = overviewByCampaign.get(campaign.id);
+                  const participants = Number(overview?.total_participants ?? 0);
+                  const spins = Number(overview?.total_spins ?? 0);
+                  const winners = Number(overview?.total_winners ?? 0);
+                  const winningRate = Number(overview?.winning_rate ?? 0);
 
                   return (
                     <tr key={campaign.id}>
-                      <td
-                        style={{
-                          padding: "12px",
-                          borderBottom: "1px solid #eee",
-                        }}
-                      >
-                        <strong>
-                          {campaign.name}
-                        </strong>
-
-                        <div
-                          style={{
-                            marginTop: "4px",
-                            color: "#888",
-                            fontSize: "12px",
-                          }}
-                        >
+                      <td style={cellStyle}>
+                        <strong>{campaign.name}</strong>
+                        <div style={{ marginTop: "4px", color: "#888", fontSize: "12px" }}>
                           {campaign.slug}
                         </div>
                       </td>
 
-                      <td
-                        style={{
-                          padding: "12px",
-                          borderBottom: "1px solid #eee",
-                        }}
-                      >
-                        {gameName ||
-                          "No game assigned"}
-
+                      <td style={cellStyle}>
+                        {gameName || "No game assigned"}
                         {gameType && (
-                          <div
-                            style={{
-                              marginTop: "4px",
-                              color: "#888",
-                              fontSize: "12px",
-                            }}
-                          >
+                          <div style={{ marginTop: "4px", color: "#888", fontSize: "12px" }}>
                             {gameType}
                           </div>
                         )}
                       </td>
 
-                      <td
-                        style={{
-                          padding: "12px",
-                          borderBottom: "1px solid #eee",
-                        }}
-                      >
+                      <td style={cellStyle}>
                         <span
                           style={{
                             display: "inline-block",
@@ -314,102 +198,43 @@ export default async function CampaignsPage() {
                             fontWeight: 600,
                           }}
                         >
-                          {formatStatus(
-                            campaign.status
-                          )}
+                          {formatStatus(campaign.status)}
                         </span>
                       </td>
 
-                      <td
-                        style={{
-                          padding: "12px",
-                          borderBottom:
-                            "1px solid #eee",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontWeight: automatic
-                              ? 600
-                              : 400,
-                          }}
-                        >
-                          {automatic
-                            ? "Automatic"
-                            : "Manual"}
-                        </span>
+                      <td style={{ ...cellStyle, fontWeight: 700 }}>{participants.toLocaleString()}</td>
+                      <td style={{ ...cellStyle, fontWeight: 700 }}>{spins.toLocaleString()}</td>
+                      <td style={{ ...cellStyle, fontWeight: 700 }}>{winners.toLocaleString()}</td>
+                      <td style={{ ...cellStyle, fontWeight: 700 }}>{winningRate.toFixed(1)}%</td>
 
+                      <td style={cellStyle}>
+                        <span style={{ fontWeight: automatic ? 600 : 400 }}>
+                          {automatic ? "Automatic" : "Manual"}
+                        </span>
                         {automatic && (
-                          <div
-                            style={{
-                              marginTop: "4px",
-                              color: "#888",
-                              fontSize: "12px",
-                            }}
-                          >
+                          <div style={{ marginTop: "4px", color: "#888", fontSize: "12px" }}>
                             Date-based
                           </div>
                         )}
                       </td>
 
-                      <td
-                        style={{
-                          padding: "12px",
-                          borderBottom:
-                            "1px solid #eee",
-                          fontSize: "13px",
-                        }}
-                      >
-                        {publicSlug === "—" ? (
-                          "—"
-                        ) : (
-                          <code>
-                            {publicSlug}
-                          </code>
-                        )}
+                      <td style={{ ...cellStyle, fontSize: "13px" }}>
+                        {publicSlug === "—" ? "—" : <code>{publicSlug}</code>}
                       </td>
 
-                      <td
-                        style={{
-                          padding: "12px",
-                          borderBottom:
-                            "1px solid #eee",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {formatCampaignDate(
-                          campaign.starts_at
-                        )}
+                      <td style={{ ...cellStyle, whiteSpace: "nowrap" }}>
+                        {formatCampaignDate(campaign.starts_at)}
                       </td>
 
-                      <td
-                        style={{
-                          padding: "12px",
-                          borderBottom:
-                            "1px solid #eee",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {formatCampaignDate(
-                          campaign.ends_at
-                        )}
+                      <td style={{ ...cellStyle, whiteSpace: "nowrap" }}>
+                        {formatCampaignDate(campaign.ends_at)}
                       </td>
 
-                      <td
-                        style={{
-                          padding: "12px",
-                          borderBottom:
-                            "1px solid #eee",
-                        }}
-                      >
+                      <td style={cellStyle}>
                         <Link
                           href={`/admin/campaigns/${campaign.id}`}
                           className="secondary-btn"
-                          style={{
-                            display: "inline-block",
-                            textDecoration: "none",
-                            whiteSpace: "nowrap",
-                          }}
+                          style={{ display: "inline-block", textDecoration: "none", whiteSpace: "nowrap" }}
                         >
                           Edit
                         </Link>
