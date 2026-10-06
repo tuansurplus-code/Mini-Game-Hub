@@ -6,7 +6,7 @@ type PageProps = { params: Promise<{ slug: string }> };
 type Campaign = { id:string; name:string; status:string; starts_at:string|null; ends_at:string|null };
 type Game = { id:string; name:string; type:string; description:string|null };
 type CampaignGame = { id:string; public_slug:string; status:string; appearance:Record<string,unknown>|null; rules:Record<string,unknown>|null; campaigns:Campaign|Campaign[]|null; games:Game|Game[]|null };
-type Prize = { id:string; name:string; description:string|null; image_url:string|null; weight:number; inventory:number|null; active:boolean };
+type Prize = { id:string; name:string; description:string|null; image_url:string|null; weight:number; inventory:number|null; active:boolean; metadata:Record<string,unknown>|null };
 type AppearanceSettings = { title:string; subtitle:string; button_text:string; page_background_color:string; button_color:string; button_text_color:string };
 type CustomerDetailMode = "off"|"optional"|"required";
 type CustomerDetailsSettings = { name:CustomerDetailMode; email:CustomerDetailMode; address:CustomerDetailMode };
@@ -25,7 +25,7 @@ export default async function PlayGamePage({params}:PageProps){
   const campaign=getSingleRecord(typedCampaignGame.campaigns); const game=getSingleRecord(typedCampaignGame.games); if(!campaign||!game)notFound();
   const now=new Date(); const startsAt=campaign.starts_at?new Date(campaign.starts_at):null; const endsAt=campaign.ends_at?new Date(campaign.ends_at):null;
   if(!(campaign.status==="active"&&(!startsAt||startsAt<=now)&&(!endsAt||endsAt>=now)))notFound();
-  const {data:prizes,error:prizesError}=await supabase.from("prizes").select(`id,name,description,image_url,weight,inventory,active`).eq("campaign_game_id",typedCampaignGame.id).eq("active",true).order("created_at",{ascending:true});
+  const {data:prizes,error:prizesError}=await supabase.from("prizes").select(`id,name,description,image_url,weight,inventory,active,metadata`).eq("campaign_game_id",typedCampaignGame.id).eq("active",true).order("created_at",{ascending:true});
   if(prizesError){console.error("Load public game prizes error:",prizesError);notFound();}
   return <SpinAndWinGame slug={typedCampaignGame.public_slug} gameName={game.name} prizes={(prizes??[]) as Prize[]} appearance={getAppearance(typedCampaignGame.appearance)} customerDetails={getCustomerDetails(typedCampaignGame.rules)}/>;
 }
