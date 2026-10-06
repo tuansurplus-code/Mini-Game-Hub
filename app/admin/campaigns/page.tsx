@@ -15,7 +15,6 @@ function formatCampaignDate(value: string | null) {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-    second: "2-digit",
     hour12: true,
   });
 }
@@ -104,6 +103,7 @@ export default async function CampaignsPage() {
   const cellStyle = {
     padding: "12px",
     borderBottom: "1px solid #eee",
+    verticalAlign: "middle" as const,
   };
 
   return (
@@ -128,18 +128,14 @@ export default async function CampaignsPage() {
 
       <div className="admin-panel">
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1700px" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1180px" }}>
             <thead>
               <tr>
                 <th style={headerStyle}>Campaign</th>
                 <th style={headerStyle}>Game</th>
                 <th style={headerStyle}>Status</th>
-                <th style={headerStyle}>Participants</th>
-                <th style={headerStyle}>Spins</th>
-                <th style={headerStyle}>Winners</th>
-                <th style={headerStyle}>Winning Rate</th>
+                <th style={headerStyle}>Performance</th>
                 <th style={headerStyle}>Scheduling</th>
-                <th style={headerStyle}>Public Slug</th>
                 <th style={headerStyle}>Customer Link</th>
                 <th style={headerStyle}>Start</th>
                 <th style={headerStyle}>End</th>
@@ -150,7 +146,7 @@ export default async function CampaignsPage() {
             <tbody>
               {!campaigns || campaigns.length === 0 ? (
                 <tr>
-                  <td colSpan={13} style={{ padding: "32px 12px", textAlign: "center", color: "#666" }}>
+                  <td colSpan={9} style={{ padding: "32px 12px", textAlign: "center", color: "#666" }}>
                     No campaigns found.
                   </td>
                 </tr>
@@ -205,10 +201,18 @@ export default async function CampaignsPage() {
                         </span>
                       </td>
 
-                      <td style={{ ...cellStyle, fontWeight: 700 }}>{participants.toLocaleString()}</td>
-                      <td style={{ ...cellStyle, fontWeight: 700 }}>{spins.toLocaleString()}</td>
-                      <td style={{ ...cellStyle, fontWeight: 700 }}>{winners.toLocaleString()}</td>
-                      <td style={{ ...cellStyle, fontWeight: 700 }}>{winningRate.toFixed(1)}%</td>
+                      <td style={cellStyle}>
+                        <div style={{ display: "grid", gridTemplateColumns: "auto auto", gap: "3px 12px", fontSize: "12px", whiteSpace: "nowrap" }}>
+                          <span style={{ color: "#777" }}>Participants</span>
+                          <strong>{participants.toLocaleString()}</strong>
+                          <span style={{ color: "#777" }}>Spins</span>
+                          <strong>{spins.toLocaleString()}</strong>
+                          <span style={{ color: "#777" }}>Winners</span>
+                          <strong>{winners.toLocaleString()}</strong>
+                          <span style={{ color: "#777" }}>Win Rate</span>
+                          <strong>{winningRate.toFixed(1)}%</strong>
+                        </div>
+                      </td>
 
                       <td style={cellStyle}>
                         <span style={{ fontWeight: automatic ? 600 : 400 }}>
@@ -221,19 +225,15 @@ export default async function CampaignsPage() {
                         )}
                       </td>
 
-                      <td style={{ ...cellStyle, fontSize: "13px" }}>
-                        {publicSlug ? <code>{publicSlug}</code> : "—"}
-                      </td>
-
                       <td style={cellStyle}>
                         <CampaignPublicActions publicSlug={publicSlug} />
                       </td>
 
-                      <td style={{ ...cellStyle, whiteSpace: "nowrap" }}>
+                      <td style={{ ...cellStyle, whiteSpace: "nowrap", fontSize: "13px" }}>
                         {formatCampaignDate(campaign.starts_at)}
                       </td>
 
-                      <td style={{ ...cellStyle, whiteSpace: "nowrap" }}>
+                      <td style={{ ...cellStyle, whiteSpace: "nowrap", fontSize: "13px" }}>
                         {formatCampaignDate(campaign.ends_at)}
                       </td>
 
