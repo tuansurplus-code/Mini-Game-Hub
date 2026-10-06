@@ -3,6 +3,7 @@ import { requireAdmin } from "../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../lib/supabase-server";
 import CampaignForm from "./CampaignForm";
 import DuplicateCampaignButton from "./DuplicateCampaignButton";
+import CampaignPublicActions from "./CampaignPublicActions";
 
 function formatCampaignDate(value: string | null) {
   if (!value) return "—";
@@ -127,7 +128,7 @@ export default async function CampaignsPage() {
 
       <div className="admin-panel">
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1530px" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1700px" }}>
             <thead>
               <tr>
                 <th style={headerStyle}>Campaign</th>
@@ -139,6 +140,7 @@ export default async function CampaignsPage() {
                 <th style={headerStyle}>Winning Rate</th>
                 <th style={headerStyle}>Scheduling</th>
                 <th style={headerStyle}>Public Slug</th>
+                <th style={headerStyle}>Customer Link</th>
                 <th style={headerStyle}>Start</th>
                 <th style={headerStyle}>End</th>
                 <th style={headerStyle}>Action</th>
@@ -148,7 +150,7 @@ export default async function CampaignsPage() {
             <tbody>
               {!campaigns || campaigns.length === 0 ? (
                 <tr>
-                  <td colSpan={12} style={{ padding: "32px 12px", textAlign: "center", color: "#666" }}>
+                  <td colSpan={13} style={{ padding: "32px 12px", textAlign: "center", color: "#666" }}>
                     No campaigns found.
                   </td>
                 </tr>
@@ -162,7 +164,7 @@ export default async function CampaignsPage() {
                   const gameRecord = Array.isArray(game) ? game[0] : game;
                   const gameName = gameRecord?.name;
                   const gameType = gameRecord?.type;
-                  const publicSlug = firstCampaignGame?.public_slug || "—";
+                  const publicSlug = firstCampaignGame?.public_slug || null;
                   const automatic = campaign.scheduling_mode === "automatic";
                   const overview = overviewByCampaign.get(campaign.id);
                   const participants = Number(overview?.total_participants ?? 0);
@@ -220,7 +222,11 @@ export default async function CampaignsPage() {
                       </td>
 
                       <td style={{ ...cellStyle, fontSize: "13px" }}>
-                        {publicSlug === "—" ? "—" : <code>{publicSlug}</code>}
+                        {publicSlug ? <code>{publicSlug}</code> : "—"}
+                      </td>
+
+                      <td style={cellStyle}>
+                        <CampaignPublicActions publicSlug={publicSlug} />
                       </td>
 
                       <td style={{ ...cellStyle, whiteSpace: "nowrap" }}>
