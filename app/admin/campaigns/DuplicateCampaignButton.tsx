@@ -1,54 +1,5 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-type Props = { campaignId: string; campaignName: string };
-
-export default function DuplicateCampaignButton({ campaignId, campaignName }: Props) {
-  const router = useRouter();
-  const [duplicating, setDuplicating] = useState(false);
-
-  async function handleDuplicate() {
-    if (duplicating) return;
-    const confirmed = window.confirm(`Duplicate "${campaignName}"?\n\nThe new campaign will be created as a Draft with the same game configuration, appearance, rules and prizes. Participants, spins, winners and coupons will not be copied.`);
-    if (!confirmed) return;
-    setDuplicating(true);
-    try {
-      const response = await fetch(`/api/admin/campaigns/${campaignId}/duplicate`, { method: "POST" });
-      const result = await response.json();
-      if (!response.ok) {
-        window.alert(result.error || "Failed to duplicate campaign.");
-        setDuplicating(false);
-        return;
-      }
-      if (!result.campaign?.id) {
-        window.alert("Campaign was duplicated, but the new campaign could not be opened.");
-        setDuplicating(false);
-        router.refresh();
-        return;
-      }
-      router.push(`/admin/campaigns/${result.campaign.id}`);
-      router.refresh();
-    } catch {
-      window.alert("Unable to duplicate campaign.");
-      setDuplicating(false);
-    }
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleDuplicate}
-      disabled={duplicating}
-      className="secondary-btn"
-      style={{
-        whiteSpace: "nowrap",
-        cursor: duplicating ? "not-allowed" : "pointer",
-        opacity: duplicating ? 0.65 : 1,
-      }}
-    >
-      {duplicating ? "Duplicating..." : "Duplicate"}
-    </button>
-  );
-}
+type Props={campaignId:string;campaignName:string};
+export default function DuplicateCampaignButton({campaignId,campaignName}:Props){const router=useRouter();const[duplicating,setDuplicating]=useState(false);async function handleDuplicate(){if(duplicating)return;const confirmed=window.confirm(`Duplicate "${campaignName}"?`);if(!confirmed)return;setDuplicating(true);try{const response=await fetch(`/api/admin/campaigns/${campaignId}/duplicate`,{method:"POST"});const result=await response.json();if(!response.ok){window.alert(result.error||"Failed to duplicate campaign.");setDuplicating(false);return}if(result.campaign?.id){router.push(`/admin/campaigns/${result.campaign.id}`);router.refresh();return}router.refresh()}catch{window.alert("Unable to duplicate campaign.");setDuplicating(false)}}return <button type="button" title="Duplicate" aria-label="Duplicate campaign" onClick={handleDuplicate} disabled={duplicating} className="secondary-btn" style={{width:36,height:36,padding:0,display:"inline-flex",alignItems:"center",justifyContent:"center"}}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="11" height="11" rx="2"/><rect x="4" y="4" width="11" height="11" rx="2"/></svg></button>}
