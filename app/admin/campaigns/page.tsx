@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "../../../lib/supabase-server";
 import CampaignForm from "./CampaignForm";
 import DuplicateCampaignButton from "./DuplicateCampaignButton";
 import CampaignPublicActions from "./CampaignPublicActions";
+import CampaignControls from "./CampaignControls";
 
 function formatCampaignDate(value: string | null) {
   if (!value) return "—";
@@ -24,6 +25,7 @@ function formatStatus(status: string) {
     case "draft": return "Draft";
     case "scheduled": return "Scheduled";
     case "active": return "Active";
+    case "paused": return "Paused";
     case "ended": return "Ended";
     case "archived": return "Archived";
     default:
@@ -142,6 +144,7 @@ export default async function CampaignsPage() {
                         <Link href={`/admin/winners?campaign=${encodeURIComponent(campaign.name)}`} className="secondary-btn" style={{ display: "block", textDecoration: "none", whiteSpace: "nowrap", textAlign: "center", width: "100%" }}>
                           Report
                         </Link>
+                        <CampaignControls campaignId={campaign.id} campaignName={campaign.name} status={campaign.status} />
                         <DuplicateCampaignButton campaignId={campaign.id} campaignName={campaign.name} />
                       </div>
                     </td>
