@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "../../../../../../lib/supabase-serve
 type RouteContext = { params: Promise<{ id: string }> };
 const hexColor = /^#[0-9a-fA-F]{6}$/;
 const alignments = new Set(["left", "center", "right"]);
+const fontFamilies = new Set(["Arial, sans-serif", "Verdana, sans-serif", "Tahoma, sans-serif", "'Trebuchet MS', sans-serif", "Georgia, serif", "'Times New Roman', serif", "'Courier New', monospace", "system-ui, sans-serif"]);
 const clamp = (value: unknown, min: number, max: number, fallback: number) => { const n = Number(value); return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : fallback; };
 
 export async function PATCH(request: Request, { params }: RouteContext) {
@@ -16,13 +17,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     for (const field of colorFields) if (!hexColor.test(String(body[field] ?? ""))) return NextResponse.json({ error: `Invalid color value for ${field}.` }, { status: 400 });
     const titleAlign = String(body.title_align ?? "center"); const subtitleAlign = String(body.subtitle_align ?? "center"); const logoAlign = String(body.logo_align ?? "center");
     if (![titleAlign, subtitleAlign, logoAlign].every(v => alignments.has(v))) return NextResponse.json({ error: "Invalid alignment value." }, { status: 400 });
+    const titleFontFamily = String(body.title_font_family ?? "Arial, sans-serif"); const subtitleFontFamily = String(body.subtitle_font_family ?? "Arial, sans-serif");
+    if (!fontFamilies.has(titleFontFamily) || !fontFamilies.has(subtitleFontFamily)) return NextResponse.json({ error: "Invalid font family." }, { status: 400 });
     const logoUrl = String(body.logo_url ?? "").trim().slice(0, 1000);
     if (logoUrl) { try { const parsed = new URL(logoUrl); if (!["http:", "https:"].includes(parsed.protocol)) throw new Error(); } catch { return NextResponse.json({ error: "Logo URL must be a valid http or https URL." }, { status: 400 }); } }
-
     const landing = {
       subtitle: String(body.subtitle ?? "").trim().slice(0, 500), background_color: body.background_color, card_background_color: body.card_background_color, button_color: body.button_color, button_text_color: body.button_text_color,
-      title_bold: Boolean(body.title_bold), title_italic: Boolean(body.title_italic), title_underline: Boolean(body.title_underline), title_align: titleAlign, title_font_size: clamp(body.title_font_size, 18, 96, 54), title_color: body.title_color,
-      subtitle_bold: Boolean(body.subtitle_bold), subtitle_italic: Boolean(body.subtitle_italic), subtitle_underline: Boolean(body.subtitle_underline), subtitle_align: subtitleAlign, subtitle_font_size: clamp(body.subtitle_font_size, 10, 48, 17), subtitle_color: body.subtitle_color,
+      title_bold: Boolean(body.title_bold), title_italic: Boolean(body.title_italic), title_underline: Boolean(body.title_underline), title_align: titleAlign, title_font_size: clamp(body.title_font_size, 18, 96, 54), title_color: body.title_color, title_font_family: titleFontFamily,
+      subtitle_bold: Boolean(body.subtitle_bold), subtitle_italic: Boolean(body.subtitle_italic), subtitle_underline: Boolean(body.subtitle_underline), subtitle_align: subtitleAlign, subtitle_font_size: clamp(body.subtitle_font_size, 10, 48, 17), subtitle_color: body.subtitle_color, subtitle_font_family: subtitleFontFamily,
       logo_url: logoUrl, logo_align: logoAlign, logo_width: clamp(body.logo_width, 40, 500, 160), logo_visible: Boolean(body.logo_visible),
     };
     const supabase = await createSupabaseServerClient();
