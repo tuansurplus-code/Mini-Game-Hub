@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "../../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../../lib/supabase-server";
 import CampaignEditForm from "./CampaignEditForm";
+import PublicGameAccess from "./PublicGameAccess";
 
 type PageProps = {
   params: Promise<{
@@ -93,6 +94,58 @@ export default async function CampaignEditPage({
         campaign={campaign}
         campaignGames={campaignGames ?? []}
       />
+
+      {(campaignGames ?? []).length > 0 && (
+        <section
+          className="admin-panel"
+          style={{ marginTop: 24 }}
+        >
+          <div className="eyebrow">PUBLIC ACCESS</div>
+          <h2 style={{ marginBottom: 6 }}>Customer Game Links</h2>
+          <p style={{ marginTop: 0, color: "#666", fontSize: 14 }}>
+            Copy a published game link or open the customer view in a new tab.
+          </p>
+
+          <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
+            {(campaignGames ?? []).map((campaignGame) => {
+              const game = Array.isArray(campaignGame.games)
+                ? campaignGame.games[0]
+                : campaignGame.games;
+              const published = campaignGame.status === "published";
+
+              return (
+                <div
+                  key={campaignGame.id}
+                  style={{
+                    padding: 16,
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 10,
+                    background: "#fff",
+                  }}
+                >
+                  <div style={{ fontWeight: 700 }}>
+                    {game?.name ?? "Campaign Game"}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 4,
+                      fontSize: 13,
+                      color: "#666",
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    /play/{campaignGame.public_slug} · {published ? "Published" : "Not Published"}
+                  </div>
+                  <PublicGameAccess
+                    publicSlug={campaignGame.public_slug}
+                    published={published}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </>
   );
 }
