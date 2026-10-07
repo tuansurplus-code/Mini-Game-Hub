@@ -16,22 +16,22 @@ function normalizeSriLankanMobile(mobile: string): string | null {
   return null;
 }
 
-function getFriendlySpinError(message: string) {
+function getFriendlyPlayError(message: string) {
   const normalized = message.toLowerCase();
 
   if (normalized.includes("already played today")) {
     return {
       code: "ALREADY_PLAYED_TODAY",
       title: "Already Played Today",
-      message: "You have already used today's spin. Please come back tomorrow for another chance to win.",
+      message: "You have already played today. Please come back tomorrow for another chance to win.",
     };
   }
 
   if (normalized.includes("already played this campaign")) {
     return {
       code: "ALREADY_PLAYED_CAMPAIGN",
-      title: "Spin Already Used",
-      message: "This mobile number has already used its spin for this campaign.",
+      title: "Play Already Used",
+      message: "This mobile number has already played this campaign.",
     };
   }
 
@@ -55,7 +55,7 @@ function getFriendlySpinError(message: string) {
     return {
       code: "PRIZE_INVENTORY_CHANGED",
       title: "Please Try Again",
-      message: "Prize availability changed during your spin. Please try again.",
+      message: "Prize availability changed while processing your play. Please try again.",
     };
   }
 
@@ -141,16 +141,18 @@ export async function POST(request: Request, context: RouteContext) {
 
     const requestId = crypto.randomUUID();
 
-    const { data: result, error: spinError } = await supabase.rpc("play_spin", {
+    // play_spin is the shared server-side prize-selection engine. The client game
+    // (wheel, scratch card, etc.) only reveals the result returned by this RPC.
+    const { data: result, error: playError } = await supabase.rpc("play_spin", {
       p_campaign_game_id: campaignGame.id,
       p_mobile_e164: mobileE164,
       p_request_id: requestId,
     });
 
-    if (spinError) {
-      console.error("Play spin RPC error:", spinError);
-      const friendlyError = getFriendlySpinError(
-        spinError.message || "Unable to play the game."
+    if (playError) {
+      console.error("Secure play RPC error:", playError);
+      const friendlyError = getFriendlyPlayError(
+        playError.message || "Unable to play the game."
       );
 
       return NextResponse.json(
