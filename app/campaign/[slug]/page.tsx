@@ -34,6 +34,20 @@ function getSingleRecord<T>(value: T | T[] | null): T | null {
   return Array.isArray(value) ? value[0] ?? null : value;
 }
 
+function getGameLabel(type: string) {
+  if (type === "spin") return "Spin & Win";
+  if (type === "scratch") return "Scratch & Win";
+  if (type === "pick_card") return "Pick a Card";
+  return "Mini Game";
+}
+
+function getGameIcon(type: string) {
+  if (type === "spin") return "↻";
+  if (type === "scratch") return "✦";
+  if (type === "pick_card") return "▣";
+  return "★";
+}
+
 export default async function PublicCampaignPage({ params }: PageProps) {
   const { slug } = await params;
 
@@ -105,32 +119,25 @@ export default async function PublicCampaignPage({ params }: PageProps) {
     <main
       style={{
         minHeight: "100vh",
-        background: "#f8fafc",
-        padding: "48px 20px",
+        background: "#f4f6f8",
+        padding: "56px 20px",
       }}
     >
       <div
         style={{
           width: "100%",
-          maxWidth: 960,
+          maxWidth: 1040,
           margin: "0 auto",
         }}
       >
-        <section
-          style={{
-            background: "#ffffff",
-            border: "1px solid #e5e7eb",
-            borderRadius: 18,
-            padding: "32px 28px",
-            boxShadow: "0 12px 32px rgba(15, 23, 42, 0.06)",
-          }}
-        >
+        <header style={{ textAlign: "center", marginBottom: 34 }}>
           <h1
             style={{
               margin: 0,
-              fontSize: "clamp(30px, 6vw, 48px)",
-              lineHeight: 1.08,
+              fontSize: "clamp(34px, 7vw, 54px)",
+              lineHeight: 1.05,
               color: "#111827",
+              letterSpacing: "-0.035em",
             }}
           >
             {typedCampaign.name}
@@ -138,117 +145,140 @@ export default async function PublicCampaignPage({ params }: PageProps) {
 
           <p
             style={{
-              margin: "14px 0 0",
-              maxWidth: 620,
+              margin: "14px auto 0",
+              maxWidth: 600,
               color: "#6b7280",
-              fontSize: 16,
+              fontSize: 17,
               lineHeight: 1.6,
             }}
           >
             Choose a game and play for your chance to win exciting rewards.
           </p>
+        </header>
 
-          {publishedGames.length > 0 ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                gap: 16,
-                marginTop: 28,
-              }}
-            >
-              {publishedGames.map((campaignGame) => {
-                const game = getSingleRecord(campaignGame.games);
+        {publishedGames.length > 0 ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 20,
+            }}
+          >
+            {publishedGames.map((campaignGame) => {
+              const game = getSingleRecord(campaignGame.games);
 
-                if (!game) {
-                  return null;
-                }
+              if (!game) {
+                return null;
+              }
 
-                return (
-                  <article
-                    key={campaignGame.id}
+              return (
+                <article
+                  key={campaignGame.id}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    minHeight: 300,
+                    padding: 26,
+                    border: "1px solid #e2e5e9",
+                    borderRadius: 20,
+                    background: "#ffffff",
+                    boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
+                  }}
+                >
+                  <div
                     style={{
+                      width: 52,
+                      height: 52,
                       display: "flex",
-                      flexDirection: "column",
-                      padding: 20,
-                      border: "1px solid #e5e7eb",
+                      alignItems: "center",
+                      justifyContent: "center",
                       borderRadius: 14,
-                      background: "#ffffff",
+                      background: "#fff1f2",
+                      color: "#e31b23",
+                      fontSize: 28,
+                      fontWeight: 800,
                     }}
                   >
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: "#e31b23",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                      }}
-                    >
-                      {game.type}
-                    </div>
+                    {getGameIcon(game.type)}
+                  </div>
 
-                    <h2
-                      style={{
-                        margin: "8px 0 0",
-                        fontSize: 22,
-                        color: "#111827",
-                      }}
-                    >
-                      {game.name}
-                    </h2>
+                  <div
+                    style={{
+                      marginTop: 20,
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color: "#e31b23",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    {getGameLabel(game.type)}
+                  </div>
 
-                    {game.description && (
-                      <p
-                        style={{
-                          margin: "10px 0 0",
-                          color: "#6b7280",
-                          lineHeight: 1.55,
-                          fontSize: 14,
-                        }}
-                      >
-                        {game.description}
-                      </p>
-                    )}
+                  <h2
+                    style={{
+                      margin: "7px 0 0",
+                      fontSize: 25,
+                      lineHeight: 1.2,
+                      color: "#111827",
+                    }}
+                  >
+                    {game.name}
+                  </h2>
 
-                    <Link
-                      href={`/play/${campaignGame.public_slug}`}
-                      style={{
-                        display: "inline-flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        marginTop: "auto",
-                        padding: "12px 16px",
-                        borderRadius: 9,
-                        background: "#e31b23",
-                        color: "#ffffff",
-                        textDecoration: "none",
-                        fontWeight: 800,
-                        fontSize: 14,
-                      }}
-                    >
-                      Play Now
-                    </Link>
-                  </article>
-                );
-              })}
-            </div>
-          ) : (
-            <div
-              style={{
-                marginTop: 28,
-                padding: 20,
-                borderRadius: 12,
-                background: "#f9fafb",
-                border: "1px dashed #d1d5db",
-                color: "#6b7280",
-                fontSize: 14,
-              }}
-            >
-              There are no games available in this campaign right now.
-            </div>
-          )}
-        </section>
+                  <p
+                    style={{
+                      margin: "10px 0 22px",
+                      color: "#6b7280",
+                      lineHeight: 1.55,
+                      fontSize: 14,
+                    }}
+                  >
+                    {game.description || "Play now for your chance to win."}
+                  </p>
+
+                  <Link
+                    href={`/play/${campaignGame.public_slug}`}
+                    style={{
+                      display: "inline-flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginTop: "auto",
+                      minHeight: 48,
+                      padding: "0 18px",
+                      borderRadius: 12,
+                      background: "#e31b23",
+                      color: "#ffffff",
+                      textDecoration: "none",
+                      fontWeight: 800,
+                      fontSize: 15,
+                      boxShadow: "0 7px 18px rgba(227, 27, 35, 0.18)",
+                    }}
+                  >
+                    Play Now →
+                  </Link>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div
+            style={{
+              maxWidth: 620,
+              margin: "0 auto",
+              padding: "28px 24px",
+              borderRadius: 16,
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
+              color: "#6b7280",
+              textAlign: "center",
+              fontSize: 15,
+              boxShadow: "0 8px 24px rgba(15, 23, 42, 0.05)",
+            }}
+          >
+            There are no games available in this campaign right now.
+          </div>
+        )}
       </div>
     </main>
   );
