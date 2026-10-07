@@ -4,6 +4,7 @@ import WheelCustomization from "./WheelCustomization";
 import ScratchCustomization from "./ScratchCustomization";
 import PrizeCouponSettings from "./PrizeCouponSettings";
 import AutoCouponSettings from "./AutoCouponSettings";
+import ConfigurationTabs from "./ConfigurationTabs";
 
 export default async function CampaignGameConfigurationLayout({
   children,
@@ -16,6 +17,7 @@ export default async function CampaignGameConfigurationLayout({
 
   return (
     <div className="campaign-game-configuration">
+      <ConfigurationTabs />
       {children}
       <PrizeCouponSettings campaignGameId={id} />
       <AutoCouponSettings campaignGameId={id} />
