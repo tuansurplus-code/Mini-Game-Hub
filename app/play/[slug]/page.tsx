@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "../../../lib/supabase-server";
 import SpinAndWinGame from "../../../components/games/SpinAndWinGame";
+import ScratchAndWinGame from "../../../components/games/ScratchAndWinGame";
 
 type PageProps = { params: Promise<{ slug: string }> };
 type Campaign = { id:string; name:string; status:string; starts_at:string|null; ends_at:string|null };
@@ -82,6 +83,7 @@ function getAppearance(a:Record<string,unknown>|null):AppearanceSettings {
   };
 }
 function getCustomerDetails(r:Record<string,unknown>|null):CustomerDetailsSettings { const raw=r?.customer_details; const d=typeof raw==="object"&&raw!==null&&!Array.isArray(raw)?raw as Record<string,unknown>:{}; const mode=(v:unknown):CustomerDetailMode=>v==="optional"||v==="required"?v:"off"; return {name:mode(d.name),email:mode(d.email),address:mode(d.address)}; }
+function normalizeGameType(type:string){return type.trim().toLowerCase().replace(/[\s_]+/g,"-");}
 
 export default async function PlayGamePage({params}:PageProps){
   const {slug}=await params; if(!slug)notFound();
@@ -94,5 +96,13 @@ export default async function PlayGamePage({params}:PageProps){
   if(!(campaign.status==="active"&&(!startsAt||startsAt<=now)&&(!endsAt||endsAt>=now)))notFound();
   const {data:prizes,error:prizesError}=await supabase.from("prizes").select(`id,name,description,image_url,weight,inventory,active,metadata`).eq("campaign_game_id",typedCampaignGame.id).eq("active",true).order("created_at",{ascending:true});
   if(prizesError){console.error("Load public game prizes error:",prizesError);notFound();}
-  return <SpinAndWinGame slug={typedCampaignGame.public_slug} gameName={game.name} prizes={(prizes??[]) as Prize[]} appearance={getAppearance(typedCampaignGame.appearance)} customerDetails={getCustomerDetails(typedCampaignGame.rules)}/>;
+
+  const gameType=normalizeGameType(game.type);
+  if(gameType==="spin"||gameType==="spin-and-win"){
+    return <SpinAndWinGame slug={typedCampaignGame.public_slug} gameName={game.name} prizes={(prizes??[]) as Prize[]} appearance={getAppearance(typedCampaignGame.appearance)} customerDetails={getCustomerDetails(typedCampaignGame.rules)}/>;
+  }
+  if(gameType==="scratch"||gameType==="scratch-and-win"){
+    return <ScratchAndWinGame gameName={game.name}/>;
+  }
+  notFound();
 }
