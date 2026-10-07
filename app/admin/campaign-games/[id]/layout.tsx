@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import CampaignPrizeColors from "./CampaignPrizeColors";
 import WheelCustomization from "./WheelCustomization";
 import ScratchCustomization from "./ScratchCustomization";
+import PrizeCouponSettings from "./PrizeCouponSettings";
 
 export default async function CampaignGameConfigurationLayout({
   children,
@@ -15,6 +16,7 @@ export default async function CampaignGameConfigurationLayout({
   return (
     <div className="campaign-game-configuration">
       {children}
+      <PrizeCouponSettings campaignGameId={id} />
       <CampaignPrizeColors campaignGameId={id} />
       <WheelCustomization campaignGameId={id} />
       <ScratchCustomization campaignGameId={id} />
