@@ -13,7 +13,7 @@ export default function CampaignPublicActions({ publicSlug }: Props) {
     return <span style={{ color: "#888", fontSize: "13px" }}>No public link</span>;
   }
 
-  const path = `/play/${publicSlug}`;
+  const path = `/campaign/${publicSlug}`;
 
   function openPreview() {
     window.open(path, "_blank", "noopener,noreferrer");
