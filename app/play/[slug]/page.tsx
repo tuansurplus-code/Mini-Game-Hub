@@ -102,7 +102,7 @@ export default async function PlayGamePage({params}:PageProps){
     return <SpinAndWinGame slug={typedCampaignGame.public_slug} gameName={game.name} prizes={(prizes??[]) as Prize[]} appearance={getAppearance(typedCampaignGame.appearance)} customerDetails={getCustomerDetails(typedCampaignGame.rules)}/>;
   }
   if(gameType==="scratch"||gameType==="scratch-and-win"){
-    return <ScratchAndWinGame gameName={game.name}/>;
+    return <ScratchAndWinGame slug={typedCampaignGame.public_slug} gameName={game.name}/>;
   }
   notFound();
 }
