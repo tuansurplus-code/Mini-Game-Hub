@@ -1,26 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import CampaignControls from "./CampaignControls";
 
 type Props = { campaignId: string; campaignName: string };
 
 export default function DuplicateCampaignButton({ campaignId, campaignName }: Props) {
   const router = useRouter();
   const [duplicating, setDuplicating] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    fetch(`/api/admin/campaigns/${campaignId}/status`, { cache: "no-store" })
-      .then(async (response) => {
-        const result = await response.json();
-        if (active && response.ok) setStatus(result.campaign?.status ?? null);
-      })
-      .catch(() => undefined);
-    return () => { active = false; };
-  }, [campaignId]);
 
   async function handleDuplicate() {
     if (duplicating) return;
@@ -30,8 +17,17 @@ export default function DuplicateCampaignButton({ campaignId, campaignName }: Pr
     try {
       const response = await fetch(`/api/admin/campaigns/${campaignId}/duplicate`, { method: "POST" });
       const result = await response.json();
-      if (!response.ok) { window.alert(result.error || "Failed to duplicate campaign."); setDuplicating(false); return; }
-      if (!result.campaign?.id) { window.alert("Campaign was duplicated, but the new campaign could not be opened."); setDuplicating(false); router.refresh(); return; }
+      if (!response.ok) {
+        window.alert(result.error || "Failed to duplicate campaign.");
+        setDuplicating(false);
+        return;
+      }
+      if (!result.campaign?.id) {
+        window.alert("Campaign was duplicated, but the new campaign could not be opened.");
+        setDuplicating(false);
+        router.refresh();
+        return;
+      }
       router.push(`/admin/campaigns/${result.campaign.id}`);
       router.refresh();
     } catch {
@@ -40,10 +36,19 @@ export default function DuplicateCampaignButton({ campaignId, campaignName }: Pr
     }
   }
 
-  return <>
-    {status && <CampaignControls campaignId={campaignId} campaignName={campaignName} status={status} />}
-    <button type="button" onClick={handleDuplicate} disabled={duplicating} className="secondary-btn" style={{ whiteSpace: "nowrap", cursor: duplicating ? "not-allowed" : "pointer", opacity: duplicating ? 0.65 : 1 }}>
+  return (
+    <button
+      type="button"
+      onClick={handleDuplicate}
+      disabled={duplicating}
+      className="secondary-btn"
+      style={{
+        whiteSpace: "nowrap",
+        cursor: duplicating ? "not-allowed" : "pointer",
+        opacity: duplicating ? 0.65 : 1,
+      }}
+    >
       {duplicating ? "Duplicating..." : "Duplicate"}
     </button>
-  </>;
+  );
 }
