@@ -125,19 +125,6 @@ export default async function PublicCampaignPage({ params }: PageProps) {
             boxShadow: "0 12px 32px rgba(15, 23, 42, 0.06)",
           }}
         >
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 800,
-              letterSpacing: "0.12em",
-              color: "#e31b23",
-              textTransform: "uppercase",
-              marginBottom: 10,
-            }}
-          >
-            Singhagiri Mini Game Hub
-          </div>
-
           <h1
             style={{
               margin: 0,
