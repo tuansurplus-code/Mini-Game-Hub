@@ -2,61 +2,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "../../../lib/supabase-server";
 
-type PageProps = { params: Promise<{ slug: string }> };
-type LandingSettings = { subtitle?: string; background_color?: string; card_background_color?: string; text_color?: string; button_color?: string; button_text_color?: string };
-type Campaign = { id: string; name: string; slug: string; status: string; starts_at: string | null; ends_at: string | null; settings: Record<string, unknown> | null };
-type Game = { id: string; name: string; type: string; description: string | null };
-type CampaignGame = { id: string; public_slug: string; status: string; display_order: number | null; games: Game | Game[] | null };
-
-function getSingleRecord<T>(value: T | T[] | null): T | null { return Array.isArray(value) ? value[0] ?? null : value; }
-function getGameLabel(type: string) { if (type === "spin") return "Spin & Win"; if (type === "scratch") return "Scratch & Win"; if (type === "pick_card" || type === "pick-card") return "Pick a Card"; return "Mini Game"; }
-function getGameIcon(type: string) { if (type === "spin") return "↻"; if (type === "scratch") return "✦"; if (type === "pick_card" || type === "pick-card") return "▣"; return "★"; }
-
-export default async function PublicCampaignPage({ params }: PageProps) {
-  const { slug } = await params;
-  if (!slug) notFound();
-  const supabase = await createSupabaseServerClient();
-  const { data: campaign, error } = await supabase.from("campaigns").select("id,name,slug,status,starts_at,ends_at,settings").eq("slug", slug).maybeSingle();
-  if (error || !campaign) { if (error) console.error("Load public campaign error:", error); notFound(); }
-
-  const typedCampaign = campaign as Campaign;
-  const now = new Date();
-  const startsAt = typedCampaign.starts_at ? new Date(typedCampaign.starts_at) : null;
-  const endsAt = typedCampaign.ends_at ? new Date(typedCampaign.ends_at) : null;
-  if (!(typedCampaign.status === "active" && (!startsAt || startsAt <= now) && (!endsAt || endsAt >= now))) notFound();
-
-  const { data: campaignGames, error: campaignGamesError } = await supabase.from("campaign_games").select(`id,public_slug,status,display_order,games!inner (id,name,type,description)`).eq("campaign_id", typedCampaign.id).eq("status", "published").order("display_order", { ascending: true });
-  if (campaignGamesError) { console.error("Load public campaign games error:", campaignGamesError); notFound(); }
-  const publishedGames = (campaignGames ?? []) as CampaignGame[];
-
-  const settings = typedCampaign.settings && typeof typedCampaign.settings === "object" && !Array.isArray(typedCampaign.settings) ? typedCampaign.settings : {};
-  const landing = settings.landing && typeof settings.landing === "object" && !Array.isArray(settings.landing) ? settings.landing as LandingSettings : {};
-  const subtitle = landing.subtitle || "Choose a game and play for your chance to win exciting rewards.";
-  const backgroundColor = landing.background_color || "#f4f6f8";
-  const cardBackgroundColor = landing.card_background_color || "#ffffff";
-  const textColor = landing.text_color || "#111827";
-  const buttonColor = landing.button_color || "#e31b23";
-  const buttonTextColor = landing.button_text_color || "#ffffff";
-
-  return <main style={{ minHeight: "100vh", background: backgroundColor, padding: "56px 20px" }}>
-    <div style={{ width: "100%", maxWidth: 1040, margin: "0 auto" }}>
-      <header style={{ textAlign: "center", marginBottom: 34 }}>
-        <h1 style={{ margin: 0, fontSize: "clamp(34px, 7vw, 54px)", lineHeight: 1.05, color: textColor, letterSpacing: "-0.035em" }}>{typedCampaign.name}</h1>
-        {subtitle && <p style={{ margin: "14px auto 0", maxWidth: 600, color: textColor, opacity: 0.65, fontSize: 17, lineHeight: 1.6 }}>{subtitle}</p>}
-      </header>
-
-      {publishedGames.length > 0 ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-        {publishedGames.map((campaignGame) => {
-          const game = getSingleRecord(campaignGame.games); if (!game) return null;
-          return <article key={campaignGame.id} style={{ display: "flex", flexDirection: "column", minHeight: 300, padding: 26, border: "1px solid rgba(128,128,128,.22)", borderRadius: 20, background: cardBackgroundColor, boxShadow: "0 10px 30px rgba(15,23,42,.06)" }}>
-            <div style={{ width: 52, height: 52, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 14, background: buttonColor, color: buttonTextColor, fontSize: 28, fontWeight: 800 }}>{getGameIcon(game.type)}</div>
-            <div style={{ marginTop: 20, fontSize: 12, fontWeight: 800, color: buttonColor, textTransform: "uppercase", letterSpacing: ".1em" }}>{getGameLabel(game.type)}</div>
-            <h2 style={{ margin: "7px 0 0", fontSize: 25, lineHeight: 1.2, color: textColor }}>{game.name}</h2>
-            <p style={{ margin: "10px 0 22px", color: textColor, opacity: .65, lineHeight: 1.55, fontSize: 14 }}>{game.description || "Play now for your chance to win."}</p>
-            <Link href={`/play/${campaignGame.public_slug}`} style={{ display: "inline-flex", justifyContent: "center", alignItems: "center", marginTop: "auto", minHeight: 48, padding: "0 18px", borderRadius: 12, background: buttonColor, color: buttonTextColor, textDecoration: "none", fontWeight: 800, fontSize: 15 }}>Play Now →</Link>
-          </article>;
-        })}
-      </div> : <div style={{ maxWidth: 620, margin: "0 auto", padding: "28px 24px", borderRadius: 16, background: cardBackgroundColor, color: textColor, textAlign: "center", fontSize: 15 }}>There are no games available in this campaign right now.</div>}
-    </div>
-  </main>;
+type PageProps={params:Promise<{slug:string}>}; type Align="left"|"center"|"right";
+type LandingSettings={subtitle?:string;background_color?:string;card_background_color?:string;text_color?:string;button_color?:string;button_text_color?:string;title_bold?:boolean;title_italic?:boolean;title_underline?:boolean;title_align?:Align;title_font_size?:number;title_color?:string;subtitle_bold?:boolean;subtitle_italic?:boolean;subtitle_underline?:boolean;subtitle_align?:Align;subtitle_font_size?:number;subtitle_color?:string;logo_url?:string;logo_align?:Align;logo_width?:number;logo_visible?:boolean};
+type Campaign={id:string;name:string;slug:string;status:string;starts_at:string|null;ends_at:string|null;settings:Record<string,unknown>|null}; type Game={id:string;name:string;type:string;description:string|null}; type CampaignGame={id:string;public_slug:string;status:string;display_order:number|null;games:Game|Game[]|null};
+function one<T>(v:T|T[]|null):T|null{return Array.isArray(v)?v[0]??null:v} function label(t:string){if(t==="spin")return"Spin & Win";if(t==="scratch")return"Scratch & Win";if(t==="pick_card"||t==="pick-card")return"Pick a Card";return"Mini Game"} function icon(t:string){if(t==="spin")return"↻";if(t==="scratch")return"✦";if(t==="pick_card"||t==="pick-card")return"▣";return"★"}
+export default async function PublicCampaignPage({params}:PageProps){
+ const{slug}=await params;if(!slug)notFound();const supabase=await createSupabaseServerClient();const{data:campaign,error}=await supabase.from("campaigns").select("id,name,slug,status,starts_at,ends_at,settings").eq("slug",slug).maybeSingle();if(error||!campaign)notFound();const c=campaign as Campaign;const now=new Date(),start=c.starts_at?new Date(c.starts_at):null,end=c.ends_at?new Date(c.ends_at):null;if(!(c.status==="active"&&(!start||start<=now)&&(!end||end>=now)))notFound();
+ const{data:campaignGames,error:gamesError}=await supabase.from("campaign_games").select(`id,public_slug,status,display_order,games!inner (id,name,type,description)`).eq("campaign_id",c.id).eq("status","published").order("display_order",{ascending:true});if(gamesError)notFound();const games=(campaignGames??[]) as CampaignGame[];
+ const settings=c.settings&&typeof c.settings==="object"&&!Array.isArray(c.settings)?c.settings:{};const l=settings.landing&&typeof settings.landing==="object"&&!Array.isArray(settings.landing)?settings.landing as LandingSettings:{};const subtitle=l.subtitle||"Choose a game and play for your chance to win exciting rewards.";const bg=l.background_color||"#f4f6f8",card=l.card_background_color||"#fff",button=l.button_color||"#e31b23",buttonText=l.button_text_color||"#fff",text=l.text_color||"#111827";
+ const titleAlign=l.title_align||"center",subAlign=l.subtitle_align||"center";
+ return <main style={{minHeight:"100vh",background:bg,padding:"56px 20px"}}><div style={{width:"100%",maxWidth:1040,margin:"0 auto"}}><header style={{marginBottom:34}}>
+  {l.logo_url&&l.logo_visible!==false&&<div style={{textAlign:l.logo_align||"center",marginBottom:18}}><img src={l.logo_url} alt="Campaign logo" style={{width:l.logo_width||160,maxWidth:"100%",height:"auto"}}/></div>}
+  <h1 style={{margin:0,fontSize:`clamp(24px, 7vw, ${l.title_font_size||54}px)`,lineHeight:1.05,color:l.title_color||text,letterSpacing:"-.035em",fontWeight:l.title_bold===false?400:700,fontStyle:l.title_italic?"italic":"normal",textDecoration:l.title_underline?"underline":"none",textAlign:titleAlign}}>{c.name}</h1>
+  {subtitle&&<p style={{margin:"14px 0 0",maxWidth:subAlign==="center"?600:"none",marginLeft:subAlign==="center"?"auto":0,marginRight:subAlign==="center"?"auto":0,color:l.subtitle_color||text,opacity:.78,fontSize:l.subtitle_font_size||17,lineHeight:1.6,fontWeight:l.subtitle_bold?700:400,fontStyle:l.subtitle_italic?"italic":"normal",textDecoration:l.subtitle_underline?"underline":"none",textAlign:subAlign,whiteSpace:"pre-wrap"}}>{subtitle}</p>}
+ </header>{games.length>0?<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:20}}>{games.map(cg=>{const g=one(cg.games);if(!g)return null;return <article key={cg.id} style={{display:"flex",flexDirection:"column",minHeight:300,padding:26,border:"1px solid rgba(128,128,128,.22)",borderRadius:20,background:card,boxShadow:"0 10px 30px rgba(15,23,42,.06)"}}><div style={{width:52,height:52,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:14,background:button,color:buttonText,fontSize:28,fontWeight:800}}>{icon(g.type)}</div><div style={{marginTop:20,fontSize:12,fontWeight:800,color:button,textTransform:"uppercase",letterSpacing:".1em"}}>{label(g.type)}</div><h2 style={{margin:"7px 0 0",fontSize:25,lineHeight:1.2,color:text}}>{g.name}</h2><p style={{margin:"10px 0 22px",color:text,opacity:.65,lineHeight:1.55,fontSize:14}}>{g.description||"Play now for your chance to win."}</p><Link href={`/play/${cg.public_slug}`} style={{display:"inline-flex",justifyContent:"center",alignItems:"center",marginTop:"auto",minHeight:48,padding:"0 18px",borderRadius:12,background:button,color:buttonText,textDecoration:"none",fontWeight:800,fontSize:15}}>Play Now →</Link></article>})}</div>:<div style={{maxWidth:620,margin:"0 auto",padding:"28px 24px",borderRadius:16,background:card,color:text,textAlign:"center",fontSize:15}}>There are no games available in this campaign right now.</div>}</div></main>;
 }
