@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "../../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../../lib/supabase-server";
 import CampaignEditForm from "./CampaignEditForm";
+import PublicCampaignAccess from "./PublicCampaignAccess";
 import PublicGameAccess from "./PublicGameAccess";
 
 type PageProps = {
@@ -73,6 +74,14 @@ export default async function CampaignEditPage({
     throw new Error("Failed to load campaign games.");
   }
 
+  const now = new Date();
+  const startsAt = campaign.starts_at ? new Date(campaign.starts_at) : null;
+  const endsAt = campaign.ends_at ? new Date(campaign.ends_at) : null;
+  const campaignPubliclyAvailable =
+    campaign.status === "active" &&
+    (!startsAt || startsAt <= now) &&
+    (!endsAt || endsAt >= now);
+
   return (
     <>
       <div className="admin-header">
@@ -94,6 +103,22 @@ export default async function CampaignEditPage({
         campaign={campaign}
         campaignGames={campaignGames ?? []}
       />
+
+      <section
+        className="admin-panel"
+        style={{ marginTop: 24 }}
+      >
+        <div className="eyebrow">CAMPAIGN PUBLIC URL</div>
+        <h2 style={{ marginBottom: 6 }}>Customer Campaign Page</h2>
+        <p style={{ marginTop: 0, color: "#666", fontSize: 14 }}>
+          Share one campaign link so customers can choose from all published games in this campaign.
+        </p>
+
+        <PublicCampaignAccess
+          campaignSlug={campaign.slug}
+          available={campaignPubliclyAvailable}
+        />
+      </section>
 
       {(campaignGames ?? []).length > 0 && (
         <section
