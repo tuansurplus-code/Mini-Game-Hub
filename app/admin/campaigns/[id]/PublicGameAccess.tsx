@@ -4,11 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Props = {
+  campaignGameId: string;
   publicSlug: string;
   published: boolean;
 };
 
-export default function PublicGameAccess({ publicSlug, published }: Props) {
+export default function PublicGameAccess({
+  campaignGameId,
+  publicSlug,
+  published,
+}: Props) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [unpublishing, setUnpublishing] = useState(false);
@@ -48,7 +53,7 @@ export default function PublicGameAccess({ publicSlug, published }: Props) {
 
     try {
       const response = await fetch(
-        `/api/admin/campaign-games/${encodeURIComponent(publicSlug)}/unpublish`,
+        `/api/admin/campaign-games/${encodeURIComponent(campaignGameId)}/unpublish`,
         { method: "POST" }
       );
       const result = await response.json();
