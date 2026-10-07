@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "../../../lib/supabase-server";
 
@@ -13,6 +14,25 @@ type Campaign = {
   starts_at: string | null;
   ends_at: string | null;
 };
+
+type Game = {
+  id: string;
+  name: string;
+  type: string;
+  description: string | null;
+};
+
+type CampaignGame = {
+  id: string;
+  public_slug: string;
+  status: string;
+  display_order: number | null;
+  games: Game | Game[] | null;
+};
+
+function getSingleRecord<T>(value: T | T[] | null): T | null {
+  return Array.isArray(value) ? value[0] ?? null : value;
+}
 
 export default async function PublicCampaignPage({ params }: PageProps) {
   const { slug } = await params;
@@ -53,6 +73,33 @@ export default async function PublicCampaignPage({ params }: PageProps) {
   if (!isAvailable) {
     notFound();
   }
+
+  const { data: campaignGames, error: campaignGamesError } = await supabase
+    .from("campaign_games")
+    .select(
+      `
+        id,
+        public_slug,
+        status,
+        display_order,
+        games!inner (
+          id,
+          name,
+          type,
+          description
+        )
+      `
+    )
+    .eq("campaign_id", typedCampaign.id)
+    .eq("status", "published")
+    .order("display_order", { ascending: true });
+
+  if (campaignGamesError) {
+    console.error("Load public campaign games error:", campaignGamesError);
+    notFound();
+  }
+
+  const publishedGames = (campaignGames ?? []) as CampaignGame[];
 
   return (
     <main
@@ -114,19 +161,106 @@ export default async function PublicCampaignPage({ params }: PageProps) {
             Choose a game and play for your chance to win exciting rewards.
           </p>
 
-          <div
-            style={{
-              marginTop: 28,
-              padding: 20,
-              borderRadius: 12,
-              background: "#f9fafb",
-              border: "1px dashed #d1d5db",
-              color: "#6b7280",
-              fontSize: 14,
-            }}
-          >
-            Game selection will be added in Step 9.2.2.
-          </div>
+          {publishedGames.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: 16,
+                marginTop: 28,
+              }}
+            >
+              {publishedGames.map((campaignGame) => {
+                const game = getSingleRecord(campaignGame.games);
+
+                if (!game) {
+                  return null;
+                }
+
+                return (
+                  <article
+                    key={campaignGame.id}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      padding: 20,
+                      border: "1px solid #e5e7eb",
+                      borderRadius: 14,
+                      background: "#ffffff",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "#e31b23",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                      }}
+                    >
+                      {game.type}
+                    </div>
+
+                    <h2
+                      style={{
+                        margin: "8px 0 0",
+                        fontSize: 22,
+                        color: "#111827",
+                      }}
+                    >
+                      {game.name}
+                    </h2>
+
+                    {game.description && (
+                      <p
+                        style={{
+                          margin: "10px 0 0",
+                          color: "#6b7280",
+                          lineHeight: 1.55,
+                          fontSize: 14,
+                        }}
+                      >
+                        {game.description}
+                      </p>
+                    )}
+
+                    <Link
+                      href={`/play/${campaignGame.public_slug}`}
+                      style={{
+                        display: "inline-flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginTop: "auto",
+                        padding: "12px 16px",
+                        borderRadius: 9,
+                        background: "#e31b23",
+                        color: "#ffffff",
+                        textDecoration: "none",
+                        fontWeight: 800,
+                        fontSize: 14,
+                      }}
+                    >
+                      Play Now
+                    </Link>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div
+              style={{
+                marginTop: 28,
+                padding: 20,
+                borderRadius: 12,
+                background: "#f9fafb",
+                border: "1px dashed #d1d5db",
+                color: "#6b7280",
+                fontSize: 14,
+              }}
+            >
+              There are no games available in this campaign right now.
+            </div>
+          )}
         </section>
       </div>
     </main>
