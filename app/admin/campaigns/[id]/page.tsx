@@ -137,6 +137,7 @@ export default async function CampaignEditPage({
                     /play/{campaignGame.public_slug} · {published ? "Published" : "Not Published"}
                   </div>
                   <PublicGameAccess
+                    campaignGameId={campaignGame.id}
                     publicSlug={campaignGame.public_slug}
                     published={published}
                   />
