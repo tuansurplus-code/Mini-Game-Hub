@@ -1,48 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import CampaignControls from "./CampaignControls";
 
-type Props = {
-  campaignId: string;
-  campaignName: string;
-};
+type Props = { campaignId: string; campaignName: string };
 
 export default function DuplicateCampaignButton({ campaignId, campaignName }: Props) {
   const router = useRouter();
   const [duplicating, setDuplicating] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`/api/admin/campaigns/${campaignId}/status`, { cache: "no-store" })
+      .then(async (response) => {
+        const result = await response.json();
+        if (active && response.ok) setStatus(result.campaign?.status ?? null);
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [campaignId]);
 
   async function handleDuplicate() {
     if (duplicating) return;
-
-    const confirmed = window.confirm(
-      `Duplicate "${campaignName}"?\n\nThe new campaign will be created as a Draft with the same game configuration, appearance, rules and prizes. Participants, spins, winners and coupons will not be copied.`
-    );
-
+    const confirmed = window.confirm(`Duplicate "${campaignName}"?\n\nThe new campaign will be created as a Draft with the same game configuration, appearance, rules and prizes. Participants, spins, winners and coupons will not be copied.`);
     if (!confirmed) return;
-
     setDuplicating(true);
-
     try {
-      const response = await fetch(`/api/admin/campaigns/${campaignId}/duplicate`, {
-        method: "POST",
-      });
-
+      const response = await fetch(`/api/admin/campaigns/${campaignId}/duplicate`, { method: "POST" });
       const result = await response.json();
-
-      if (!response.ok) {
-        window.alert(result.error || "Failed to duplicate campaign.");
-        setDuplicating(false);
-        return;
-      }
-
-      if (!result.campaign?.id) {
-        window.alert("Campaign was duplicated, but the new campaign could not be opened.");
-        setDuplicating(false);
-        router.refresh();
-        return;
-      }
-
+      if (!response.ok) { window.alert(result.error || "Failed to duplicate campaign."); setDuplicating(false); return; }
+      if (!result.campaign?.id) { window.alert("Campaign was duplicated, but the new campaign could not be opened."); setDuplicating(false); router.refresh(); return; }
       router.push(`/admin/campaigns/${result.campaign.id}`);
       router.refresh();
     } catch {
@@ -51,19 +40,10 @@ export default function DuplicateCampaignButton({ campaignId, campaignName }: Pr
     }
   }
 
-  return (
-    <button
-      type="button"
-      onClick={handleDuplicate}
-      disabled={duplicating}
-      className="secondary-btn"
-      style={{
-        whiteSpace: "nowrap",
-        cursor: duplicating ? "not-allowed" : "pointer",
-        opacity: duplicating ? 0.65 : 1,
-      }}
-    >
+  return <>
+    {status && <CampaignControls campaignId={campaignId} campaignName={campaignName} status={status} />}
+    <button type="button" onClick={handleDuplicate} disabled={duplicating} className="secondary-btn" style={{ whiteSpace: "nowrap", cursor: duplicating ? "not-allowed" : "pointer", opacity: duplicating ? 0.65 : 1 }}>
       {duplicating ? "Duplicating..." : "Duplicate"}
     </button>
-  );
+  </>;
 }
