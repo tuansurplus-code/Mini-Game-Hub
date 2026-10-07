@@ -21,31 +21,45 @@ export async function POST(_request: Request, context: RouteContext) {
 
     if (!id) {
       return NextResponse.json(
-        { error: "Campaign game ID is required." },
+        { error: "Campaign game ID or public slug is required." },
         { status: 400 }
       );
     }
 
     const supabase = await createSupabaseServerClient();
 
-    const { data: campaignGame, error: lookupError } = await supabase
-      .from("campaign_games")
-      .select(`
+    const selectFields = `
+      id,
+      public_slug,
+      status,
+      campaigns!inner (
         id,
-        status,
-        campaigns!inner (
-          id,
-          workspace_id
-        )
-      `)
+        workspace_id
+      )
+    `;
+
+    let lookup = await supabase
+      .from("campaign_games")
+      .select(selectFields)
       .eq("id", id)
       .eq("campaigns.workspace_id", workspaceId)
       .maybeSingle();
 
-    if (lookupError) {
-      console.error("Verify campaign game before unpublish error:", lookupError);
-      return NextResponse.json({ error: lookupError.message }, { status: 400 });
+    if (!lookup.data && !lookup.error) {
+      lookup = await supabase
+        .from("campaign_games")
+        .select(selectFields)
+        .eq("public_slug", id)
+        .eq("campaigns.workspace_id", workspaceId)
+        .maybeSingle();
     }
+
+    if (lookup.error) {
+      console.error("Verify campaign game before unpublish error:", lookup.error);
+      return NextResponse.json({ error: lookup.error.message }, { status: 400 });
+    }
+
+    const campaignGame = lookup.data;
 
     if (!campaignGame) {
       return NextResponse.json(
@@ -64,7 +78,7 @@ export async function POST(_request: Request, context: RouteContext) {
     const { data: updatedCampaignGame, error: updateError } = await supabase
       .from("campaign_games")
       .update({ status: "draft" })
-      .eq("id", id)
+      .eq("id", campaignGame.id)
       .select(`
         id,
         campaign_id,
