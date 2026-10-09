@@ -39,7 +39,8 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     let nextStatus: string;
     if (action === "activate") {
       if (!["draft", "scheduled"].includes(campaign.status)) return NextResponse.json({ error: "Only draft or scheduled campaigns can be activated." }, { status: 409 });
-      nextStatus = "active";
+      if (campaign.ends_at && new Date(campaign.ends_at).getTime() <= Date.now()) return NextResponse.json({ error: "Extend the end date before publishing this campaign." }, { status: 409 });
+      nextStatus = campaign.scheduling_mode === "automatic" && campaign.starts_at && new Date(campaign.starts_at).getTime() > Date.now() ? "scheduled" : "active";
     } else if (action === "pause") {
       if (campaign.status !== "active") return NextResponse.json({ error: "Only active campaigns can be paused." }, { status: 409 });
       nextStatus = "paused";
