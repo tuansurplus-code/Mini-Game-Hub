@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { builderGame, withGame } from "../../lib/game-builder";
 import { supabase } from "../../lib/supabase";
 
 const fieldStyle = { width: "100%", padding: "12px 14px", border: "1px solid #d1d5db", borderRadius: "9px", marginBottom: "18px", fontSize: "15px", boxSizing: "border-box" as const };
 
-export default function LoginPage() {
+function LoginPage() {
   const router = useRouter();
+  const game = builderGame(useSearchParams().get("game"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +20,7 @@ export default function LoginPage() {
     event.preventDefault(); setLoading(true); setError("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { setError(error.message); setLoading(false); return; }
-    router.push("/onboarding"); router.refresh();
+    router.push(withGame("/onboarding", game)); router.refresh();
   }
 
   return <main style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#f6f7f9",padding:20}}>
@@ -35,7 +37,9 @@ export default function LoginPage() {
         <div style={{textAlign:"right",marginBottom:20}}><Link href="/forgot-password" style={{fontSize:13,color:"#374151"}}>Forgot password?</Link></div>
         <button type="submit" disabled={loading} style={{width:"100%",border:0,borderRadius:9,padding:"13px 16px",background:"#111827",color:"#fff",fontWeight:700,fontSize:15,cursor:loading?"not-allowed":"pointer",opacity:loading?.7:1}}>{loading?"Signing in...":"Sign In"}</button>
       </form>
-      <p style={{textAlign:"center",fontSize:14,color:"#697386",margin:"22px 0 0"}}>New to Mini-Game Hub? <Link href="/signup" style={{fontWeight:700,color:"#111827"}}>Create an account</Link></p>
+      <p style={{textAlign:"center",fontSize:14,color:"#697386",margin:"22px 0 0"}}>New to Mini-Game Hub? <Link href={withGame("/signup", game)} style={{fontWeight:700,color:"#111827"}}>Create an account</Link></p>
     </div>
   </main>;
 }
+
+export default function Page() { return <Suspense fallback={<main style={{padding:40}}>Loading...</main>}><LoginPage /></Suspense>; }
