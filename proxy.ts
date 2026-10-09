@@ -31,17 +31,42 @@ export async function proxy(request: NextRequest) {
 
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
   const isLoginRoute = request.nextUrl.pathname === "/login";
+  const isOnboardingRoute = request.nextUrl.pathname === "/onboarding";
 
-  if (isAdminRoute && !user) {
-    return NextResponse.redirect(
-      new URL("/login", request.url)
-    );
+  function redirectWithCookies(path: string) {
+    const redirect = NextResponse.redirect(new URL(path, request.url));
+    response.cookies.getAll().forEach(cookie => redirect.cookies.set(cookie));
+    return redirect;
   }
 
-  if (isLoginRoute && user) {
-    return NextResponse.redirect(
-      new URL("/admin", request.url)
-    );
+  if ((isAdminRoute || isOnboardingRoute) && !user) {
+    return redirectWithCookies("/login");
+  }
+
+  if ((isLoginRoute || isOnboardingRoute) && user) {
+    const { data: platformAdmin, error: platformError } = await supabase
+      .from("platform_admins")
+      .select("role,active")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!platformError && platformAdmin?.active &&
+        ["owner", "admin", "support"].includes(platformAdmin.role)) {
+      return redirectWithCookies("/saas-admin");
+    }
+
+    const { data: memberships, error: workspaceError } = await supabase
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", user.id)
+      .limit(1);
+
+    if (!workspaceError && memberships?.length) {
+      return redirectWithCookies("/admin");
+    }
+
+    // Onboarding performs its own account checks and displays setup.
+    if (isLoginRoute) return redirectWithCookies("/onboarding");
   }
 
   return response;
@@ -51,5 +76,6 @@ export const config = {
   matcher: [
     "/admin/:path*",
     "/login",
+    "/onboarding",
   ],
 };
