@@ -1,0 +1,2 @@
+import PublicStateScreen from"./components/PublicStateScreen";
+export default function NotFound(){return <PublicStateScreen title="Page Unavailable" message="This campaign or game may be unpublished, unavailable, or the link may be incorrect."/>}
