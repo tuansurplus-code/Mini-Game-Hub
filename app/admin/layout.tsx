@@ -1,37 +1,7 @@
 import Link from "next/link";
 import "./admin.css";
 import SignOutButton from "./SignOutButton";
-
-const links = [
-  { label: "Overview", href: "/admin" },
-  { label: "Games", href: "/admin/games" },
-  { label: "Campaigns", href: "/admin/campaigns" },
-  { label: "Prizes", href: "/admin/prizes" },
-  { label: "Coupons", href: "/admin/coupons" },
-  { label: "Winner History", href: "/admin/winners" },
-];
-
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="admin-shell">
-      <aside className="admin-sidebar">
-        <div className="admin-brand">Mini-Game Hub</div>
-        <div className="admin-label">ADMIN</div>
-        <nav className="admin-nav">
-          {links.map((link) => (
-            <Link key={link.href} href={link.href}>{link.label}</Link>
-          ))}
-        </nav>
-        <div style={{ marginTop: "auto", display: "grid", gap: 10 }}>
-          <Link className="admin-customer" href="/">← Customer View</Link>
-          <SignOutButton />
-        </div>
-      </aside>
-      <main className="admin-main">{children}</main>
-    </div>
-  );
-}
+import {requireAdmin}from"../../lib/admin-auth";
+import{createSupabaseServerClient}from"../../lib/supabase-server";
+const links=[{label:"Overview",href:"/admin"},{label:"Campaigns",href:"/admin/campaigns"},{label:"Games",href:"/admin/games"},{label:"Prizes",href:"/admin/prizes"},{label:"Coupons",href:"/admin/coupons"},{label:"Winner History",href:"/admin/winners"},{label:"Reports",href:"/admin/reports"},{label:"Team",href:"/admin/team"},{label:"Settings",href:"/admin/settings"}];
+export default async function AdminLayout({children}:{children:React.ReactNode}){const{user,workspaceId,role}=await requireAdmin();const s=await createSupabaseServerClient();const{data:w}=await s.from("workspaces").select("name").eq("id",workspaceId).maybeSingle();return <div className="admin-shell"><aside className="admin-sidebar"><div className="admin-brand">Mini-Game Hub</div><div className="admin-label">CUSTOMER ADMIN</div><div style={{fontSize:13,fontWeight:700,padding:"4px 2px 12px"}}>{w?.name??"Workspace"}</div><nav className="admin-nav">{links.map(x=><Link key={x.href} href={x.href}>{x.label}</Link>)}</nav><div style={{marginTop:"auto",display:"grid",gap:10}}><div style={{fontSize:11,color:"#9ca3af",padding:"0 4px"}}>{user.email}<br/>{role.toUpperCase()}</div><Link className="admin-customer" href="/">← Public Site</Link><SignOutButton/></div></aside><main className="admin-main">{children}</main></div>}
