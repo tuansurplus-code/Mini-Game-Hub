@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
+import { builderGame, withGame } from "./lib/game-builder";
 import type { NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
@@ -29,6 +30,7 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const game = builderGame(request.nextUrl.searchParams.get("game"));
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
   const isLoginRoute = request.nextUrl.pathname === "/login";
   const isOnboardingRoute = request.nextUrl.pathname === "/onboarding";
@@ -40,7 +42,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if ((isAdminRoute || isOnboardingRoute) && !user) {
-    return redirectWithCookies("/login");
+    return redirectWithCookies(withGame("/login", game));
   }
 
   if ((isLoginRoute || isOnboardingRoute) && user) {
@@ -50,7 +52,7 @@ export async function proxy(request: NextRequest) {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (!platformError && platformAdmin?.active &&
+    if (!game && !platformError && platformAdmin?.active &&
         ["owner", "admin", "support"].includes(platformAdmin.role)) {
       return redirectWithCookies("/saas-admin");
     }
@@ -62,11 +64,11 @@ export async function proxy(request: NextRequest) {
       .limit(1);
 
     if (!workspaceError && memberships?.length) {
-      return redirectWithCookies("/admin");
+      return redirectWithCookies(game ? withGame("/admin/campaigns/new", game) : "/admin");
     }
 
     // Onboarding performs its own account checks and displays setup.
-    if (isLoginRoute) return redirectWithCookies("/onboarding");
+    if (isLoginRoute) return redirectWithCookies(withGame("/onboarding", game));
   }
 
   return response;
