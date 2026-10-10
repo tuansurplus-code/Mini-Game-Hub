@@ -26,7 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .eq("user_id", user.id);
   const workspaces = (memberships ?? []).flatMap((item: any) => {
     const workspace = Array.isArray(item.workspaces) ? item.workspaces[0] : item.workspaces;
-    return workspace?.status === "active" && ["owner", "admin", "editor"].includes(item.role)
+    return workspace?.status === "active" && ["owner", "admin", "editor", "viewer"].includes(item.role)
       ? [{ id: item.workspace_id, name: workspace.name }]
       : [];
   });
