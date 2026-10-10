@@ -21,11 +21,11 @@ export async function requireAdmin() {
   const selectedWorkspaceId = cookieStore.get("mini-game-hub-workspace")?.value;
   const membership = memberships.find((item: any) => {
     const workspace = Array.isArray(item.workspaces) ? item.workspaces[0] : item.workspaces;
-    return workspace?.status === "active" && ["owner", "admin", "editor"].includes(item.role) &&
+    return workspace?.status === "active" && ["owner", "admin", "editor", "viewer"].includes(item.role) &&
       (!selectedWorkspaceId || item.workspace_id === selectedWorkspaceId);
   }) ?? memberships.find((item: any) => {
     const workspace = Array.isArray(item.workspaces) ? item.workspaces[0] : item.workspaces;
-    return workspace?.status === "active" && ["owner", "admin", "editor"].includes(item.role);
+    return workspace?.status === "active" && ["owner", "admin", "editor", "viewer"].includes(item.role);
   });
 
   if (!membership) redirect("/");
