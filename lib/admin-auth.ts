@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "./supabase-server";
 
@@ -16,7 +17,13 @@ export async function requireAdmin() {
 
   if (error || !memberships?.length) redirect("/");
 
+  const cookieStore = await cookies();
+  const selectedWorkspaceId = cookieStore.get("mini-game-hub-workspace")?.value;
   const membership = memberships.find((item: any) => {
+    const workspace = Array.isArray(item.workspaces) ? item.workspaces[0] : item.workspaces;
+    return workspace?.status === "active" && ["owner", "admin", "editor"].includes(item.role) &&
+      (!selectedWorkspaceId || item.workspace_id === selectedWorkspaceId);
+  }) ?? memberships.find((item: any) => {
     const workspace = Array.isArray(item.workspaces) ? item.workspaces[0] : item.workspaces;
     return workspace?.status === "active" && ["owner", "admin", "editor"].includes(item.role);
   });
