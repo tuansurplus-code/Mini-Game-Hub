@@ -7,3 +7,23 @@
 #games,#how{scroll-margin-top:100px}
 @media(max-width:1050px){.topbar{padding:0 24px;gap:20px}.topbar nav{gap:16px}}
 @media(max-width:800px){.topbar{height:auto;min-height:76px;flex-wrap:wrap;padding:14px 18px;gap:14px}.topbar nav{display:flex;flex-wrap:wrap;width:100%;margin-left:0;gap:12px 18px}.topbar nav .nav{padding:6px 0}.topbar nav .primary.small{padding:9px 13px}#games,#how{scroll-margin-top:180px}}
+
+.home-public { min-height:100vh; background:var(--home-bg,#f6f7f9); }
+.home-public .topbar { height:auto; min-height:76px; flex-wrap:wrap; }
+.home-public .home-logo { width:auto; max-width:150px; height:auto; max-height:46px; object-fit:contain; }
+.home-public .topbar .brand { font-family:inherit; }
+.home-public .topbar nav .nav,.home-public .topbar nav .primary.small { font-family:inherit; font-size:inherit; font-weight:inherit; font-style:inherit; text-decoration:inherit; }
+.home-announcement { flex-basis:100%; padding:7px 0 9px; text-align:center; color:var(--home-primary); font-size:12px; font-weight:700; }
+.home-public .brandmark,.home-public .primary,.home-public .game-visual.red,.home-public .play.red { background:var(--home-primary); }
+.home-public .hero { background:var(--home-hero); }
+.home-public .hero h1 span { color:var(--home-accent); }
+.home-public .primary { box-shadow:0 8px 18px color-mix(in srgb,var(--home-primary) 20%,transparent); }
+.home-public .eyebrow,.home-public .step>b { color:var(--home-primary); }
+.home-public .grid { grid-template-columns:repeat(var(--game-columns,3),minmax(0,1fr)); }
+.home-public .home-game-card { display:flex; flex-direction:column; overflow:hidden; transition:transform .2s,box-shadow .2s; }
+.home-public .home-game-card:hover { transform:translateY(-4px); box-shadow:0 16px 36px #10182820; }
+.home-public .home-game-card .card-body { display:flex; flex:1; flex-direction:column; align-items:stretch; }
+.home-public .home-game-card .play { margin-top:auto; }
+.home-public .home-game-card .game-visual small { color:inherit; }
+@media(max-width:800px) { .home-public .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:520px) { .home-public .grid { grid-template-columns:1fr; } }
