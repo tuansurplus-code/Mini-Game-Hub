@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     .eq("user_id", user.id)
     .maybeSingle();
   const workspace = Array.isArray(data?.workspaces) ? data.workspaces[0] : data?.workspaces;
-  if (error || !data || workspace?.status !== "active" || !["owner", "admin", "editor"].includes(data.role)) {
+  if (error || !data || workspace?.status !== "active" || !["owner", "admin", "editor", "viewer"].includes(data.role)) {
     return NextResponse.json({ error: "You do not have access to that workspace." }, { status: 403 });
   }
 
