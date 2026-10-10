@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "./supabase-server";
 
-export type PlatformRole = "owner" | "admin" | "support";
+import type { PlatformRole } from "./platform-roles";
+export type { PlatformRole } from "./platform-roles";
 
 export async function requirePlatformAdmin() {
   const supabase = await createSupabaseServerClient("platform");
@@ -17,13 +18,15 @@ export async function requirePlatformAdmin() {
 
   if (error || !platformAdmin?.active || !["owner", "admin", "support"].includes(platformAdmin.role)) redirect("/saas-login?denied=1");
 
+  if (user.app_metadata?.must_change_password === true) redirect("/saas-password");
+
   return { user, role: platformAdmin.role as PlatformRole };
 }
 
 export async function getPlatformAdmin() {
   const supabase = await createSupabaseServerClient("platform");
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!user || user.app_metadata?.must_change_password === true) return null;
 
   const { data } = await supabase
     .from("platform_admins")

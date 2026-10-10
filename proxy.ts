@@ -6,7 +6,7 @@ import type { NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const platform = pathname === "/saas-login" || pathname === "/saas-admin" || pathname.startsWith("/saas-admin/") || pathname.startsWith("/api/saas-admin/");
+  const platform = pathname === "/saas-login" || pathname === "/saas-password" || pathname === "/saas-admin" || pathname.startsWith("/saas-admin/") || pathname.startsWith("/api/saas-admin/");
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -52,7 +52,7 @@ export async function proxy(request: NextRequest) {
     }
     if (user && pathname === "/saas-login") {
       const { data } = await supabase.from("platform_admins").select("role,active").eq("user_id", user.id).maybeSingle();
-      if (data?.active && ["owner", "admin", "support"].includes(data.role)) return redirectWithCookies("/saas-admin");
+      if (data?.active && ["owner", "admin", "support"].includes(data.role)) return redirectWithCookies(user.app_metadata?.must_change_password === true ? "/saas-password" : "/saas-admin");
     }
     return response;
   }
@@ -85,6 +85,7 @@ export const config = {
     "/saas-admin/:path*",
     "/api/saas-admin/:path*",
     "/saas-login",
+    "/saas-password",
     "/login",
     "/onboarding",
   ],

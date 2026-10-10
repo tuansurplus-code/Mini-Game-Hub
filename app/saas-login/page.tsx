@@ -22,7 +22,7 @@ export default function PlatformLogin() {
         await platformSupabase.auth.signOut({ scope: "local" });
         throw new Error("This account does not have platform administrator access.");
       }
-      window.location.assign("/saas-admin");
+      window.location.assign(data.user.app_metadata?.must_change_password === true ? "/saas-password" : "/saas-admin");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to sign in. Please try again.");
       setBusy(false);

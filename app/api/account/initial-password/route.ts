@@ -11,14 +11,14 @@ export async function POST(request: Request) {
     return jsonError("Invalid request origin.", 403);
   }
 
-  let body: { password?: unknown };
+  let body: { password?: unknown; area?: unknown };
   try { body = await request.json(); } catch { return jsonError("Invalid request.", 400); }
   const password = typeof body.password === "string" ? body.password : "";
   if (password.length < 12 || password.length > 128) {
     return jsonError("Choose a password with at least 12 characters.", 400);
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient(body.area === "platform" ? "platform" : "customer");
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user) return jsonError("Sign in to change your password.", 401);
   if (user.app_metadata?.must_change_password !== true) {

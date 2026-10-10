@@ -26,7 +26,6 @@ export async function PATCH(request: Request) {
   if (request.headers.get("origin") !== new URL(request.url).origin) return error("Invalid request origin.", 403);
   const platformAdmin = await getPlatformAdmin();
   if (!platformAdmin) return error("Platform admin access required.", 403);
-  if (platformAdmin.role === "support") return error("Your platform role cannot approve subscriptions.", 403);
   let body: { id?: unknown; decision?: unknown; notes?: unknown };
   try { body = await request.json(); } catch { return error("Invalid request."); }
   if (typeof body.id !== "string" || !/^[0-9a-f-]{36}$/i.test(body.id) || !["approve", "reject"].includes(String(body.decision))) return error("Choose a request and approve or reject it.");
