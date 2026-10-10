@@ -11,6 +11,7 @@ export default async function Page() {
     <AccountForms email={user.email ?? ""} displayName={typeof user.user_metadata?.display_name === "string" ? user.user_metadata.display_name : ""}
       name={workspace.name} slug={workspace.slug} status={workspace.status} role={role}
       logoUrl={typeof profile?.logo_url === "string" ? profile.logo_url : ""}
+      contactNumber={typeof profile?.contact_number === "string" ? profile.contact_number : ""}
       brandColor={typeof profile?.brand_color === "string" && /^#[0-9a-f]{6}$/i.test(profile.brand_color) ? profile.brand_color : "#e31b23"} />
   </>;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import AdminModal from "../AdminModal";
 
 type Role = "owner" | "admin" | "editor" | "viewer";
 type Member = { user_id: string; email: string | null; role: Role; created_at: string };
@@ -21,6 +22,7 @@ export default function TeamManager({ role }: Props) {
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState("");
   const [message, setMessage] = useState("");
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [error, setError] = useState("");
 
   async function load() {
@@ -143,24 +145,26 @@ export default function TeamManager({ role }: Props) {
     {error && <div role="alert" style={{ ...cardStyle, color: "#991b1b", background: "#fef2f2", borderColor: "#fecaca" }}>{error}</div>}
     {message && <div role="status" aria-live="polite" style={{ ...cardStyle, color: "#065f46", background: "#ecfdf5", borderColor: "#a7f3d0" }}>{message}</div>}
 
-    {owner && <section style={cardStyle}>
-      <h2 style={{ marginTop: 0 }}>Create a team account</h2>
-      <p style={{ color: "#5b6472" }}>The account is added to this workspace immediately. Confirm the person’s email address first. A temporary password will appear once, and the member must replace it at first sign-in.</p>
-      <form onSubmit={createAccount} style={{ display: "grid", gridTemplateColumns: "minmax(180px, 1fr) minmax(220px, 1.2fr) 150px auto", gap: 12, alignItems: "end" }}>
-        <label>Full name<input style={inputStyle} type="text" maxLength={120} autoComplete="name" value={fullName} onChange={event => setFullName(event.target.value)} placeholder="Team member" /></label>
-        <label>Email address<input style={inputStyle} type="email" required maxLength={254} autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="teammate@company.com" /></label>
-        <label>Role<select style={inputStyle} value={memberRole} onChange={event => setMemberRole(event.target.value as "admin" | "editor" | "viewer")}><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select></label>
-        <button className="primary-btn" disabled={working === "create"}>{working === "create" ? "Creating…" : "Create account"}</button>
-      </form>
-      {createdAccount && <div style={{ marginTop: 18, padding: 16, borderRadius: 10, border: "1px solid #fcd34d", background: "#fffbeb" }}>
-        <strong>Temporary password for {createdAccount.email}</strong>
-        <p style={{ margin: "6px 0 10px", color: "#5b6472" }}>Copy it now and share it privately. It will disappear if you leave or refresh this page.</p>
-        <div style={{ display: "flex", gap: 8 }}>
-          <input aria-label="Temporary password" style={inputStyle} readOnly value={createdAccount.password} onFocus={event => event.currentTarget.select()} />
-          <button type="button" style={smallButton} onClick={() => void copyTemporaryPassword()}>Copy password</button>
-        </div>
-      </div>}
-    </section>}
+    {owner && <div style={{ marginBottom: 18 }}>
+      <button type="button" className="primary-btn" onClick={() => { setError(""); setMessage(""); setShowCreateForm(true); }}>+ Create Account</button>
+      <AdminModal open={showCreateForm} title="Create a team account" onClose={() => { setShowCreateForm(false); setCreatedAccount(null); }} maxWidth={760}>
+        <p style={{ color: "#5b6472", marginTop: 0 }}>Add the person to this workspace. Confirm their email address first. A temporary password appears once after creation; share it privately.</p>
+        <form onSubmit={createAccount} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12, alignItems: "end" }}>
+          <label>Full name<input style={inputStyle} type="text" maxLength={120} autoComplete="name" value={fullName} onChange={event => setFullName(event.target.value)} placeholder="Team member" /></label>
+          <label>Email address<input style={inputStyle} type="email" required maxLength={254} autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="teammate@company.com" /></label>
+          <label>Role<select style={inputStyle} value={memberRole} onChange={event => setMemberRole(event.target.value as "admin" | "editor" | "viewer")}><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select></label>
+          <button className="primary-btn" disabled={working === "create"}>{working === "create" ? "Creating…" : "Create account"}</button>
+        </form>
+        {createdAccount && <div style={{ marginTop: 18, padding: 16, borderRadius: 10, border: "1px solid #fcd34d", background: "#fffbeb" }}>
+          <strong>Temporary password for {createdAccount.email}</strong>
+          <p style={{ margin: "6px 0 10px", color: "#5b6472" }}>Copy it now and share it privately. It disappears when you close or refresh this page.</p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input aria-label="Temporary password" style={{ ...inputStyle, flex: "1 1 220px" }} readOnly value={createdAccount.password} onFocus={event => event.currentTarget.select()} />
+            <button type="button" style={smallButton} onClick={() => void copyTemporaryPassword()}>Copy password</button>
+          </div>
+        </div>}
+      </AdminModal>
+    </div>}
 
     <section style={cardStyle}>
       <h2 style={{ marginTop: 0 }}>Members</h2>

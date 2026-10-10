@@ -2,6 +2,7 @@ import Link from "next/link";
 import "./admin.css";
 import SignOutButton from "./SignOutButton";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
+import AdminNavigation from "./AdminNavigation";
 import { requireAdmin } from "../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../lib/supabase-server";
 
@@ -40,8 +41,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       {workspaces.length > 1
         ? <WorkspaceSwitcher workspaces={workspaces} currentId={workspaceId} />
         : <div style={{ fontSize: 13, fontWeight: 700, padding: "4px 2px 12px" }}>{currentWorkspace?.name ?? "Workspace"}</div>}
-      <nav className="admin-nav">{links.map(item => <Link key={item.href} href={item.href}>{item.label}</Link>)}</nav>
-      <div style={{ marginTop: "auto", display: "grid", gap: 10 }}>
+      <AdminNavigation links={links} />
+      <div className="admin-sidebar-footer">
         <div style={{ fontSize: 11, color: "#9ca3af", padding: "0 4px" }}>{user.email}<br />{role.toUpperCase()}</div>
         <Link className="admin-customer" href="/">← Public Site</Link>
         <SignOutButton />

@@ -14,13 +14,15 @@ export async function PATCH(request: Request) {
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
-  if (!body || typeof body.name !== "string" || typeof body.logo_url !== "string" || typeof body.brand_color !== "string") {
+  if (!body || typeof body.name !== "string" || typeof body.logo_url !== "string" || typeof body.brand_color !== "string" || typeof body.contact_number !== "string") {
     return NextResponse.json({ error: "Invalid business profile." }, { status: 400 });
   }
   const name = body.name.trim();
   const logoUrl = body.logo_url.trim();
-  if (!name || name.length > 100 || logoUrl.length > 2048 || !/^#[0-9a-f]{6}$/i.test(body.brand_color)) {
-    return NextResponse.json({ error: "Enter a business name (up to 100 characters) and a valid brand color." }, { status: 400 });
+  const contactNumber = body.contact_number.trim();
+  const normalizedPhone = contactNumber.replace(/[\s()-]/g, "");
+  if (!name || name.length > 100 || logoUrl.length > 2048 || !/^#[0-9a-f]{6}$/i.test(body.brand_color) || !/^\+?\d{8,15}$/.test(normalizedPhone)) {
+    return NextResponse.json({ error: "Enter a business name, a valid contact number, and a valid brand color." }, { status: 400 });
   }
   if (logoUrl) {
     try { const url = new URL(logoUrl); if (url.protocol !== "https:" || url.username || url.password) throw new Error(); }
@@ -31,7 +33,7 @@ export async function PATCH(request: Request) {
     .select("settings").eq("id", workspaceId).eq("owner_user_id", user.id).single();
   if (loadError || !workspace) return NextResponse.json({ error: "Unable to load your workspace." }, { status: 403 });
   const { data, error } = await s.from("workspaces").update({ name,
-    settings: { ...workspace.settings, business_profile: { logo_url: logoUrl || null, brand_color: body.brand_color } },
+    settings: { ...workspace.settings, business_profile: { ...((workspace.settings?.business_profile && typeof workspace.settings.business_profile === "object") ? workspace.settings.business_profile : {}), contact_number: contactNumber, logo_url: logoUrl || null, brand_color: body.brand_color } },
   }).eq("id", workspaceId).eq("owner_user_id", user.id).select("id").single();
   if (error || !data) return NextResponse.json({ error: "Unable to save the business profile. Please try again." }, { status: 400 });
   return NextResponse.json({ saved: true });
