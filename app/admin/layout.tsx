@@ -3,6 +3,7 @@ import "./admin.css";
 import SignOutButton from "./SignOutButton";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import AdminNavigation from "./AdminNavigation";
+import AdminThemeControl from "./AdminThemeControl";
 import { requireAdmin } from "../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../lib/supabase-server";
 
@@ -34,7 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   });
   const currentWorkspace = workspaces.find(item => item.id === workspaceId);
 
-  return <div className="admin-shell">
+  return <div className="admin-shell" data-theme="system">
     <aside className="admin-sidebar">
       <div className="admin-brand">Mini-Game Hub</div>
       <div className="admin-label">CUSTOMER ADMIN</div>
@@ -43,7 +44,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         : <div style={{ fontSize: 13, fontWeight: 700, padding: "4px 2px 12px" }}>{currentWorkspace?.name ?? "Workspace"}</div>}
       <AdminNavigation links={links} />
       <div className="admin-sidebar-footer">
-        <div style={{ fontSize: 11, color: "#9ca3af", padding: "0 4px" }}>{user.email}<br />{role.toUpperCase()}</div>
+        <div className="admin-user-meta">{user.email}<br />{role.toUpperCase()}</div>
+        <AdminThemeControl />
         <Link className="admin-customer" href="/">← Public Site</Link>
         <SignOutButton />
       </div>

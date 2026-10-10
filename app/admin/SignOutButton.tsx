@@ -18,6 +18,7 @@ export default function SignOutButton() {
   return (
     <button
       type="button"
+      className="admin-signout-button"
       onClick={signOut}
       disabled={loading}
       style={{
