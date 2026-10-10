@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   const paymentReference = String(form.get("paymentReference") ?? "").trim().slice(0, 120);
   const receipt = form.get("receipt");
   if (!/^[0-9a-f-]{36}$/i.test(planId) || !paymentReference) return error("Choose a plan and enter the payment reference.");
-  if (!(receipt instanceof File) || receipt.size < 1 || receipt.size > 5 * 1024 * 1024) return error("Upload a PDF, PNG or JPG receipt up to 5 MB.");
+  if (!(receipt instanceof File) || receipt.size < 1 || receipt.size > 4 * 1024 * 1024) return error("Upload a PDF, PNG or JPG receipt up to 5 MB.");
   const mime = receipt.type.toLowerCase();
   if (!["application/pdf", "image/png", "image/jpeg"].includes(mime)) return error("Only PDF, PNG and JPG receipts are accepted.");
   const bytes = new Uint8Array(await receipt.arrayBuffer());
