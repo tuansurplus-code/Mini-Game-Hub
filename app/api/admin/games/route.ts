@@ -2,6 +2,33 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "../../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../../lib/supabase-server";
 
+export async function GET() {
+  try {
+    const { workspaceId, role } = await requireAdmin();
+    const supabase = await createSupabaseServerClient();
+    const [{ data: games, error: gamesError }, { data: assignments, error: assignmentsError }] = await Promise.all([
+      supabase.from("games").select("id,name,slug,type,status").eq("workspace_id", workspaceId).order("created_at", { ascending: false }),
+      supabase.from("campaign_games").select("game_id,campaigns!inner(status,workspace_id)").eq("campaigns.workspace_id", workspaceId),
+    ]);
+    if (gamesError || assignmentsError) {
+      return NextResponse.json({ error: gamesError?.message || assignmentsError?.message || "Unable to load games." }, { status: 400 });
+    }
+    const rows = assignments ?? [];
+    const result = (games ?? []).map(game => {
+      const linked = rows.filter(row => row.game_id === game.id);
+      const live = linked.some(row => {
+        const campaign = Array.isArray(row.campaigns) ? row.campaigns[0] : row.campaigns;
+        return campaign?.status === "active";
+      });
+      return { ...game, status: live ? "live" : linked.length ? "assigned" : "draft" };
+    });
+    return NextResponse.json({ role, games: result });
+  } catch (error) {
+    console.error("Load games error:", error);
+    return NextResponse.json({ error: "Unable to load games." }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const { user, workspaceId, role } = await requireAdmin();
