@@ -55,6 +55,10 @@ export default function PlanManager({ canEdit }: Props) {
 
   async function save(event: FormEvent<HTMLFormElement>, plan: Plan) {
     event.preventDefault();
+    if ([plan.monthly_price_lkr, plan.max_active_campaigns, plan.max_monthly_participants, plan.max_team_members].some(value => typeof value === "number" && !Number.isFinite(value))) {
+      setError("Enter a valid price or whole-number limit before saving.");
+      return;
+    }
     setSavingId(plan.id);
     setError("");
     setMessage("");
