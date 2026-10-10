@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 
 type Role = "owner" | "admin" | "editor" | "viewer";
 type Member = { user_id: string; email: string | null; role: Role; created_at: string };
+type Invitation = { id: string; email: string; role: "admin" | "editor"; created_at: string; expires_at: string };
 type Props = { role: Role };
 
 const inputStyle = { width: "100%", padding: "11px 12px", border: "1px solid #d1d5db", borderRadius: 8, boxSizing: "border-box" as const };
@@ -12,6 +13,7 @@ const smallButton = { border: "1px solid #d1d5db", borderRadius: 8, background: 
 export default function TeamManager({ role }: Props) {
   const owner = role === "owner";
   const [members, setMembers] = useState<Member[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [memberRole, setMemberRole] = useState<"admin" | "editor" | "viewer">("editor");
@@ -29,6 +31,7 @@ export default function TeamManager({ role }: Props) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to load the team.");
       setMembers(data.members ?? []);
+      setInvitations(data.invitations ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load the team.");
     } finally {
@@ -104,6 +107,26 @@ export default function TeamManager({ role }: Props) {
     } finally { setWorking(""); }
   }
 
+  async function revokeInvitation(invitation: Invitation) {
+    if (!window.confirm(`Revoke the old invitation for ${invitation.email}?`)) return;
+    setWorking(invitation.id); setError(""); setMessage("");
+    try {
+      const response = await fetch("/api/admin/team", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invitationId: invitation.id }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to revoke the invitation.");
+      setMessage("Invitation revoked.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to revoke the invitation.");
+    } finally {
+      setWorking("");
+    }
+  }
+
   async function copyTemporaryPassword() {
     if (!createdAccount) return;
     try {
@@ -159,5 +182,23 @@ export default function TeamManager({ role }: Props) {
         </table>
       </div>}
     </section>
+    {owner && invitations.length > 0 && <section style={cardStyle}>
+      <h2 style={{ marginTop: 0 }}>Older pending invitations</h2>
+      <p style={{ color: "#5b6472" }}>These links were created before account creation changed. Revoke any link that should no longer work.</p>
+      <div style={{ overflowX: "auto" }}>
+        <table className="admin-table" style={{ minWidth: 520, width: "100%" }}>
+          <thead><tr><th>Email</th><th>Role</th><th>Expires</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>{invitations.map(invitation => {
+            const expired = new Date(invitation.expires_at).getTime() <= Date.now();
+            return <tr key={invitation.id}>
+              <td>{invitation.email}</td><td>{invitation.role}</td>
+              <td>{new Date(invitation.expires_at).toLocaleDateString("en-LK")}</td>
+              <td>{expired ? "Expired" : "Waiting for acceptance"}</td>
+              <td><button type="button" style={smallButton} disabled={working === invitation.id} onClick={() => void revokeInvitation(invitation)}>Revoke</button></td>
+            </tr>;
+          })}</tbody>
+        </table>
+      </div>
+    </section>}
   </div>;
 }
