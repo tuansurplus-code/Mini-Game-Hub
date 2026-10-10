@@ -52,8 +52,12 @@ export default function TeamManager({ role }: Props) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to create the account.");
-      setCreatedAccount({ email: data.email, role: data.role, password: data.temporaryPassword });
-      setMessage(`Account created for ${data.email}. Share the temporary password privately; the member must change it at first sign-in.`);
+      setCreatedAccount(typeof data.temporaryPassword === "string"
+        ? { email: data.email, role: data.role, password: data.temporaryPassword }
+        : null);
+      setMessage(data.existingAccount
+        ? `Existing account ${data.email} was added. They can sign in with their current password.`
+        : `Account created for ${data.email}. Share the temporary password privately; the member must change it at first sign-in.`);
       setFullName("");
       setEmail("");
       await load();
