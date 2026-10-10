@@ -14,10 +14,7 @@ export async function GET() {
   const { workspaceId, role } = await requireAdmin();
   const supabase = await createSupabaseServerClient();
   const { data: members, error: membersError } = await supabase
-    .from("workspace_members")
-    .select("user_id,role,created_at")
-    .eq("workspace_id", workspaceId)
-    .order("created_at", { ascending: true });
+    .rpc("get_workspace_team_members", { p_workspace_id: workspaceId });
   if (membersError) return jsonError("Unable to load workspace members.", 400);
 
   let invitations: unknown[] = [];
