@@ -10,7 +10,11 @@ const fieldStyle = { width: "100%", padding: "12px 14px", border: "1px solid #d1
 
 function LoginPage() {
   const router = useRouter();
-  const game = builderGame(useSearchParams().get("game"));
+  const search = useSearchParams();
+  const game = builderGame(search.get("game"));
+  const inviteId = search.get("invite") || "";
+  const inviteToken = search.get("token") || "";
+  const inviteHref = inviteId && inviteToken ? `/invite/${encodeURIComponent(inviteId)}?token=${encodeURIComponent(inviteToken)}` : "";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,7 +24,7 @@ function LoginPage() {
     event.preventDefault(); setLoading(true); setError("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { setError(error.message); setLoading(false); return; }
-    router.push(withGame("/onboarding", game)); router.refresh();
+    router.push(inviteHref || withGame("/onboarding", game)); router.refresh();
   }
 
   return <main style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#f6f7f9",padding:20}}>
@@ -37,7 +41,7 @@ function LoginPage() {
         <div style={{textAlign:"right",marginBottom:20}}><Link href="/forgot-password" style={{fontSize:13,color:"#374151"}}>Forgot password?</Link></div>
         <button type="submit" disabled={loading} style={{width:"100%",border:0,borderRadius:9,padding:"13px 16px",background:"#111827",color:"#fff",fontWeight:700,fontSize:15,cursor:loading?"not-allowed":"pointer",opacity:loading?.7:1}}>{loading?"Signing in...":"Sign In"}</button>
       </form>
-      <p style={{textAlign:"center",fontSize:14,color:"#697386",margin:"22px 0 0"}}>New to Mini-Game Hub? <Link href={withGame("/signup", game)} style={{fontWeight:700,color:"#111827"}}>Create an account</Link></p>
+      <p style={{textAlign:"center",fontSize:14,color:"#697386",margin:"22px 0 0"}}>New to Mini-Game Hub? <Link href={inviteHref ? `/signup?invite=${encodeURIComponent(inviteId)}&token=${encodeURIComponent(inviteToken)}` : withGame("/signup", game)} style={{fontWeight:700,color:"#111827"}}>Create an account</Link></p>
     </div>
   </main>;
 }
