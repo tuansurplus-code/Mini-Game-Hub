@@ -1,4 +1,5 @@
-import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { randomBytes } from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { requireAdmin } from "../../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../../lib/supabase-server";
@@ -9,7 +10,6 @@ function validOrigin(request: Request) {
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
-
 export async function GET() {
   const { workspaceId, role } = await requireAdmin();
   const supabase = await createSupabaseServerClient();
@@ -34,52 +34,67 @@ export async function GET() {
 
 export async function POST(request: Request) {
   if (!validOrigin(request)) return jsonError("Invalid request origin.", 403);
-  const { workspaceId, role, user } = await requireAdmin();
-  if (role !== "owner") return jsonError("Only the workspace owner can invite people.", 403);
+  const { workspaceId, role } = await requireAdmin();
+  if (role !== "owner") return jsonError("Only the workspace owner can create team accounts.", 403);
 
-  let body: { email?: unknown; role?: unknown };
+  let body: { email?: unknown; fullName?: unknown; role?: unknown };
   try { body = await request.json(); } catch { return jsonError("Invalid request.", 400); }
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const fullName = typeof body.fullName === "string" ? body.fullName.trim().slice(0, 120) : "";
   const memberRole = body.role;
   if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return jsonError("Enter a valid email address.", 400);
   }
-  if (memberRole !== "admin" && memberRole !== "editor") {
-    return jsonError("Choose Admin or Editor.", 400);
+  if (!["admin", "editor", "viewer"].includes(String(memberRole))) {
+    return jsonError("Choose Admin, Editor, or Viewer.", 400);
   }
 
-  const supabase = await createSupabaseServerClient();
-  const now = new Date();
-  const { data: existing, error: lookupError } = await supabase
-    .from("workspace_invitations")
-    .select("id")
-    .eq("workspace_id", workspaceId)
-    .eq("email", email)
-    .is("accepted_at", null)
-    .is("revoked_at", null)
-    .gt("expires_at", now.toISOString())
-    .maybeSingle();
-  if (lookupError) return jsonError("Unable to check existing invitations.", 400);
-  if (existing) return jsonError("There is already an active invitation for this email. Revoke it before sending another.", 409);
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !secretKey) {
+    return jsonError("Account creation is not configured. Add the server-only SUPABASE_SECRET_KEY in Vercel.", 503);
+  }
 
-  const token = randomBytes(32).toString("base64url");
-  const tokenHash = createHash("sha256").update(token).digest("hex");
-  const id = randomUUID();
-  const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const { error } = await supabase.from("workspace_invitations").insert({
-    id,
-    workspace_id: workspaceId,
-    email,
-    role: memberRole,
-    token_hash: tokenHash,
-    invited_by: user.id,
-    expires_at: expiresAt.toISOString(),
+  const admin = createClient(supabaseUrl, secretKey, {
+    auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
   });
-  if (error) return jsonError("Unable to create the invitation. Please try again.", 400);
+  const temporaryPassword = randomBytes(24).toString("base64url") + "aA1!";
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email,
+    password: temporaryPassword,
+    email_confirm: true,
+    user_metadata: fullName ? { full_name: fullName } : {},
+    app_metadata: { must_change_password: true },
+  });
+  if (createError || !created.user) {
+    const alreadyExists = createError?.message.toLowerCase().includes("already") ||
+      createError?.code === "email_exists";
+    return jsonError(
+      alreadyExists
+        ? "An account already exists for this email. Remove the old invitation and ask the user to sign in first."
+        : "Unable to create this account. Check the email address and try again.",
+      alreadyExists ? 409 : 400,
+    );
+  }
 
-  const invitationUrl = new URL(`/invite/${id}`, new URL(request.url).origin);
-  invitationUrl.searchParams.set("token", token);
-  return NextResponse.json({ invitationUrl: invitationUrl.toString(), email, role: memberRole, expiresAt: expiresAt.toISOString() }, { status: 201 });
+  const { error: membershipError } = await admin.from("workspace_members").insert({
+    workspace_id: workspaceId,
+    user_id: created.user.id,
+    role: memberRole,
+  });
+  if (membershipError) {
+    await admin.auth.admin.deleteUser(created.user.id);
+    return jsonError("The account was created but could not be added to this workspace. Please try again.", 500);
+  }
+
+  return NextResponse.json({
+    created: true,
+    email,
+    fullName,
+    role: memberRole,
+    temporaryPassword,
+    passwordChangeRequired: true,
+  }, { status: 201 });
 }
 
 export async function PATCH(request: Request) {
@@ -89,7 +104,7 @@ export async function PATCH(request: Request) {
   let body: { userId?: unknown; role?: unknown };
   try { body = await request.json(); } catch { return jsonError("Invalid request.", 400); }
   if (typeof body.userId !== "string" || !/^[0-9a-f-]{36}$/i.test(body.userId) ||
-      (body.role !== "admin" && body.role !== "editor")) {
+      (body.role !== "admin" && body.role !== "editor" && body.role !== "viewer")) {
     return jsonError("Invalid team member or role.", 400);
   }
   const supabase = await createSupabaseServerClient();
