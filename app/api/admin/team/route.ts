@@ -41,13 +41,11 @@ export async function POST(request: Request) {
   try { body = await request.json(); } catch { return jsonError("Invalid request.", 400); }
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
   const fullName = typeof body.fullName === "string" ? body.fullName.trim().slice(0, 120) : "";
-  const memberRole = body.role;
+  const memberRole = body.role === "admin" || body.role === "editor" || body.role === "viewer" ? body.role : null;
   if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return jsonError("Enter a valid email address.", 400);
   }
-  if (!["admin", "editor", "viewer"].includes(String(memberRole))) {
-    return jsonError("Choose Admin, Editor, or Viewer.", 400);
-  }
+  if (!memberRole) return jsonError("Choose Admin, Editor, or Viewer.", 400);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -58,42 +56,66 @@ export async function POST(request: Request) {
   const admin = createClient(supabaseUrl, secretKey, {
     auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
   });
-  const temporaryPassword = randomBytes(24).toString("base64url") + "aA1!";
-  const { data: created, error: createError } = await admin.auth.admin.createUser({
-    email,
-    password: temporaryPassword,
-    email_confirm: true,
-    user_metadata: fullName ? { full_name: fullName } : {},
-    app_metadata: { must_change_password: true },
-  });
-  if (createError || !created.user) {
-    const alreadyExists = createError?.message.toLowerCase().includes("already") ||
-      createError?.code === "email_exists";
-    return jsonError(
-      alreadyExists
-        ? "An account already exists for this email. Remove the old invitation and ask the user to sign in first."
-        : "Unable to create this account. Check the email address and try again.",
-      alreadyExists ? 409 : 400,
-    );
+
+  let existingUser: { id: string } | null = null;
+  for (let page = 1; page <= 20; page += 1) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) return jsonError("Unable to check whether this email already has an account.", 500);
+    const match = data.users.find((candidate) => candidate.email?.toLowerCase() === email);
+    if (match) {
+      existingUser = { id: match.id };
+      break;
+    }
+    if (data.users.length < 1000) break;
+  }
+
+  const { data: currentMembership } = await admin.from("workspace_members")
+    .select("user_id").eq("workspace_id", workspaceId)
+    .eq("user_id", existingUser?.id ?? "00000000-0000-0000-0000-000000000000")
+    .maybeSingle();
+  if (currentMembership) return jsonError("This person is already a member of the workspace.", 409);
+
+  let userId = existingUser?.id ?? "";
+  let temporaryPassword: string | null = null;
+  let createdNewAccount = false;
+  if (!existingUser) {
+    temporaryPassword = randomBytes(24).toString("base64url") + "aA1!";
+    const { data: created, error: createError } = await admin.auth.admin.createUser({
+      email,
+      password: temporaryPassword,
+      email_confirm: true,
+      user_metadata: fullName ? { full_name: fullName } : {},
+      app_metadata: { must_change_password: true },
+    });
+    if (createError || !created.user) {
+      const alreadyExists = createError?.message.toLowerCase().includes("already") || createError?.code === "email_exists";
+      return jsonError(
+        alreadyExists ? "An account already exists for this email. Try creating the account again." : "Unable to create this account. Check the email address and try again.",
+        alreadyExists ? 409 : 400,
+      );
+    }
+    userId = created.user.id;
+    createdNewAccount = true;
   }
 
   const { error: membershipError } = await admin.from("workspace_members").insert({
     workspace_id: workspaceId,
-    user_id: created.user.id,
+    user_id: userId,
     role: memberRole,
   });
   if (membershipError) {
-    await admin.auth.admin.deleteUser(created.user.id);
-    return jsonError("The account was created but could not be added to this workspace. Please try again.", 500);
+    if (createdNewAccount) await admin.auth.admin.deleteUser(userId);
+    return jsonError("The account could not be added to this workspace. Please try again.", 500);
   }
 
   return NextResponse.json({
     created: true,
+    existingAccount: Boolean(existingUser),
     email,
     fullName,
     role: memberRole,
     temporaryPassword,
-    passwordChangeRequired: true,
+    passwordChangeRequired: Boolean(temporaryPassword),
   }, { status: 201 });
 }
 
