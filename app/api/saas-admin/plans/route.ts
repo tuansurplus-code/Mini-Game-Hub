@@ -21,7 +21,7 @@ export async function GET() {
   try {
     const platformAdmin = await getPlatformAdmin();
     if (!platformAdmin) return jsonError("Platform admin access required.", 403);
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient("platform");
     const { data: plans, error } = await supabase.from("subscription_plans")
       .select("id,slug,name,description,monthly_price_lkr,max_active_campaigns,max_monthly_participants,max_team_members,feature_flags,active,sort_order")
       .order("sort_order", { ascending: true });
@@ -74,7 +74,7 @@ export async function PATCH(request: Request) {
       advanced_reports: rawFeatures.advanced_reports === true,
     };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient("platform");
     const { data: plan, error } = await supabase.from("subscription_plans")
       .update({
         name,

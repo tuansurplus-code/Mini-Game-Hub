@@ -57,7 +57,7 @@ function InviteContent() {
   }, [id, token]);
 
   async function switchAccount() {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "local" });
     router.push(loginHref);
   }
 

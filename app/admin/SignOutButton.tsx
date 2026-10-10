@@ -3,15 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { platformSupabase } from "../../lib/supabase-platform";
 
-export default function SignOutButton() {
+export default function SignOutButton({ area = "customer" }: { area?: "customer" | "platform" }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function signOut() {
     setLoading(true);
-    await supabase.auth.signOut();
-    router.replace("/login");
+    const client = area === "platform" ? platformSupabase : supabase;
+    const { error } = await client.auth.signOut({ scope: "local" });
+    if (error) { setLoading(false); window.alert("Unable to sign out. Please try again."); return; }
+    router.replace(area === "platform" ? "/saas-login" : "/login");
     router.refresh();
   }
 

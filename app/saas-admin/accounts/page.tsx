@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from "../../../lib/supabase-server";
 
 export default async function AccountsPage() {
   await requirePlatformAdmin();
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient("platform");
   const { data, error } = await supabase
     .from("workspaces")
     .select("id,name,slug,status,created_at,workspace_members(count),campaigns(count),workspace_subscriptions(status,period_end,subscription_plans(name,slug))")

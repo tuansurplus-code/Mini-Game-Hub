@@ -30,7 +30,7 @@ export async function PATCH(request: Request) {
   let body: { id?: unknown; decision?: unknown; notes?: unknown };
   try { body = await request.json(); } catch { return error("Invalid request."); }
   if (typeof body.id !== "string" || !/^[0-9a-f-]{36}$/i.test(body.id) || !["approve", "reject"].includes(String(body.decision))) return error("Choose a request and approve or reject it.");
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient("platform");
   const { data, error: reviewError } = await supabase.rpc("review_subscription_request", {
     p_request_id: body.id, p_decision: body.decision, p_review_notes: typeof body.notes === "string" ? body.notes.slice(0, 1000) : null,
   });
