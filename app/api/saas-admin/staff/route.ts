@@ -66,3 +66,19 @@ async function mutate(request: Request, create: boolean) {
 }
 export async function POST(request: Request) { return mutate(request, true); }
 export async function PATCH(request: Request) { return mutate(request, false); }
+
+export async function DELETE(request: Request) {
+  if (request.headers.get("origin") !== new URL(request.url).origin) return reply({ error: "Invalid request origin." }, 403);
+  const actor = await getPlatformAdmin();
+  if (!actor || actor.role !== "owner") return reply({ error: "Only Super Admins can remove platform staff." }, 403);
+  let body: Record<string, unknown>;
+  try { body = await request.json(); } catch { return reply({ error: "Invalid request." }, 400); }
+  if (typeof body.userId !== "string" || !/^[0-9a-f-]{36}$/i.test(body.userId)) return reply({ error: "Invalid staff account." }, 400);
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin.rpc("remove_platform_staff", { p_actor: actor.user.id, p_target: body.userId });
+  if (error) {
+    const safe = ["You cannot remove your own Super Admin access.", "The last active Super Admin cannot be removed.", "Only active Super Admins can manage staff.", "Staff account not found."];
+    return reply({ error: safe.includes(error.message) ? error.message : "Unable to remove platform access." }, 409);
+  }
+  return reply({ removed: true });
+}

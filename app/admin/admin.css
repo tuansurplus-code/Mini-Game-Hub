@@ -45,6 +45,14 @@
   gap: 4px;
 }
 
+.admin-nav-section {
+  margin: 18px 10px 5px;
+  color: #818b9a;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
 .admin-nav a,
 .admin-customer {
   color: #d7dce3;

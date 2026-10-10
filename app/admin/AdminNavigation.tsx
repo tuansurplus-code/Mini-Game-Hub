@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-type NavLink = { label: string; href: string };
+type NavLink = { label: string; href: string } | { section: string };
 
 export default function AdminNavigation({ links }: { links: NavLink[] }) {
   const pathname = usePathname();
@@ -23,6 +23,7 @@ export default function AdminNavigation({ links }: { links: NavLink[] }) {
     </button>
     <nav id="admin-navigation-links" className={`admin-nav ${open ? "is-open" : ""}`} aria-label="Admin navigation">
       {links.map(item => {
+        if ("section" in item) return <div key={item.section} className="admin-nav-section">{item.section}</div>;
         const active = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
         return <Link
           key={item.href}

@@ -8,9 +8,11 @@ import { requirePlatformAdmin } from "../../lib/platform-auth";
 
 const links = [
   { label: "Overview", href: "/saas-admin" },
+  { section: "CUSTOMER OPERATIONS" },
   { label: "Accounts", href: "/saas-admin/accounts" },
-  { label: "Platform Staff", href: "/saas-admin/users" },
   { label: "Workspace Memberships", href: "/saas-admin/memberships" },
+  { section: "SAAS CONFIGURATION" },
+  { label: "Platform Staff", href: "/saas-admin/users" },
   { label: "Game Templates", href: "/saas-admin/templates" },
   { label: "Plans & Limits", href: "/saas-admin/plans" },
   { label: "Subscription Requests", href: "/saas-admin/subscriptions" },

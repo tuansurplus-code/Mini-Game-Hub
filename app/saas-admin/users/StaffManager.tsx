@@ -13,6 +13,7 @@ export default function StaffManager() {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [audit, setAudit] = useState<Audit[]>([]);
   const [canManage, setCanManage] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -25,7 +26,7 @@ export default function StaffManager() {
     const response = await fetch("/api/saas-admin/staff", { cache: "no-store" });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Unable to load staff.");
-    setStaff(data.staff); setAudit(data.audit); setCanManage(data.canManage);
+    setStaff(data.staff); setAudit(data.audit); setCanManage(data.canManage); setCurrentUserId(data.currentUserId);
   }, []);
   useEffect(() => { load().catch(e => setError(e.message)).finally(() => setLoading(false)); }, [load]);
   useEffect(() => { if (form) dialog.current?.showModal(); else dialog.current?.close(); }, [Boolean(form)]);
@@ -44,6 +45,15 @@ export default function StaffManager() {
     } catch (e) { setError(e instanceof Error ? e.message : "Unable to save staff."); }
     finally { setSaving(false); }
   }
+  async function removeStaff(person: Staff) {
+    if (!window.confirm(`Remove ${person.email} from platform staff? Their login and any customer workspace access will remain.`)) return;
+    setError(""); setMessage("");
+    const response = await fetch("/api/saas-admin/staff", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: person.user_id }) });
+    const data = await response.json();
+    if (!response.ok) { setError(data.error || "Unable to remove platform staff."); return; }
+    setStaff(current => current.filter(row => row.user_id !== person.user_id)); setMessage(`${person.email} no longer has platform staff access. Their customer access was not changed.`);
+    await load();
+  }
   const name = (id: string) => staff.find(s => s.user_id === id)?.email || "Staff account";
   const lastOwner = form?.userId && staff.find(s => s.user_id === form.userId)?.role === "owner" && staff.find(s => s.user_id === form.userId)?.active && staff.filter(s => s.role === "owner" && s.active).length === 1;
 
@@ -61,7 +71,7 @@ export default function StaffManager() {
         {!canManage && <p>You can view staff. Only Super Admins can create accounts or change access.</p>}
         <table className="admin-table"><thead><tr><th>Name / Email</th><th>Contact number</th><th>Role</th><th>Status</th>{canManage && <th>Action</th>}</tr></thead><tbody>{staff.map(s => <tr key={s.user_id}>
           <td><b>{s.full_name || "Name not set"}</b><br />{s.email}</td><td>{s.contact_number || "Not set"}</td><td>{platformRoleLabels[s.role]}</td><td>{s.active ? "Active" : "Inactive"}{s.password_change_required && <div style={{ fontSize: 12 }}>Password setup pending</div>}</td>
-          {canManage && <td><button onClick={() => { setError(""); setForm({ userId: s.user_id, email: s.email, fullName: s.full_name, contactNumber: s.contact_number, role: s.role, active: s.active }); }}>Edit Access</button></td>}
+          {canManage && <td><button onClick={() => { setError(""); setForm({ userId: s.user_id, email: s.email, fullName: s.full_name, contactNumber: s.contact_number, role: s.role, active: s.active }); }}>Edit Access</button>{s.user_id !== currentUserId && <button style={{ marginLeft: 8 }} onClick={() => void removeStaff(s)}>Remove Access</button>}</td>}
         </tr>)}</tbody></table>
       </>}
     </div>
@@ -70,7 +80,7 @@ export default function StaffManager() {
       <tr><td>Admin</td><td>All available platform features except staff creation and access changes.</td></tr>
       <tr><td>Operator</td><td>Approve or reject subscriptions. View other platform sections.</td></tr>
     </tbody></table></div>
-    <div className="admin-panel" style={{ marginTop: 20, overflowX: "auto" }}><h2>Recent staff access changes</h2>{audit.length === 0 ? <p>No staff changes recorded yet.</p> : <table className="admin-table"><thead><tr><th>When</th><th>Changed by</th><th>Account</th><th>Change</th></tr></thead><tbody>{audit.map(a => <tr key={a.id}><td>{new Date(a.created_at).toLocaleString()}</td><td>{name(a.actor_id)}</td><td>{name(a.target_id)}</td><td>{a.action === "create" ? "Created" : "Updated"}: {a.before_state?.role ? `${platformRoleLabels[a.before_state.role]} → ` : ""}{platformRoleLabels[a.after_state.role]} · {a.after_state.active ? "Active" : "Inactive"}</td></tr>)}</tbody></table>}</div>
+    <div className="admin-panel" style={{ marginTop: 20, overflowX: "auto" }}><h2>Recent staff access changes</h2>{audit.length === 0 ? <p>No staff changes recorded yet.</p> : <table className="admin-table"><thead><tr><th>When</th><th>Changed by</th><th>Account</th><th>Change</th></tr></thead><tbody>{audit.map(a => <tr key={a.id}><td>{new Date(a.created_at).toLocaleString()}</td><td>{name(a.actor_id)}</td><td>{name(a.target_id)}</td><td>{a.action === "delete" ? "Removed platform access" : a.action === "create" ? "Created" : "Updated"}{a.action !== "delete" && <>: {a.before_state?.role ? `${platformRoleLabels[a.before_state.role]} → ` : ""}{platformRoleLabels[a.after_state.role]} · {a.after_state.active ? "Active" : "Inactive"}</>}</td></tr>)}</tbody></table>}</div>
     <dialog ref={dialog} onCancel={event => { if (saving) event.preventDefault(); else setForm(null); }} style={{ width: "min(480px, calc(100vw - 40px))", maxHeight: "85vh", overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: 16, padding: 28, color: "#111827", background: "white" }} aria-labelledby="staff-dialog-title">
       {form && <form onSubmit={submit} style={{ display: "grid", gap: 16 }}>
         <h2 id="staff-dialog-title" style={{ margin: 0 }}>{form.userId ? "Edit Staff Access" : "Create Staff Account"}</h2>

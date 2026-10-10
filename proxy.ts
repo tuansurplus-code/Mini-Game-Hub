@@ -57,6 +57,10 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  if (user?.app_metadata?.must_change_password === true && (isAdminRoute || isOnboardingRoute || isLoginRoute)) {
+    return redirectWithCookies("/change-password");
+  }
+
   if ((isAdminRoute || isOnboardingRoute) && !user) {
     return redirectWithCookies(withGame("/login", game));
   }
@@ -88,5 +92,6 @@ export const config = {
     "/saas-password",
     "/login",
     "/onboarding",
+    "/change-password",
   ],
 };
