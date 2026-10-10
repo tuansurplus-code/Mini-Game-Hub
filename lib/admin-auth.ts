@@ -9,6 +9,7 @@ export async function requireAdmin() {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
+  if (user.app_metadata?.must_change_password === true) redirect("/change-password");
 
   const { data: memberships, error } = await supabase
     .from("workspace_members")
