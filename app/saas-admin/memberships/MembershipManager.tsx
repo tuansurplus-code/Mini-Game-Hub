@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 
-export type Membership = { user_id: string; email: string; workspace_id: string; workspace_name: string; workspace_slug: string; workspace_status: string; role: "owner" | "admin" | "editor" | "viewer"; created_at: string };
+export type Membership = { user_id: string; email: string; workspace_id: string; workspace_name: string; workspace_slug: string; workspace_status: string; login_status: "active" | "deactivated" | "unknown"; role: "owner" | "admin" | "editor" | "viewer"; created_at: string };
 type Workspace = { id: string; name: string; slug: string };
 const input = { width: "100%", padding: 11, border: "1px solid #cbd5e1", borderRadius: 8, boxSizing: "border-box" as const };
 const labels: Record<Membership["role"], string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer" };
@@ -11,6 +11,7 @@ export default function MembershipManager({ initial, workspaces, canManage }: { 
   const [rows, setRows] = useState(initial);
   const [draft, setDraft] = useState<{ workspaceId: string; email: string; role: Membership["role"] } | null>(null);
   const [roleChanges, setRoleChanges] = useState<Record<string, Membership["role"]>>({});
+  const [temporaryCredential, setTemporaryCredential] = useState<{ email: string; password: string } | null>(null);
   const [error, setError] = useState(""); const [notice, setNotice] = useState(""); const [saving, setSaving] = useState(false);
   const key = (row: Membership) => `${row.workspace_id}:${row.user_id}`;
 
@@ -21,7 +22,7 @@ export default function MembershipManager({ initial, workspaces, canManage }: { 
       const response = await fetch("/api/saas-admin/memberships", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(draft) });
       const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to add member.");
       const workspace = workspaces.find(item => item.id === draft.workspaceId)!;
-      setRows(current => [{ user_id: data.userId, email: draft.email, workspace_id: workspace.id, workspace_name: workspace.name, workspace_slug: workspace.slug, workspace_status: "active", role: draft.role, created_at: new Date().toISOString() }, ...current]);
+      setRows(current => [{ user_id: data.userId, email: draft.email, workspace_id: workspace.id, workspace_name: workspace.name, workspace_slug: workspace.slug, workspace_status: "active", login_status: "active", role: draft.role, created_at: new Date().toISOString() }, ...current]);
       setDraft(null); setNotice("Workspace membership added.");
     } catch (err) { setError(err instanceof Error ? err.message : "Unable to add member."); }
     finally { setSaving(false); }
@@ -48,17 +49,44 @@ export default function MembershipManager({ initial, workspaces, canManage }: { 
     setRows(current => current.filter(item => key(item) !== key(row))); setNotice("Workspace access removed. The customer login and workspace data were preserved.");
   }
 
+  async function changeLoginStatus(row: Membership) {
+    const activate = row.login_status === "deactivated";
+    if (!window.confirm(`${activate ? "Activate" : "Deactivate"} ${row.email}'s customer login? This applies to all of this user's workspaces.`)) return;
+    setSaving(true); setError(""); setNotice(""); setTemporaryCredential(null);
+    try {
+      const response = await fetch("/api/saas-admin/memberships", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ workspaceId: row.workspace_id, userId: row.user_id, action: activate ? "activate" : "deactivate" }) });
+      const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to update customer login.");
+      setRows(current => current.map(item => item.user_id === row.user_id ? { ...item, login_status: activate ? "active" : "deactivated" } : item));
+      setNotice(`Customer login ${activate ? "activated" : "deactivated"}.`);
+    } catch (err) { setError(err instanceof Error ? err.message : "Unable to update customer login."); }
+    finally { setSaving(false); }
+  }
+
+  async function resetPassword(row: Membership) {
+    if (!window.confirm(`Generate a temporary password for ${row.email}? They will have to change it when they next sign in.`)) return;
+    setSaving(true); setError(""); setNotice(""); setTemporaryCredential(null);
+    try {
+      const response = await fetch("/api/saas-admin/memberships", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ workspaceId: row.workspace_id, userId: row.user_id, action: "reset-password" }) });
+      const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to reset password.");
+      setTemporaryCredential({ email: row.email, password: data.temporaryPassword });
+      setNotice("Temporary password generated. Copy it now; it will not be shown again.");
+    } catch (err) { setError(err instanceof Error ? err.message : "Unable to reset password."); }
+    finally { setSaving(false); }
+  }
+
   return <>
     {error && <p role="alert" className="admin-panel" style={{ color: "#991b1b" }}>{error}</p>}{notice && <p role="status" className="admin-panel" style={{ color: "#065f46" }}>{notice}</p>}
-    {!canManage && <div className="admin-panel">Only Super Admins can add, change or remove customer workspace memberships.</div>}
+    {temporaryCredential && <div className="admin-panel" role="status" style={{ borderColor: "#d6a542" }}><strong>Temporary password for {temporaryCredential.email}</strong><p style={{ margin: "8px 0", fontFamily: "monospace", fontSize: 16, userSelect: "all" }}>{temporaryCredential.password}</p><p style={{ margin: "0 0 12px", color: "#6b7280", fontSize: 13 }}>Share this password privately. The customer must set a new password at their next sign-in.</p><button type="button" onClick={() => void navigator.clipboard.writeText(temporaryCredential.password).then(() => setNotice("Temporary password copied."), () => setError("Copy failed. Select the password and copy it manually."))}>Copy password</button></div>}
+    {!canManage && <div className="admin-panel">Only Super Admins can add, change, activate, deactivate or remove customer workspace memberships and reset customer passwords.</div>}
     <div className="admin-panel" style={{ overflowX: "auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 14 }}><h2 style={{ margin: 0 }}>Workspace memberships</h2>{canManage && <button className="primary-btn" onClick={() => { setError(""); setDraft({ workspaceId: workspaces[0]?.id ?? "", email: "", role: "admin" }); }}>Add Member</button>}</div>
-      <table className="admin-table" style={{ minWidth: 850 }}><thead><tr><th>Customer login</th><th>Workspace</th><th>Workspace role</th><th>Status</th><th>Joined</th>{canManage && <th>Actions</th>}</tr></thead>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 8 }}><h2 style={{ margin: 0 }}>Workspace memberships</h2>{canManage && <button className="primary-btn" onClick={() => { setError(""); setDraft({ workspaceId: workspaces[0]?.id ?? "", email: "", role: "admin" }); }}>Add Member</button>}</div>
+      <p style={{ margin: "0 0 14px", color: "#6b7280", fontSize: 13 }}>Role and removal apply to this workspace. Login activation and password reset apply to the customer login across all workspaces.</p>
+      <table className="admin-table" style={{ minWidth: 1120 }}><thead><tr><th>Customer login</th><th>Workspace</th><th>Workspace role</th><th>Login status</th><th>Workspace status</th><th>Joined</th>{canManage && <th>Actions</th>}</tr></thead>
         <tbody>{rows.map(row => { const edited = roleChanges[key(row)] ?? row.role; const ownerCount = rows.filter(other => other.workspace_id === row.workspace_id && other.role === "owner").length;
           return <tr key={key(row)}><td>{row.email}</td><td><strong>{row.workspace_name}</strong><br /><small>{row.workspace_slug}</small></td>
             <td>{canManage ? <select aria-label={`Role for ${row.email}`} value={edited} disabled={saving || (row.role === "owner" && ownerCount === 1)} onChange={e => setRoleChanges(current => ({ ...current, [key(row)]: e.target.value as Membership["role"] }))}>{Object.entries(labels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select> : labels[row.role]}</td>
-            <td>{row.workspace_status}</td><td>{new Date(row.created_at).toLocaleDateString("en-LK")}</td>
-            {canManage && <td style={{ whiteSpace: "nowrap" }}>{edited !== row.role && <button disabled={saving} onClick={() => void saveRole(row)}>Save</button>}<button disabled={saving || (row.role === "owner" && ownerCount === 1)} style={{ marginLeft: 8 }} onClick={() => void remove(row)}>Remove</button></td>}
+            <td><span style={{ color: row.login_status === "active" ? "#15803d" : row.login_status === "deactivated" ? "#b91c1c" : "#6b7280" }}>{row.login_status === "active" ? "Active" : row.login_status === "deactivated" ? "Deactivated" : "Unknown"}</span></td><td>{row.workspace_status}</td><td>{new Date(row.created_at).toLocaleDateString("en-LK")}</td>
+            {canManage && <td style={{ whiteSpace: "nowrap" }}>{edited !== row.role && <button disabled={saving} onClick={() => void saveRole(row)}>Save</button>}<button disabled={saving || row.login_status === "unknown"} style={{ marginLeft: 8 }} onClick={() => void changeLoginStatus(row)}>{row.login_status === "deactivated" ? "Activate" : "Deactivate"}</button><button disabled={saving || row.login_status === "unknown"} style={{ marginLeft: 8 }} onClick={() => void resetPassword(row)}>Reset password</button><button disabled={saving || (row.role === "owner" && ownerCount === 1)} style={{ marginLeft: 8 }} onClick={() => void remove(row)}>Remove</button></td>}
           </tr>;
         })}</tbody>
       </table>
