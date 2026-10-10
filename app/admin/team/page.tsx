@@ -1,1 +1,19 @@
-import{requireAdmin}from"../../../lib/admin-auth";import{createSupabaseServerClient}from"../../../lib/supabase-server";export default async function Page(){const{workspaceId,role}=await requireAdmin();const s=await createSupabaseServerClient();const{data}=await s.from("workspace_members").select("user_id,role,created_at").eq("workspace_id",workspaceId).order("created_at");return <><div className="admin-header"><div><div className="eyebrow">WORKSPACE</div><h1>Team</h1><p>People who can access this customer workspace.</p></div><span className="status-pill">YOUR ROLE: {role.toUpperCase()}</span></div><div className="admin-panel"><table className="admin-table"><thead><tr><th>Member</th><th>Role</th><th>Joined</th></tr></thead><tbody>{(data??[]).map((m:any)=><tr key={m.user_id}><td><code>{String(m.user_id).slice(0,8)}…</code></td><td>{m.role}</td><td>{new Date(m.created_at).toLocaleDateString("en-LK")}</td></tr>)}</tbody></table></div></>}
+import { requireAdmin } from "../../../lib/admin-auth";
+import TeamManager from "./TeamManager";
+
+export default async function TeamPage() {
+  const { role } = await requireAdmin();
+  return (
+    <>
+      <div className="admin-header">
+        <div>
+          <div className="eyebrow">WORKSPACE</div>
+          <h1>Team</h1>
+          <p>Manage the people who can access this workspace.</p>
+        </div>
+        <span className="status-pill">YOUR ROLE: {role.toUpperCase()}</span>
+      </div>
+      <TeamManager role={role} />
+    </>
+  );
+}
