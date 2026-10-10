@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getPlatformAdmin } from "../../../../lib/platform-auth";
 import { createSupabaseAdminClient } from "../../../../lib/supabase-admin";
@@ -60,11 +61,41 @@ export async function PATCH(request: Request) {
   const auth = await requireOwner(request); if (auth.error) return auth.error;
   let body: Record<string, unknown>;
   try { body = await request.json(); } catch { return reply({ error: "Invalid request." }, 400); }
-  if (!validId(body.workspaceId) || !validId(body.userId) || !validRole(body.role)) return reply({ error: "Invalid workspace membership." }, 400);
+  if (!validId(body.workspaceId) || !validId(body.userId)) return reply({ error: "Invalid workspace membership." }, 400);
   const workspaceId = body.workspaceId as string;
   const userId = body.userId as string;
-  const role = body.role as string;
   const admin = createSupabaseAdminClient();
+
+  if (body.action === "activate" || body.action === "deactivate" || body.action === "reset-password") {
+    const membership = await membershipExists(admin, workspaceId, userId);
+    if (!membership) return reply({ error: "Workspace membership not found." }, 404);
+    const { data: target, error: userError } = await admin.auth.admin.getUserById(userId);
+    if (userError || !target.user) return reply({ error: "Customer login not found." }, 404);
+
+    // Customer membership controls must never change a platform operator's sign-in.
+    const { data: platformStaff, error: platformError } = await admin.from("platform_admins")
+      .select("user_id").eq("user_id", userId).maybeSingle();
+    if (platformError) return reply({ error: "Unable to verify this customer's access." }, 500);
+    if (platformStaff) return reply({ error: "This login also has platform staff access. Manage it from Platform Staff." }, 409);
+
+    if (body.action === "reset-password") {
+      const temporaryPassword = `${randomBytes(12).toString("base64url")}Aa1!`;
+      const { error } = await admin.auth.admin.updateUserById(userId, {
+        password: temporaryPassword,
+        app_metadata: { ...target.user.app_metadata, must_change_password: true },
+      });
+      if (error) return reply({ error: "Unable to reset this customer's password." }, 500);
+      return reply({ reset: true, temporaryPassword });
+    }
+
+    const active = body.action === "activate";
+    const { error } = await admin.auth.admin.updateUserById(userId, { ban_duration: active ? "none" : "876000h" });
+    if (error) return reply({ error: `Unable to ${active ? "activate" : "deactivate"} this customer login.` }, 500);
+    return reply({ active });
+  }
+
+  if (!validRole(body.role)) return reply({ error: "Invalid workspace membership." }, 400);
+  const role = body.role as string;
   if (role !== "owner" && await preventLastOwner(admin, workspaceId, userId)) return reply({ error: "A workspace must keep at least one owner." }, 409);
   const { data, error } = await admin.from("workspace_members").update({ role }).eq("workspace_id", workspaceId).eq("user_id", userId).select("user_id").maybeSingle();
   if (error) return reply({ error: "Unable to update workspace role." }, 409);

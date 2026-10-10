@@ -8,6 +8,8 @@ import { requirePlatformAdmin } from "../../lib/platform-auth";
 
 const links = [
   { label: "Overview", href: "/saas-admin" },
+  { section: "PUBLIC WEBSITE" },
+  { label: "Homepage Layout", href: "/saas-admin/settings" },
   { section: "CUSTOMER OPERATIONS" },
   { label: "Accounts", href: "/saas-admin/accounts" },
   { label: "Workspace Memberships", href: "/saas-admin/memberships" },
@@ -17,7 +19,6 @@ const links = [
   { label: "Plans & Limits", href: "/saas-admin/plans" },
   { label: "Subscription Requests", href: "/saas-admin/subscriptions" },
   { label: "Usage", href: "/saas-admin/usage" },
-  { label: "Platform Settings", href: "/saas-admin/settings" },
 ];
 
 export default async function SaaSAdminLayout({ children }: { children: React.ReactNode }) {
