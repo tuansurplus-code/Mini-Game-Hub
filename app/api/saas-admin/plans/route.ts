@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requirePlatformAdmin } from "../../../../lib/platform-auth";
+import { getPlatformAdmin } from "../../../../lib/platform-auth";
 import { createSupabaseServerClient } from "../../../../lib/supabase-server";
 
 const featureKeys = ["custom_branding", "automatic_scheduling", "advanced_reports"] as const;
@@ -19,7 +19,8 @@ function optionalLimit(value: unknown, label: string) {
 
 export async function GET() {
   try {
-    await requirePlatformAdmin();
+    const platformAdmin = await getPlatformAdmin();
+    if (!platformAdmin) return jsonError("Platform admin access required.", 403);
     const supabase = await createSupabaseServerClient();
     const { data: plans, error } = await supabase.from("subscription_plans")
       .select("id,slug,name,description,monthly_price_lkr,max_active_campaigns,max_monthly_participants,max_team_members,feature_flags,active,sort_order")
@@ -37,7 +38,9 @@ export async function PATCH(request: Request) {
     return jsonError("Invalid request origin.", 403);
   }
   try {
-    const { role } = await requirePlatformAdmin();
+    const platformAdmin = await getPlatformAdmin();
+    if (!platformAdmin) return jsonError("Platform admin access required.", 403);
+    const { role } = platformAdmin;
     if (role === "support") return jsonError("Your platform role cannot change plans.", 403);
 
     let body: Record<string, unknown>;
