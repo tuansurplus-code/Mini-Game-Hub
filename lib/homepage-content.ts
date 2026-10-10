@@ -49,8 +49,13 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
 };
 
 export function resolveActiveTheme(content: HomepageContent, now = new Date()): SeasonalTheme | null {
+  const parts = new Intl.DateTimeFormat("en", {
+    timeZone: "Asia/Colombo", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(now);
+  const date = (key: string) => parts.find((part) => part.type === key)?.value ?? "";
+  const currentDate = `${date("year")}-${date("month")}-${date("day")}`;
   return content.seasonalThemes
-    .filter((theme) => theme.enabled && theme.startsAt && theme.endsAt && new Date(theme.startsAt) <= now && now <= new Date(theme.endsAt))
+    .filter((theme) => theme.enabled && theme.startsAt && theme.endsAt && theme.startsAt <= currentDate && currentDate <= theme.endsAt)
     .sort((a, b) => b.startsAt.localeCompare(a.startsAt))[0] ?? null;
 }
 
