@@ -14,6 +14,7 @@ const links = [
   { label: "Winner History", href: "/admin/winners" },
   { label: "Reports", href: "/admin/reports" },
   { label: "Team", href: "/admin/team" },
+  { label: "Billing", href: "/admin/billing" },
   { label: "Account", href: "/admin/settings" },
 ];
 
