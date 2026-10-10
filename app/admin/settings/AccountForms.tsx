@@ -38,8 +38,8 @@ export default function AccountForms(props: Props) {
   }
   return <div style={{ display: "grid", gap: 24, maxWidth: 760 }}>
     <section className="admin-panel"><h2>Personal account</h2><p><b>Email:</b> {props.email}</p>
-      <form onSubmit={savePersonal}><label htmlFor="display-name">Display name</label><input id="display-name" style={field} autoComplete="name" maxLength={100} value={displayName} onChange={e => setDisplayName(e.target.value)} />
-        <p role="status" aria-live="polite">{personalMessage}</p><button className="primary-btn" disabled={savingPersonal}>{savingPersonal ? "Saving…" : "Save personal profile"}</button></form>
+      {props.role === "viewer" ? <p><b>Display name:</b> {displayName || "Not set"}</p> : <form onSubmit={savePersonal}><label htmlFor="display-name">Display name</label><input id="display-name" style={field} autoComplete="name" maxLength={100} value={displayName} onChange={e => setDisplayName(e.target.value)} />
+        <p role="status" aria-live="polite">{personalMessage}</p><button className="primary-btn" disabled={savingPersonal}>{savingPersonal ? "Saving…" : "Save personal profile"}</button></form>}
       <p><Link href="/forgot-password">Reset your password</Link></p>
     </section>
     <section className="admin-panel"><h2>Business profile</h2><p><b>Workspace:</b> {props.slug} · <b>Status:</b> {props.status} · <b>Your role:</b> {props.role}</p>
