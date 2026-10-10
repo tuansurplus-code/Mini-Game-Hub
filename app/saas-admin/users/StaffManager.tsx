@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { platformRoleLabels, PlatformRole } from "../../../lib/platform-roles";
 
 type Staff = { user_id: string; email: string; full_name: string; contact_number: string; role: PlatformRole; active: boolean; password_change_required: boolean };
@@ -20,7 +20,6 @@ export default function StaffManager() {
   const [form, setForm] = useState<Form | null>(null);
   const [saving, setSaving] = useState(false);
   const [credential, setCredential] = useState<{ email: string; password: string } | null>(null);
-  const dialog = useRef<HTMLDialogElement>(null);
 
   const load = useCallback(async () => {
     const response = await fetch("/api/saas-admin/staff", { cache: "no-store" });
@@ -29,7 +28,6 @@ export default function StaffManager() {
     setStaff(data.staff); setAudit(data.audit); setCanManage(data.canManage); setCurrentUserId(data.currentUserId);
   }, []);
   useEffect(() => { load().catch(e => setError(e.message)).finally(() => setLoading(false)); }, [load]);
-  useEffect(() => { if (form) dialog.current?.showModal(); else dialog.current?.close(); }, [Boolean(form)]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -81,8 +79,9 @@ export default function StaffManager() {
       <tr><td>Operator</td><td>Approve or reject subscriptions. View other platform sections.</td></tr>
     </tbody></table></div>
     <div className="admin-panel" style={{ marginTop: 20, overflowX: "auto" }}><h2>Recent staff access changes</h2>{audit.length === 0 ? <p>No staff changes recorded yet.</p> : <table className="admin-table"><thead><tr><th>When</th><th>Changed by</th><th>Account</th><th>Change</th></tr></thead><tbody>{audit.map(a => <tr key={a.id}><td>{new Date(a.created_at).toLocaleString()}</td><td>{name(a.actor_id)}</td><td>{name(a.target_id)}</td><td>{a.action === "delete" ? "Removed platform access" : a.action === "create" ? "Created" : "Updated"}{a.action !== "delete" && <>: {a.before_state?.role ? `${platformRoleLabels[a.before_state.role]} → ` : ""}{platformRoleLabels[a.after_state.role]} · {a.after_state.active ? "Active" : "Inactive"}</>}</td></tr>)}</tbody></table>}</div>
-    <dialog ref={dialog} onCancel={event => { if (saving) event.preventDefault(); else setForm(null); }} style={{ width: "min(480px, calc(100vw - 40px))", maxHeight: "85vh", overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: 16, padding: 28, color: "#111827", background: "white" }} aria-labelledby="staff-dialog-title">
-      {form && <form onSubmit={submit} style={{ display: "grid", gap: 16 }}>
+    {form && <div role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setForm(null); }} style={{ position: "fixed", inset: 0, zIndex: 1000, display: "grid", placeItems: "center", padding: 20, background: "rgba(0,0,0,.58)" }}>
+      <section role="dialog" aria-modal="true" aria-labelledby="staff-dialog-title" className="admin-panel" style={{ width: "min(480px, 100%)", maxHeight: "calc(100vh - 40px)", overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: 16, padding: 28, boxShadow: "0 24px 80px rgba(0,0,0,.35)" }}>
+      <form onSubmit={submit} style={{ display: "grid", gap: 16 }}>
         <h2 id="staff-dialog-title" style={{ margin: 0 }}>{form.userId ? "Edit Staff Access" : "Create Staff Account"}</h2>
         {error && <p role="alert" style={{ color: "#b91c1c" }}>{error}</p>}
         <label>Full name<input autoFocus required maxLength={120} style={inputStyle} value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} /></label>
@@ -93,7 +92,8 @@ export default function StaffManager() {
         {lastOwner && <p>The last active Super Admin must remain active with this role. Add another Super Admin before changing this access.</p>}
         {form.role === "owner" && !lastOwner && <p>This role grants full platform control, including management of other staff.</p>}
         <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}><button type="button" disabled={saving} onClick={() => setForm(null)}>Cancel</button><button className="primary-btn" disabled={saving}>{saving ? "Saving…" : form.userId ? "Save Changes" : "Create Account"}</button></div>
-      </form>}
-    </dialog>
+      </form>
+      </section>
+    </div>}
   </section>;
 }

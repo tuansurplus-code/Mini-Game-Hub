@@ -78,9 +78,10 @@ export default function AccountManager({ initial, canManage }: Props) {
       </table>
       {!rows.length && <p>No customer accounts yet.</p>}
     </div>
-    <dialog open={Boolean(draft)} onClose={() => setDraft(null)} style={{ width: "min(520px, calc(100vw - 32px))", maxHeight: "88vh", overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: 16, padding: 26, color: "#111827" }}>
-      {draft && <form onSubmit={save} style={{ display: "grid", gap: 14 }}>
-        <h2 style={{ margin: 0 }}>{draft.id ? "Edit Customer Account" : "Create Customer Account"}</h2>
+    {draft && <div role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setDraft(null); }} style={{ position: "fixed", inset: 0, zIndex: 1000, display: "grid", placeItems: "center", padding: 20, background: "rgba(0,0,0,.58)" }}>
+      <section role="dialog" aria-modal="true" aria-labelledby="account-dialog-title" className="admin-panel" style={{ width: "min(520px, 100%)", maxHeight: "calc(100vh - 40px)", overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: 16, padding: 26, boxShadow: "0 24px 80px rgba(0,0,0,.35)" }}>
+      <form onSubmit={save} style={{ display: "grid", gap: 14 }}>
+        <h2 id="account-dialog-title" style={{ margin: 0 }}>{draft.id ? "Edit Customer Account" : "Create Customer Account"}</h2>
         <label>Workspace name<input required maxLength={120} style={input} value={draft.name} onChange={e => setName(e.target.value)} /></label>
         <label>Workspace URL<input required maxLength={60} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" style={input} value={draft.slug} onChange={e => setDraft({ ...draft, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })} /></label>
         {draft.id ? <label>Status<select style={input} value={draft.status} onChange={e => setDraft({ ...draft, status: e.target.value })}><option value="active">Active</option><option value="suspended">Suspended</option><option value="disabled">Disabled</option></select></label> : <>
@@ -90,7 +91,8 @@ export default function AccountManager({ initial, canManage }: Props) {
         </>}
         {error && <p role="alert" style={{ margin: 0, color: "#991b1b" }}>{error}</p>}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}><button type="button" disabled={saving} onClick={() => { setDraft(null); setError(""); }}>Cancel</button><button className="primary-btn" disabled={saving}>{saving ? "Saving…" : draft.id ? "Save Changes" : "Create Account"}</button></div>
-      </form>}
-    </dialog>
+      </form>
+      </section>
+    </div>}
   </>;
 }
