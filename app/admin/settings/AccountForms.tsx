@@ -8,6 +8,7 @@ type Props = { email: string; displayName: string; name: string; slug: string; s
 const field = { display: "block", width: "100%", padding: 12, margin: "8px 0 18px", border: "1px solid #d1d5db", borderRadius: 9 };
 export default function AccountForms(props: Props) {
   const router = useRouter();
+  const [activeSection, setActiveSection] = useState<"personal" | "business">("personal");
   const [displayName, setDisplayName] = useState(props.displayName);
   const [name, setName] = useState(props.name);
   const [logoUrl, setLogoUrl] = useState(props.logoUrl);
@@ -61,8 +62,12 @@ export default function AccountForms(props: Props) {
     } catch (error) { setBusinessMessage(error instanceof Error ? error.message : "Unable to save your business profile."); }
     finally { setSavingBusiness(false); }
   }
-  return <div style={{ display: "grid", gap: 24, maxWidth: 760 }}>
-    <section className="admin-panel"><h2>Personal account</h2><p><b>Email:</b> {props.email}</p>
+  return <div className="account-settings">
+    <div className="account-section-switcher" role="group" aria-label="Account settings sections">
+      <button type="button" className={activeSection === "personal" ? "is-selected" : ""} aria-pressed={activeSection === "personal"} onClick={() => setActiveSection("personal")}>Personal Account</button>
+      <button type="button" className={activeSection === "business" ? "is-selected" : ""} aria-pressed={activeSection === "business"} onClick={() => setActiveSection("business")}>Business Profile</button>
+    </div>
+    {activeSection === "personal" && <section className="admin-panel"><h2>Personal account</h2><p><b>Email:</b> {props.email}</p>
       {props.role === "viewer" ? <p><b>Display name:</b> {displayName || "Not set"}</p> : <form onSubmit={savePersonal}><label htmlFor="display-name">Display name</label><input id="display-name" style={field} autoComplete="name" maxLength={100} value={displayName} onChange={e => setDisplayName(e.target.value)} />
         <p role="status" aria-live="polite">{personalMessage}</p><button className="primary-btn" disabled={savingPersonal}>{savingPersonal ? "Saving…" : "Save personal profile"}</button></form>}
       <button type="button" className="secondary-btn" onClick={() => { setPasswordMessage(""); setShowPasswordForm(true); }}>Change password</button>{passwordMessage && <p role="status" aria-live="polite">{passwordMessage}</p>}
@@ -75,8 +80,8 @@ export default function AccountForms(props: Props) {
           <button className="primary-btn" disabled={savingPassword}>{savingPassword ? "Updating…" : "Update password"}</button>
         </form>
       </AdminModal>
-    </section>
-    <section className="admin-panel"><h2>Business profile</h2><p><b>Workspace:</b> {props.slug} · <b>Status:</b> {props.status} · <b>Your role:</b> {props.role}</p>
+    </section>}
+    {activeSection === "business" && <section className="admin-panel"><h2>Business profile</h2><p><b>Workspace:</b> {props.slug} · <b>Status:</b> {props.status} · <b>Your role:</b> {props.role}</p>
       {!owner && <p>The workspace owner manages the business profile.</p>}
       <form onSubmit={saveBusiness}><fieldset disabled={!owner || savingBusiness} style={{ border: 0, padding: 0, margin: 0 }}>
         <label htmlFor="business-name">Business name</label><input id="business-name" style={field} required maxLength={100} value={name} onChange={e => setName(e.target.value)} />
@@ -86,6 +91,6 @@ export default function AccountForms(props: Props) {
         <p>Save your business branding here. Each campaign currently keeps its own appearance settings.</p>
         {owner && <button className="primary-btn" disabled={savingBusiness}>{savingBusiness ? "Saving…" : "Save business profile"}</button>}
       </fieldset><p role="status" aria-live="polite">{businessMessage}</p></form>
-    </section>
+    </section>}
   </div>;
 }

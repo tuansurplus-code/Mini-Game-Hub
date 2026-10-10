@@ -389,3 +389,36 @@ th {
   .campaign-table th:nth-child(7), .campaign-table td:nth-child(7),
   .campaign-table th:nth-child(8), .campaign-table td:nth-child(8) { display: none; }
 }
+
+
+/* Compact Personal Account / Business Profile switcher */
+.account-settings { max-width: 760px; }
+.account-section-switcher {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 11px;
+  background: #eef0f3;
+}
+.account-section-switcher button {
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #4b5563;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.account-section-switcher button.is-selected {
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
+}
+.account-settings > .admin-panel { margin-top: 14px; }
+@media (max-width: 480px) {
+  .account-section-switcher { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .account-section-switcher button { padding: 9px 8px; font-size: 14px; }
+}
