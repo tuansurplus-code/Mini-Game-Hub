@@ -92,15 +92,17 @@ export default function MembershipManager({ initial, workspaces, canManage }: { 
       </table>
       {!rows.length && <p>No customer workspace memberships yet.</p>}
     </div>
-    <dialog open={Boolean(draft)} onClose={() => setDraft(null)} style={{ width: "min(480px, calc(100vw - 32px))", border: "1px solid #cbd5e1", borderRadius: 16, padding: 26 }}>
-      {draft && <form onSubmit={add} style={{ display: "grid", gap: 14 }}><h2 style={{ margin: 0 }}>Add Workspace Member</h2>
+    {draft && <div role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setDraft(null); }} style={{ position: "fixed", inset: 0, zIndex: 1000, display: "grid", placeItems: "center", padding: 20, background: "rgba(0,0,0,.58)" }}>
+      <section role="dialog" aria-modal="true" aria-labelledby="add-workspace-member-title" className="admin-panel" style={{ width: "min(480px, 100%)", maxHeight: "calc(100vh - 40px)", overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: 16, padding: 26, boxShadow: "0 24px 80px rgba(0,0,0,.35)" }}>
+      <form onSubmit={add} style={{ display: "grid", gap: 14 }}><h2 id="add-workspace-member-title" style={{ margin: 0 }}>Add Workspace Member</h2>
         <label>Workspace<select required style={input} value={draft.workspaceId} onChange={e => setDraft({ ...draft, workspaceId: e.target.value })}>{workspaces.map(workspace => <option key={workspace.id} value={workspace.id}>{workspace.name}</option>)}</select></label>
         <label>Existing customer login email<input required type="email" style={input} value={draft.email} onChange={e => setDraft({ ...draft, email: e.target.value })} /></label>
         <label>Workspace role<select style={input} value={draft.role} onChange={e => setDraft({ ...draft, role: e.target.value as Membership["role"] })}>{Object.entries(labels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         <p style={{ margin: 0, color: "#6b7280", fontSize: 13 }}>The email must already have a customer login. Platform staff access remains separate.</p>
         {error && <p role="alert" style={{ margin: 0, color: "#991b1b" }}>{error}</p>}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}><button type="button" disabled={saving} onClick={() => { setDraft(null); setError(""); }}>Cancel</button><button className="primary-btn" disabled={saving || !workspaces.length}>{saving ? "Adding…" : "Add Member"}</button></div>
-      </form>}
-    </dialog>
+      </form>
+      </section>
+    </div>}
   </>;
 }
