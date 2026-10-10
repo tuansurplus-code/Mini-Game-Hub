@@ -1,5 +1,141 @@
 "use client";
-import{FormEvent,useEffect,useState}from"react";import{supabase}from"../../../lib/supabase";
-type Game={id:string;name:string;slug:string;type:string;status:string};type Assignment={game_id:string;campaigns:{status:string}|{status:string}[]|null};
-const gameTypes=[{value:"spin",label:"Spin & Win"},{value:"scratch",label:"Scratch Card"},{value:"pick-card",label:"Pick a Card"},{value:"slot",label:"Slot Machine"},{value:"quiz",label:"Quiz"},{value:"lucky-draw",label:"Lucky Draw"}];
-export default function GamesPage(){const[games,setGames]=useState<Game[]>([]),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[deleting,setDeleting]=useState<string|null>(null),[showForm,setShowForm]=useState(false),[name,setName]=useState(""),[type,setType]=useState("spin"),[description,setDescription]=useState(""),[error,setError]=useState("");async function loadGames(){setLoading(true);setError("");const{data:{user}}=await supabase.auth.getUser();if(!user){window.location.href="/login";return}const{data:m,error:me}=await supabase.from("workspace_members").select("workspace_id").eq("user_id",user.id);if(me||!m?.length){setError("No workspace membership found.");setLoading(false);return}const workspaceId=m[0].workspace_id;const[{data:g,error:ge},{data:a,error:ae}]=await Promise.all([supabase.from("games").select("id,name,slug,type,status").eq("workspace_id",workspaceId).order("created_at",{ascending:false}),supabase.from("campaign_games").select("game_id,campaigns!inner(status,workspace_id)").eq("campaigns.workspace_id",workspaceId)]);if(ge||ae)setError(ge?.message||ae?.message||"Unable to load games.");else{const assignments=(a??[])as Assignment[];setGames((g??[]).map(game=>{const rows=assignments.filter(x=>x.game_id===game.id),live=rows.some(x=>{const c=Array.isArray(x.campaigns)?x.campaigns[0]:x.campaigns;return c?.status==="active"});return{...game,status:live?"live":rows.length?"assigned":"draft"}}))}setLoading(false)}useEffect(()=>{loadGames()},[]);async function handleCreateGame(e:FormEvent<HTMLFormElement>){e.preventDefault();if(!name.trim()){setError("Please enter a game name.");return}setSaving(true);setError("");try{const r=await fetch("/api/admin/games",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,type,description})}),j=await r.json();if(!r.ok){setError(j.error||"Failed to create game.");setSaving(false);return}setName("");setDescription("");setType("spin");setShowForm(false);await loadGames()}catch{setError("Unable to create game.")}setSaving(false)}async function removeGame(g:Game){if(!confirm(`Delete "${g.name}" permanently?\n\nAssigned games must first be removed from all campaigns.`))return;setDeleting(g.id);setError("");try{const r=await fetch(`/api/admin/games?id=${encodeURIComponent(g.id)}`,{method:"DELETE"}),j=await r.json();if(!r.ok){setError(j.error||"Unable to delete game.");setDeleting(null);return}await loadGames()}catch{setError("Unable to delete game.")}setDeleting(null)}return <><div className="admin-header"><div><div className="eyebrow">GAME MANAGEMENT</div><h1>Games</h1><p>Draft = not assigned, Assigned = added to a campaign, Live = assigned to an active campaign.</p></div><button className="primary-btn" onClick={()=>{setShowForm(!showForm);setError("")}}>{showForm?"Cancel":"+ New Game"}</button></div>{showForm&&<div className="admin-panel"><h2>Create New Game</h2><form onSubmit={handleCreateGame}><div style={{marginBottom:18}}><label style={{display:"block",fontWeight:700,marginBottom:8}}>Game Name</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Singhagiri Spin & Win" required style={{width:"100%",padding:12,border:"1px solid #d1d5db",borderRadius:9,boxSizing:"border-box"}}/></div><div style={{marginBottom:18}}><label style={{display:"block",fontWeight:700,marginBottom:8}}>Game Type</label><select value={type} onChange={e=>setType(e.target.value)} style={{width:"100%",padding:12,border:"1px solid #d1d5db",borderRadius:9,background:"#fff"}}>{gameTypes.map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></div><div style={{marginBottom:18}}><label style={{display:"block",fontWeight:700,marginBottom:8}}>Description</label><textarea value={description} onChange={e=>setDescription(e.target.value)} rows={4} placeholder="Optional description" style={{width:"100%",padding:12,border:"1px solid #d1d5db",borderRadius:9,boxSizing:"border-box"}}/></div>{error&&<div className="error-box">{error}</div>}<button className="primary-btn" disabled={saving}>{saving?"Creating...":"Create Game"}</button></form></div>}{!showForm&&error&&<div className="error-box">{error}</div>}<div className="admin-panel">{loading?<div className="empty">Loading games...</div>:games.length?<table><thead><tr><th>Name</th><th>Type</th><th>Slug</th><th>Status</th><th>Action</th></tr></thead><tbody>{games.map(g=><tr key={g.id}><td><strong>{g.name}</strong></td><td><span className="tag">{g.type}</span></td><td>{g.slug}</td><td><span className="tag" style={{textTransform:"capitalize"}}>{g.status}</span></td><td><button type="button" disabled={deleting===g.id} onClick={()=>removeGame(g)} style={{padding:"7px 10px",border:"1px solid #fecaca",borderRadius:7,background:"#fff",color:"#b91c1c",fontWeight:700,cursor:"pointer"}}>{deleting===g.id?"Deleting...":"Delete"}</button></td></tr>)}</tbody></table>:<div className="empty">No games have been created yet.</div>}</div></>}
+
+import { FormEvent, useEffect, useState } from "react";
+
+type Role = "owner" | "admin" | "editor" | "viewer";
+type Game = { id: string; name: string; slug: string; type: string; status: string };
+const gameTypes = [
+  { value: "spin", label: "Spin & Win" },
+  { value: "scratch", label: "Scratch Card" },
+  { value: "pick-card", label: "Pick a Card" },
+  { value: "slot", label: "Slot Machine" },
+  { value: "quiz", label: "Quiz" },
+  { value: "lucky-draw", label: "Lucky Draw" },
+];
+
+export default function GamesPage() {
+  const [games, setGames] = useState<Game[]>([]);
+  const [role, setRole] = useState<Role>("viewer");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState("");
+  const [type, setType] = useState("spin");
+  const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
+  const canEdit = role !== "viewer";
+
+  async function loadGames() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/admin/games", { cache: "no-store" });
+      const data = await response.json();
+      if (response.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      if (!response.ok) throw new Error(data.error || "Unable to load games.");
+      setRole(data.role);
+      setGames(data.games ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to load games.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { void loadGames(); }, []);
+
+  async function handleCreateGame(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!name.trim()) {
+      setError("Please enter a game name.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const response = await fetch("/api/admin/games", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, type, description }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to create game.");
+      setName("");
+      setDescription("");
+      setType("spin");
+      setShowForm(false);
+      await loadGames();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to create game.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function removeGame(game: Game) {
+    if (!window.confirm(`Delete "${game.name}" permanently?\n\nAssigned games must first be removed from all campaigns.`)) return;
+    setDeleting(game.id);
+    setError("");
+    try {
+      const response = await fetch(`/api/admin/games?id=${encodeURIComponent(game.id)}`, { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to delete game.");
+      await loadGames();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to delete game.");
+    } finally {
+      setDeleting(null);
+    }
+  }
+
+  return <>
+    <div className="admin-header">
+      <div>
+        <div className="eyebrow">GAME MANAGEMENT</div>
+        <h1>Games</h1>
+        <p>Draft = not assigned, Assigned = added to a campaign, Live = assigned to an active campaign.</p>
+      </div>
+      {canEdit && <button className="primary-btn" onClick={() => { setShowForm(!showForm); setError(""); }}>{showForm ? "Cancel" : "+ New Game"}</button>}
+    </div>
+
+    {canEdit && showForm && <div className="admin-panel">
+      <h2>Create New Game</h2>
+      <form onSubmit={handleCreateGame}>
+        <div style={{ marginBottom: 18 }}>
+          <label style={{ display: "block", fontWeight: 700, marginBottom: 8 }}>Game Name</label>
+          <input value={name} onChange={event => setName(event.target.value)} placeholder="e.g. Singhagiri Spin & Win" required style={{ width: "100%", padding: 12, border: "1px solid #d1d5db", borderRadius: 9, boxSizing: "border-box" }} />
+        </div>
+        <div style={{ marginBottom: 18 }}>
+          <label style={{ display: "block", fontWeight: 700, marginBottom: 8 }}>Game Type</label>
+          <select value={type} onChange={event => setType(event.target.value)} style={{ width: "100%", padding: 12, border: "1px solid #d1d5db", borderRadius: 9, background: "#fff" }}>
+            {gameTypes.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+        </div>
+        <div style={{ marginBottom: 18 }}>
+          <label style={{ display: "block", fontWeight: 700, marginBottom: 8 }}>Description</label>
+          <textarea value={description} onChange={event => setDescription(event.target.value)} rows={4} placeholder="Optional description" style={{ width: "100%", padding: 12, border: "1px solid #d1d5db", borderRadius: 9, boxSizing: "border-box" }} />
+        </div>
+        {error && <div className="error-box">{error}</div>}
+        <button className="primary-btn" disabled={saving}>{saving ? "Creating..." : "Create Game"}</button>
+      </form>
+    </div>}
+
+    {!showForm && error && <div className="error-box">{error}</div>}
+    <div className="admin-panel">
+      {loading ? <div className="empty">Loading games...</div> : games.length ? <table>
+        <thead><tr><th>Name</th><th>Type</th><th>Slug</th><th>Status</th>{canEdit && <th>Action</th>}</tr></thead>
+        <tbody>{games.map(game => <tr key={game.id}>
+          <td><strong>{game.name}</strong></td>
+          <td><span className="tag">{game.type}</span></td>
+          <td>{game.slug}</td>
+          <td><span className="tag" style={{ textTransform: "capitalize" }}>{game.status}</span></td>
+          {canEdit && <td><button type="button" disabled={deleting === game.id} onClick={() => void removeGame(game)} style={{ padding: "7px 10px", border: "1px solid #fecaca", borderRadius: 7, background: "#fff", color: "#b91c1c", fontWeight: 700, cursor: "pointer" }}>{deleting === game.id ? "Deleting..." : "Delete"}</button></td>}
+        </tr>)}</tbody>
+      </table> : <div className="empty">No games have been created yet.</div>}
+    </div>
+  </>;
+}
