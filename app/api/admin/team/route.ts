@@ -29,7 +29,7 @@ export async function GET() {
     if (error) return jsonError("Unable to load invitations.", 400);
     invitations = data ?? [];
   }
-  return NextResponse.json({ members: members ?? [], invitations });
+  return NextResponse.json({ role, members: members ?? [], invitations });
 }
 
 export async function POST(request: Request) {
