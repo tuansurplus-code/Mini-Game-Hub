@@ -688,3 +688,26 @@ th {
 .homepage-preview .preview-game-cards article { display:flex; flex-direction:column; justify-content:flex-start; gap:3px; overflow:hidden; padding:5px; font-size:7px; line-height:1.25; }
 .homepage-preview .preview-card-art { min-height:30px; display:grid; place-items:center; font-size:18px; }
 .homepage-preview .preview-game-cards article>span { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; opacity:.85; }
+
+/* Homepage editor navigation and section scoped typography */
+.home-editor-column { min-width: 0; display: grid; align-content: start; gap: 12px; }
+.home-editor-tabs,
+.home-editor-subtabs { display: flex; flex-wrap: wrap; gap: 6px; border-radius: 12px; }
+.home-editor-tabs { padding: 6px; background: #e9edf3; }
+.home-editor-tabs button,
+.home-editor-subtabs button { min-height: 40px; padding: 9px 14px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: #475467; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .16s ease, color .16s ease, box-shadow .16s ease; }
+.home-editor-tabs button[aria-selected="true"] { color: #101828; background: #fff; box-shadow: 0 1px 3px #1018281a; }
+.home-editor-subtabs { margin: 14px 0 10px; padding-bottom: 8px; border-bottom: 1px solid #eaecf0; }
+.home-editor-subtabs button { min-height: 36px; padding: 7px 12px; }
+.home-editor-subtabs button[aria-selected="true"] { color: #175cd3; background: #eff8ff; border-color: #b2ddff; }
+.home-editor-tabs button:focus-visible,
+.home-editor-subtabs button:focus-visible { outline: 3px solid #84caff; outline-offset: 2px; }
+.home-type-help { margin: 0 0 8px; color: #667085; font-size: 12px; }
+.home-editor-fieldset { min-width: 0; }
+.home-editor-fieldset [hidden] { display: none !important; }
+@media (max-width: 700px) {
+  .home-editor-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-editor-tabs button { text-align: center; }
+  .home-editor-subtabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .home-editor-subtabs button { padding-inline: 6px; }
+}
