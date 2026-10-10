@@ -4,7 +4,6 @@ import { FormEvent, useEffect, useState } from "react";
 
 type Role = "owner" | "admin" | "editor" | "viewer";
 type Member = { user_id: string; email: string | null; role: Role; created_at: string };
-type Invitation = { id: string; email: string; role: "admin" | "editor"; created_at: string; expires_at: string };
 type Props = { role: Role };
 
 const inputStyle = { width: "100%", padding: "11px 12px", border: "1px solid #d1d5db", borderRadius: 8, boxSizing: "border-box" as const };
@@ -13,10 +12,10 @@ const smallButton = { border: "1px solid #d1d5db", borderRadius: 8, background: 
 export default function TeamManager({ role }: Props) {
   const owner = role === "owner";
   const [members, setMembers] = useState<Member[]>([]);
-  const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"admin" | "editor">("editor");
-  const [inviteUrl, setInviteUrl] = useState("");
+  const [memberRole, setMemberRole] = useState<"admin" | "editor" | "viewer">("editor");
+  const [createdAccount, setCreatedAccount] = useState<{ email: string; role: string; password: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState("");
   const [message, setMessage] = useState("");
@@ -30,7 +29,6 @@ export default function TeamManager({ role }: Props) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to load the team.");
       setMembers(data.members ?? []);
-      setInvitations(data.invitations ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load the team.");
     } finally {
@@ -40,27 +38,33 @@ export default function TeamManager({ role }: Props) {
 
   useEffect(() => { void load(); }, []);
 
-  async function sendInvite(event: FormEvent<HTMLFormElement>) {
+  async function createAccount(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setWorking("invite"); setError(""); setMessage(""); setInviteUrl("");
+    setWorking("create");
+    setError("");
+    setMessage("");
+    setCreatedAccount(null);
     try {
       const response = await fetch("/api/admin/team", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, role: inviteRole }),
+        body: JSON.stringify({ fullName, email, role: memberRole }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Unable to create the invitation.");
-      setInviteUrl(data.invitationUrl);
+      if (!response.ok) throw new Error(data.error || "Unable to create the account.");
+      setCreatedAccount({ email: data.email, role: data.role, password: data.temporaryPassword });
+      setMessage(`Account created for ${data.email}. Share the temporary password privately; the member must change it at first sign-in.`);
+      setFullName("");
       setEmail("");
-      setMessage(`Invitation created for ${data.email}. Copy the link below and send it to that email address.`);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to create the invitation.");
-    } finally { setWorking(""); }
+      setError(err instanceof Error ? err.message : "Unable to create the account.");
+    } finally {
+      setWorking("");
+    }
   }
 
-  async function changeRole(member: Member, nextRole: "admin" | "editor") {
+  async function changeRole(member: Member, nextRole: "admin" | "editor" | "viewer") {
     if (member.role === nextRole) return;
     setWorking(member.user_id); setError(""); setMessage("");
     try {
@@ -96,54 +100,37 @@ export default function TeamManager({ role }: Props) {
     } finally { setWorking(""); }
   }
 
-  async function revokeInvitation(invitation: Invitation) {
-    if (!window.confirm(`Revoke the invitation for ${invitation.email}?`)) return;
-    setWorking(invitation.id); setError(""); setMessage("");
+  async function copyTemporaryPassword() {
+    if (!createdAccount) return;
     try {
-      const response = await fetch("/api/admin/team", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invitationId: invitation.id }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Unable to revoke this invitation.");
-      setMessage("Invitation revoked.");
-      if (inviteUrl.includes(`/invite/${invitation.id}?`)) setInviteUrl("");
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to revoke this invitation.");
-    } finally { setWorking(""); }
-  }
-
-  async function copyInvite() {
-    try {
-      await navigator.clipboard.writeText(inviteUrl);
-      setMessage("Invitation link copied.");
+      await navigator.clipboard.writeText(createdAccount.password);
+      setMessage("Temporary password copied. Share it through a private channel.");
     } catch {
-      setError("Could not copy the link. Select and copy it from the field.");
+      setError("Could not copy the password. Select and copy it from the field.");
     }
   }
 
   const cardStyle = { background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: 20, marginBottom: 20 } as const;
-  const now = Date.now();
 
   return <div>
     {error && <div role="alert" style={{ ...cardStyle, color: "#991b1b", background: "#fef2f2", borderColor: "#fecaca" }}>{error}</div>}
     {message && <div role="status" aria-live="polite" style={{ ...cardStyle, color: "#065f46", background: "#ecfdf5", borderColor: "#a7f3d0" }}>{message}</div>}
 
     {owner && <section style={cardStyle}>
-      <h2 style={{ marginTop: 0 }}>Invite a team member</h2>
-      <p style={{ color: "#5b6472" }}>Invitations are tied to the invited email and expire after 7 days. The link is generated here for you to share with that person.</p>
-      <form onSubmit={sendInvite} style={{ display: "grid", gridTemplateColumns: "minmax(180px, 1fr) 160px auto", gap: 12, alignItems: "end" }}>
+      <h2 style={{ marginTop: 0 }}>Create a team account</h2>
+      <p style={{ color: "#5b6472" }}>The account is added to this workspace immediately. Confirm the person’s email address first. A temporary password will appear once, and the member must replace it at first sign-in.</p>
+      <form onSubmit={createAccount} style={{ display: "grid", gridTemplateColumns: "minmax(180px, 1fr) minmax(220px, 1.2fr) 150px auto", gap: 12, alignItems: "end" }}>
+        <label>Full name<input style={inputStyle} type="text" maxLength={120} autoComplete="name" value={fullName} onChange={event => setFullName(event.target.value)} placeholder="Team member" /></label>
         <label>Email address<input style={inputStyle} type="email" required maxLength={254} autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="teammate@company.com" /></label>
-        <label>Role<select style={inputStyle} value={inviteRole} onChange={event => setInviteRole(event.target.value as "admin" | "editor")}><option value="editor">Editor</option><option value="admin">Admin</option></select></label>
-        <button className="primary-btn" disabled={working === "invite"}>{working === "invite" ? "Creating…" : "Create invitation"}</button>
+        <label>Role<select style={inputStyle} value={memberRole} onChange={event => setMemberRole(event.target.value as "admin" | "editor" | "viewer")}><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select></label>
+        <button className="primary-btn" disabled={working === "create"}>{working === "create" ? "Creating…" : "Create account"}</button>
       </form>
-      {inviteUrl && <div style={{ marginTop: 16 }}>
-        <label htmlFor="invite-link">New invitation link</label>
-        <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-          <input id="invite-link" style={inputStyle} readOnly value={inviteUrl} onFocus={event => event.currentTarget.select()} />
-          <button type="button" style={smallButton} onClick={copyInvite}>Copy link</button>
+      {createdAccount && <div style={{ marginTop: 18, padding: 16, borderRadius: 10, border: "1px solid #fcd34d", background: "#fffbeb" }}>
+        <strong>Temporary password for {createdAccount.email}</strong>
+        <p style={{ margin: "6px 0 10px", color: "#5b6472" }}>Copy it now and share it privately. It will disappear if you leave or refresh this page.</p>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input aria-label="Temporary password" style={inputStyle} readOnly value={createdAccount.password} onFocus={event => event.currentTarget.select()} />
+          <button type="button" style={smallButton} onClick={() => void copyTemporaryPassword()}>Copy password</button>
         </div>
       </div>}
     </section>}
@@ -157,9 +144,9 @@ export default function TeamManager({ role }: Props) {
             <td>{member.email || member.user_id}</td>
             <td>{member.role === "owner" ? <strong>Owner</strong> : owner ?
               <select aria-label={`Role for ${member.email || member.user_id}`} disabled={working === member.user_id}
-                value={member.role} onChange={event => void changeRole(member, event.target.value as "admin" | "editor")}
+                value={member.role} onChange={event => void changeRole(member, event.target.value as "admin" | "editor" | "viewer")}
                 style={{ ...inputStyle, minWidth: 110 }}>
-                <option value="admin">Admin</option><option value="editor">Editor</option>
+                <option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option>
               </select> : member.role}
             </td>
             <td>{new Date(member.created_at).toLocaleDateString("en-LK")}</td>
@@ -168,23 +155,5 @@ export default function TeamManager({ role }: Props) {
         </table>
       </div>}
     </section>
-
-    {owner && <section style={cardStyle}>
-      <h2 style={{ marginTop: 0 }}>Pending invitations</h2>
-      {loading ? <p>Loading invitations…</p> : invitations.length === 0 ? <p>No pending invitations.</p> : <div style={{ overflowX: "auto" }}>
-        <table className="admin-table" style={{ minWidth: 560, width: "100%" }}>
-          <thead><tr><th>Email</th><th>Role</th><th>Expires</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody>{invitations.map(invitation => {
-            const expired = new Date(invitation.expires_at).getTime() <= now;
-            return <tr key={invitation.id}>
-              <td>{invitation.email}</td><td>{invitation.role}</td>
-              <td>{new Date(invitation.expires_at).toLocaleDateString("en-LK")}</td>
-              <td>{expired ? "Expired" : "Waiting for acceptance"}</td>
-              <td><button type="button" style={smallButton} disabled={working === invitation.id} onClick={() => void revokeInvitation(invitation)}>Revoke</button></td>
-            </tr>;
-          })}</tbody>
-        </table>
-      </div>}
-    </section>}
   </div>;
 }
