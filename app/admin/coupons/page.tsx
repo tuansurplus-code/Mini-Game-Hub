@@ -23,6 +23,7 @@ export default function CouponsPage() {
   const [working, setWorking] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [canRedeem, setCanRedeem] = useState(false);
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -52,6 +53,15 @@ export default function CouponsPage() {
   useEffect(() => {
     loadCoupons();
   }, [status]);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/admin/team", { cache: "no-store" })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => { if (active) setCanRedeem(Boolean(data && data.role !== "viewer")); })
+      .catch(() => { if (active) setCanRedeem(false); });
+    return () => { active = false; };
+  }, []);
 
   async function redeemCoupon(code: string) {
     const confirmed = window.confirm(
@@ -224,7 +234,7 @@ export default function CouponsPage() {
                   <th>Prize</th>
                   <th>Created</th>
                   <th>Redeemed</th>
-                  <th>Action</th>
+                  {canRedeem && <th>Action</th>}
                 </tr>
               </thead>
 
@@ -273,7 +283,7 @@ export default function CouponsPage() {
                       )}
                     </td>
 
-                    <td>
+                    {canRedeem && <td>
                       {coupon.status === "active" ? (
                         <button
                           type="button"
@@ -294,7 +304,7 @@ export default function CouponsPage() {
                       ) : (
                         "—"
                       )}
-                    </td>
+                    </td>}
                   </tr>
                 ))}
               </tbody>
