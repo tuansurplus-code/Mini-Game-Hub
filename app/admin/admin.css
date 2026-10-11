@@ -763,3 +763,21 @@ th {
 .contact-field-admin-card .home-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .contact-field-admin-card .home-format-options { margin-top:12px; }
 @media(max-width:700px) { .contact-field-admin-card .home-fields { grid-template-columns:minmax(0,1fr); } .contact-form-settings { padding:14px; } }
+
+.home-saved-drafts { display:grid; gap:14px; margin:0 0 18px; padding:16px 18px; border:1px solid #d0d5dd; border-radius:12px; background:#fff; }
+.home-saved-drafts > div:first-child strong { color:#101828; font-size:15px; }
+.home-saved-drafts > div:first-child p { margin:4px 0 0; color:#667085; font-size:12px; }
+.home-draft-controls { display:grid; grid-template-columns:minmax(150px,1fr) auto minmax(200px,1.4fr); align-items:end; gap:12px; }
+.home-draft-controls .home-secondary { min-height:40px; }
+.home-theme-preview-select { max-width:360px; margin:14px 0; }
+.home-theme-preview-button { min-height:32px; padding:4px 10px; }
+.homepage-preview-title > span { max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.contact-inbox-panel { display:grid; gap:14px; }
+.contact-inbox-count { align-self:center; padding:7px 11px; border-radius:99px; background:#eff8ff; color:#175cd3; font-size:12px; font-weight:700; }
+.contact-submission-head > div { display:grid; gap:3px; justify-items:end; color:#667085; font-size:11px; }
+.contact-submission-head > div time { color:#344054; font-size:12px; }
+.contact-submission-meta a { color:#175cd3; }
+.empty-submission-value { color:#98a2b3; font-style:italic; }
+.page-submissions-toggle { display:inline-flex; align-items:center; min-height:38px; width:max-content; margin:12px 0 0; padding:0 14px; text-decoration:none; }
+@media(max-width:760px) { .home-draft-controls { grid-template-columns:1fr 1fr; } .home-draft-controls .home-field:last-child { grid-column:1/-1; order:-1; } }
+@media(max-width:480px) { .home-draft-controls { grid-template-columns:1fr; } .home-draft-controls .home-field:last-child { grid-column:auto; } .contact-submission-head > div { justify-items:start; } }

@@ -10,6 +10,7 @@ const links = [
   { label: "Overview", href: "/saas-admin" },
   { section: "PUBLIC WEBSITE" },
   { label: "Homepage Layout", href: "/saas-admin/settings" },
+  { label: "Contact enquiries", href: "/saas-admin/contact-submissions" },
   { section: "CUSTOMER OPERATIONS" },
   { label: "Accounts", href: "/saas-admin/accounts" },
   { label: "Workspace Memberships", href: "/saas-admin/memberships" },
