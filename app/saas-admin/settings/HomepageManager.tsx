@@ -18,14 +18,14 @@ const THEME_PRESETS: Record<HomepageSiteTheme["preset"], { label: string; colors
 const READY_TEMPLATES = [
   { kind: "wesak", name: "Wesak", note: "The finalized lantern and lotus design in warm ivory and gold.", preview: "/template-previews/wesak.svg" },
   { kind: "christmas", name: "Christmas", note: "The finalized holiday design with winter artwork and evergreen accents.", preview: "/template-previews/christmas.svg" },
-  { kind: "ramadan", name: "Ramadan", note: "The finalized crescent and lantern design in sage, cream and gold.", preview: "/template-previews/ramadan.svg" },
+  { kind: "ramadan", name: "Ramadan", note: "A full-page Ramadan background with crescent and lantern artwork.", preview: "/template-previews/ramadan.svg" },
   { kind: "new-year", name: "New Year", note: "The finalized fireworks design in cool blue with bright celebration colors.", preview: "/template-previews/new-year.svg" },
 ] as const;
 const TEMPLATE_ART: Record<SavedHomepagePage["kind"], { hero: string; cards: Partial<Record<HomepageGameCard["id"], string>> }> = {
   custom: { hero: "", cards: {} },
   wesak: { hero: "/template-previews/wesak.svg?crop=hero", cards: { spin: "/template-previews/wesak.svg?crop=spin", scratch: "/template-previews/wesak.svg?crop=scratch", "pick-card": "/template-previews/wesak.svg?crop=pick-card" } },
   christmas: { hero: "", cards: { spin: "/template-previews/christmas.svg?crop=spin", scratch: "/template-previews/christmas.svg?crop=scratch", "pick-card": "/template-previews/christmas.svg?crop=pick-card" } },
-  ramadan: { hero: "/template-previews/ramadan.svg?crop=hero", cards: { spin: "/template-previews/ramadan.svg?crop=spin", scratch: "/template-previews/ramadan.svg?crop=scratch", "pick-card": "/template-previews/ramadan.svg?crop=pick-card" } },
+  ramadan: { hero: "", cards: { spin: "/template-previews/ramadan.svg?crop=spin", scratch: "/template-previews/ramadan.svg?crop=scratch", "pick-card": "/template-previews/ramadan.svg?crop=pick-card" } },
   "new-year": { hero: "/template-previews/new-year.svg?crop=hero", cards: { spin: "/template-previews/new-year.svg?crop=spin", scratch: "/template-previews/new-year.svg?crop=scratch", "pick-card": "/template-previews/new-year.svg?crop=pick-card" } },
 };
 const THEME_COLORS: Record<SeasonalTheme["preset"], Pick<SeasonalTheme, "primary" | "accent" | "heroBackground" | "pageBackground">> = {

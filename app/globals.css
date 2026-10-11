@@ -1067,3 +1067,169 @@
     background-size:100% auto;
   }
 }
+
+
+/* Ramadan template: use the uploaded scene as one full-page backdrop, matching Wesak. */
+.home-public.home-template-ramadan {
+  min-height:100vh;
+  overflow-x:hidden;
+  background:#f8f7ee !important;
+  background-image:none !important;
+}
+.home-public.home-template-ramadan .topbar {
+  width:100%;
+  max-width:none;
+  min-height:68px;
+  padding:8px max(22px,calc((100% - 1200px)/2));
+  background:#fffdf6;
+}
+.home-public.home-template-ramadan .home-template-backdrop {
+  background-color:#f8f7ee;
+  background-image:url("/template-previews/ramadan-background.webp");
+  background-position:center top;
+  background-repeat:no-repeat;
+  background-size:100% auto;
+}
+.home-public.home-template-ramadan .hero {
+  width:100%;
+  max-width:none;
+  min-height:310px;
+  margin:0;
+  padding:30px 24px 34px;
+  border-radius:0;
+  box-shadow:none;
+  background:transparent !important;
+}
+.home-public.home-template-ramadan .hero > div:first-child {
+  width:min(100%,900px);
+  max-width:900px;
+}
+.home-public.home-template-ramadan .hero h1,
+.home-public.home-template-ramadan .home-game-card h3 {
+  font-family:Georgia,serif !important;
+}
+.home-public.home-template-ramadan .hero h1 {
+  color:#31594d;
+  font-size:clamp(42px,4.3vw,62px) !important;
+  line-height:1;
+}
+.home-public.home-template-ramadan .hero h1 span { color:#b68731; }
+.home-public.home-template-ramadan .hero p {
+  margin:16px auto 22px;
+  color:#52685d;
+  font-size:18px;
+}
+.home-public.home-template-ramadan .hero-art,
+.home-public.home-template-ramadan .home-seasonal-decoration {
+  display:none !important;
+}
+.home-public.home-template-ramadan .games {
+  width:min(100%,1200px);
+  margin:0 auto 42px;
+  padding:0 14px;
+}
+.home-public.home-template-ramadan .games .grid {
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:18px;
+}
+.home-public.home-template-ramadan .home-game-card {
+  height:350px !important;
+  min-height:350px !important;
+  width:100% !important;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid #fffdf6 !important;
+  border-radius:22px !important;
+  background:#fffdf7 !important;
+  box-shadow:0 12px 28px #46513c1c !important;
+}
+.home-public.home-template-ramadan .home-game-card .game-visual {
+  height:205px !important;
+  min-height:205px;
+  flex:none;
+  margin:10px 10px 0;
+  border-radius:16px !important;
+}
+.home-public.home-template-ramadan .home-game-card .game-visual-contained {
+  display:grid;
+  place-items:center;
+  background-color:#f4f3e8 !important;
+  overflow:hidden;
+}
+.home-public.home-template-ramadan .game-visual-art {
+  display:block;
+  height:100%;
+  max-width:100%;
+  flex:none;
+  background-repeat:no-repeat;
+}
+.home-public.home-template-ramadan .home-game-card .game-visual small { display:none; }
+.home-public.home-template-ramadan .home-game-card .card-body {
+  min-height:0;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  padding:7px 14px 10px;
+  text-align:center !important;
+}
+.home-public.home-template-ramadan .home-game-card h3 {
+  margin:0 0 4px;
+  color:#31594d !important;
+  font-size:clamp(22px,1.9vw,27px) !important;
+  line-height:1.05;
+  white-space:nowrap;
+}
+.home-public.home-template-ramadan .home-game-card p {
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  margin:0 0 5px;
+  color:#52685d !important;
+  font-size:14px !important;
+  line-height:1.25;
+}
+.home-public.home-template-ramadan .home-game-card .play {
+  min-height:40px;
+  width:max-content;
+  min-width:150px;
+  align-self:center;
+  margin-top:auto;
+  padding:8px 20px;
+  border-radius:24px;
+  background:#315d50 !important;
+  color:#fff !important;
+  font-size:16px;
+}
+@media(max-width:800px) {
+  .home-public.home-template-ramadan .topbar {
+    min-height:60px;
+    padding:8px 16px;
+  }
+  .home-public.home-template-ramadan .hero {
+    min-height:300px;
+    padding:34px 18px 28px;
+  }
+  .home-public.home-template-ramadan .hero h1 {
+    font-size:clamp(34px,9vw,48px) !important;
+  }
+  .home-public.home-template-ramadan .games { padding:0 16px; }
+  .home-public.home-template-ramadan .games .grid {
+    grid-template-columns:1fr !important;
+    gap:16px;
+  }
+  .home-public.home-template-ramadan .home-game-card {
+    height:350px !important;
+    min-height:350px !important;
+  }
+  .home-public.home-template-ramadan .home-game-card .game-visual {
+    height:210px !important;
+    min-height:210px;
+  }
+  .home-public.home-template-ramadan .home-game-card h3 { font-size:clamp(23px,6vw,28px) !important; }
+}
+@media(max-width:420px) {
+  .home-public.home-template-ramadan .home-game-card .play { min-width:138px; }
+}
