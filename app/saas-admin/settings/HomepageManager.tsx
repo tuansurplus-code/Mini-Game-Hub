@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { CSSProperties, ChangeEvent } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { CSSProperties, ChangeEvent, ReactNode } from "react";
 import { DEFAULT_HOMEPAGE_CONTENT, GAME_CATALOG, type HomepageContent, type HomepageGameCard, type HomepageTypography, type ManagedPageSlug, type SeasonalTheme } from "../../../lib/homepage-content";
 
 type Metadata = { updatedAt: string | null; publishedAt: string | null; canEdit: boolean };
@@ -13,6 +13,97 @@ const MANAGED_PAGES: { slug: ManagedPageSlug; label: string }[] = [
   { slug: "about-us", label: "About Us" },
   { slug: "contact-us", label: "Contact Us" },
 ];
+type ContactSubmission = { id: string; name: string; phone_number: string; email: string; details: string; created_at: string };
+function EditorButton({ label, title, onAction, children }: { label: string; title: string; onAction: () => void; children: ReactNode }) {
+  return <button type="button" className="page-editor-tool" aria-label={label} title={title} onMouseDown={(event) => event.preventDefault()} onClick={onAction}>{children}</button>;
+}
+function PageRichTextEditor({ value, onChange }: { value: string; onChange: (html: string) => void }) {
+  const editor = useRef<HTMLDivElement>(null);
+  const savedRange = useRef<Range | null>(null);
+  const [sourceMode, setSourceMode] = useState(false);
+  const [source, setSource] = useState(value);
+  const [showHelp, setShowHelp] = useState(false);
+  useEffect(() => {
+    setSource(value);
+    if (editor.current && !sourceMode && editor.current.innerHTML !== value) editor.current.innerHTML = value;
+  }, [value, sourceMode]);
+  const rememberSelection = () => {
+    const selection = window.getSelection();
+    if (selection?.rangeCount && editor.current?.contains(selection.anchorNode)) savedRange.current = selection.getRangeAt(0).cloneRange();
+  };
+  const restoreSelection = () => {
+    const selection = window.getSelection();
+    if (selection && savedRange.current) { selection.removeAllRanges(); selection.addRange(savedRange.current); }
+    editor.current?.focus();
+  };
+  const command = (name: string, commandValue?: string) => {
+    restoreSelection();
+    document.execCommand("styleWithCSS", false, "true");
+    document.execCommand(name, false, commandValue);
+    if (editor.current) onChange(editor.current.innerHTML);
+  };
+  const addLink = () => {
+    const selected = window.getSelection()?.toString().trim();
+    const url = window.prompt("Enter a web address or email link");
+    if (!url) return;
+    if (selected) command("createLink", url);
+    else { const text = window.prompt("Link text", url); if (text) command("insertHTML", `<a href="${url.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}">${text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</a>`); }
+  };
+  const addImage = () => {
+    const url = window.prompt("Enter an image URL (https://)");
+    if (url) command("insertHTML", `<img src="${url.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}" alt="Page image" />`);
+  };
+  const addVideo = () => {
+    const url = window.prompt("Enter a direct video file URL (https://…mp4)");
+    if (url) command("insertHTML", `<video controls src="${url.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}"></video>`);
+  };
+  const addTable = () => command("insertHTML", "<table><tbody><tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr></tbody></table><p><br></p>");
+  const toggleSource = () => {
+    if (!sourceMode && editor.current) setSource(editor.current.innerHTML);
+    if (sourceMode && editor.current) { editor.current.innerHTML = source; onChange(source); }
+    setSourceMode((current) => !current);
+  };
+  const fullscreen = () => {
+    if (!editor.current) return;
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void editor.current.closest(".page-editor-shell")?.requestFullscreen();
+  };
+  return <div className="page-editor-shell">
+    <div className="page-editor-toolbar" role="toolbar" aria-label="Page content formatting">
+      <label className="page-editor-select" title="Text style"><span className="sr-only">Text style</span><select defaultValue="p" onChange={(event) => command("formatBlock", event.target.value)}><option value="p">Paragraph</option><option value="h1">Heading 1</option><option value="h2">Heading 2</option><option value="h3">Heading 3</option><option value="h4">Heading 4</option><option value="blockquote">Quote</option></select></label>
+      <EditorButton label="Bold" title="Bold" onAction={() => command("bold")}><b>B</b></EditorButton><EditorButton label="Underline" title="Underline" onAction={() => command("underline")}><u>U</u></EditorButton><EditorButton label="Italic" title="Italic" onAction={() => command("italic")}><i>I</i></EditorButton><EditorButton label="Clear formatting" title="Clear formatting" onAction={() => command("removeFormat")}>⌫</EditorButton>
+      <label className="page-editor-select" title="Font family"><span className="sr-only">Font family</span><select defaultValue="" onChange={(event) => { if (event.target.value) command("fontName", event.target.value); event.target.value = ""; }}><option value="" disabled>Font family</option>{FONTS.map((font) => <option key={font} value={font}>{font.split(",")[0]}</option>)}</select></label>
+      <label className="page-editor-color" title="Text color">A<input aria-label="Text color" type="color" onMouseDown={rememberSelection} onChange={(event) => command("foreColor", event.target.value)} /></label><label className="page-editor-color highlight" title="Highlight color">▰<input aria-label="Highlight color" type="color" onMouseDown={rememberSelection} onChange={(event) => command("hiliteColor", event.target.value)} /></label>
+      <EditorButton label="Bulleted list" title="Bulleted list" onAction={() => command("insertUnorderedList")}>• ≡</EditorButton><EditorButton label="Numbered list" title="Numbered list" onAction={() => command("insertOrderedList")}>1. ≡</EditorButton>
+      <EditorButton label="Align left" title="Align left" onAction={() => command("justifyLeft")}>☰</EditorButton><EditorButton label="Align center" title="Align center" onAction={() => command("justifyCenter")}>≡</EditorButton><EditorButton label="Align right" title="Align right" onAction={() => command("justifyRight")}>☷</EditorButton>
+      <EditorButton label="Insert table" title="Insert table" onAction={addTable}>▦</EditorButton><EditorButton label="Insert link" title="Insert link" onAction={addLink}>↗</EditorButton><EditorButton label="Insert image" title="Insert image by URL" onAction={addImage}>▧</EditorButton><EditorButton label="Insert video" title="Insert video by URL" onAction={addVideo}>▶</EditorButton>
+      <EditorButton label="Toggle fullscreen" title="Toggle fullscreen" onAction={fullscreen}>⛶</EditorButton><EditorButton label={sourceMode ? "Visual editor" : "View source"} title="View source" onAction={toggleSource}>&lt;/&gt;</EditorButton><EditorButton label="Editor help" title="Editor help" onAction={() => setShowHelp((current) => !current)}>?</EditorButton>
+    </div>
+    {showHelp && <p className="page-editor-help">Select text and use the toolbar to format it. Links and images accept web addresses. Video requires a direct MP4 file URL. Unsafe HTML is removed when the page is saved.</p>}
+    {sourceMode ? <textarea className="page-editor-source" aria-label="Page HTML source" value={source} onChange={(event) => { setSource(event.target.value); onChange(event.target.value); }} /> : <div ref={editor} className="page-editor-canvas" contentEditable role="textbox" aria-multiline="true" suppressContentEditableWarning onInput={(event) => onChange(event.currentTarget.innerHTML)} onMouseUp={rememberSelection} onKeyUp={rememberSelection} aria-label="Page content editor" />}
+  </div>;
+}
+function ContactSubmissionsPanel() {
+  const [items, setItems] = useState<ContactSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let active = true;
+    fetch("/api/saas-admin/contact-submissions", { cache: "no-store" }).then(async (response) => {
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to load contact enquiries.");
+      if (active) setItems(result.submissions ?? []);
+    }).catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason.message : "Unable to load contact enquiries."); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+  return <div className="contact-submission-list" aria-live="polite">
+    {loading && <p>Loading contact enquiries…</p>}{error && <p className="error-box">{error}</p>}
+    {!loading && !error && items.length === 0 && <p>No contact enquiries have been received yet.</p>}
+    {items.map((item) => <article key={item.id} className="contact-submission-card"><div className="contact-submission-head"><strong>{item.name}</strong><time dateTime={item.created_at}>{new Date(item.created_at).toLocaleString()}</time></div><p><a href={`tel:${item.phone_number}`}>{item.phone_number}</a> · <a href={`mailto:${item.email}`}>{item.email}</a></p><div className="contact-submission-details">{item.details}</div></article>)}
+  </div>;
+}
+
 const THEME_COLORS: Record<SeasonalTheme["preset"], Pick<SeasonalTheme, "primary" | "accent" | "heroBackground" | "pageBackground">> = {
   christmas: { primary: "#b4232c", accent: "#35a36b", heroBackground: "#163529", pageBackground: "#f4f8f4" },
   "new-year": { primary: "#a77812", accent: "#f2cc63", heroBackground: "#182039", pageBackground: "#f7f6f1" },
@@ -48,6 +139,7 @@ export default function HomepageManager() {
   const [newPreset, setNewPreset] = useState<SeasonalTheme["preset"]>("christmas");
   const [activeTab, setActiveTab] = useState<"header" | "body" | "footer" | "pages" | "themes">("header");
   const [activePage, setActivePage] = useState<ManagedPageSlug>("terms-and-conditions");
+  const [showContactSubmissions, setShowContactSubmissions] = useState(false);
   const [activeBodyTab, setActiveBodyTab] = useState<"hero" | "games" | "how">("hero");
   useEffect(() => { fetch("/api/saas-admin/homepage").then(async (r) => { const result = await r.json(); if (!r.ok) throw new Error(result.error || "Unable to load homepage settings."); setContent(result.draft); setPublished(result.published); setMetadata({ updatedAt: result.updatedAt, publishedAt: result.publishedAt, canEdit: result.canEdit }); setStatus(""); }).catch((e) => setStatus(e instanceof Error ? e.message : "Unable to load settings.")); }, []);
 
@@ -107,7 +199,7 @@ export default function HomepageManager() {
         </div><div className="home-body-panel" hidden={activeBodyTab !== "how"}><h3 className="home-subheading">How it works</h3><div className="home-fields"><TextField label="Eyebrow" value={content.how.eyebrow} onChange={(v) => updateGroup("how", "eyebrow", v)} /><TextField label="Section title" value={content.how.title} onChange={(v) => updateGroup("how", "title", v)} />{content.how.steps.map((step, i) => <div className="home-step-fields" key={i}><b>Step {i + 1}</b><TextField label="Title" value={step.title} onChange={(v) => updateStep(i, "title", v)} /><TextField label="Description" value={step.description} onChange={(v) => updateStep(i, "description", v)} multiline /></div>)}</div><h3 className="home-subheading">How it works typography</h3><TypographyEditor value={content.typography.how} onChange={(v) => updateType("how", v)} /></div>
       </section>}
       {activeTab === "footer" && <section className="admin-panel home-editor-panel"><div className="home-panel-heading"><div><span className="home-step-index">03</span><h2>Footer</h2></div><small>Copyright and link labels</small></div><div className="home-fields"><TextField label="Copyright" value={content.footer.copyright} onChange={(v) => updateGroup("footer", "copyright", v)} /></div><div className="home-footer-pages"><div><h3 className="home-subheading">Footer page links</h3><p>Choose which pages appear in the footer and how the links are aligned.</p></div><div className="home-page-toggles">{MANAGED_PAGES.map((page) => <label className="home-check" key={page.slug}><input type="checkbox" checked={content.pages[page.slug].showInFooter} onChange={(e) => setContent((c) => ({ ...c, pages: { ...c.pages, [page.slug]: { ...c.pages[page.slug], showInFooter: e.target.checked } } }))} /> {page.label}</label>)}</div><label className="home-field home-page-alignment"><span>Link alignment</span><select value={content.footer.pageLinksAlignment} onChange={(e) => updateGroup("footer", "pageLinksAlignment", e.target.value)}><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label></div><h3 className="home-subheading">Footer typography</h3><TypographyEditor value={content.typography.footer} onChange={(v) => updateType("footer", v)} /></section>}
-      {activeTab === "pages" && <section className="admin-panel home-editor-panel"><div className="home-panel-heading"><div><span className="home-step-index">04</span><h2>Content pages</h2></div><small>Edit each public information page separately</small></div><nav className="home-editor-subtabs home-page-tabs" role="tablist" aria-label="Content pages">{MANAGED_PAGES.map((page) => <button key={page.slug} type="button" role="tab" aria-selected={activePage === page.slug} onClick={() => setActivePage(page.slug)}>{page.label}</button>)}</nav><div className="home-fields"><TextField label="Page title" value={content.pages[activePage].title} onChange={(value) => updatePage(activePage, "title", value)} /><label className="home-field home-page-content-field"><span>Page content</span><textarea rows={16} value={content.pages[activePage].body} onChange={(event) => updatePage(activePage, "body", event.target.value)} placeholder="Write the page content here. Line breaks will be kept on the public page." /></label></div><p className="home-page-note">Page content is displayed as plain text with line breaks preserved. Use the draft and publish buttons above to manage when changes go live.</p></section>}
+      {activeTab === "pages" && <section className="admin-panel home-editor-panel"><div className="home-panel-heading"><div><span className="home-step-index">04</span><h2>Content pages</h2></div><small>Edit each public information page separately</small></div><nav className="home-editor-subtabs home-page-tabs" role="tablist" aria-label="Content pages">{MANAGED_PAGES.map((page) => <button key={page.slug} type="button" role="tab" aria-selected={!showContactSubmissions && activePage === page.slug} onClick={() => { setActivePage(page.slug); setShowContactSubmissions(false); }}>{page.label}</button>)}</nav>{activePage === "contact-us" && <button type="button" className="home-secondary page-submissions-toggle" onClick={() => setShowContactSubmissions((current) => !current)}>{showContactSubmissions ? "Back to Contact Us page" : "View contact enquiries"}</button>}{showContactSubmissions && activePage === "contact-us" ? <ContactSubmissionsPanel /> : <><div className="home-fields"><TextField label="Page title" value={content.pages[activePage].title} onChange={(value) => updatePage(activePage, "title", value)} /><div className="home-field home-page-content-field"><span>Page content</span><PageRichTextEditor key={activePage} value={content.pages[activePage].body} onChange={(body) => updatePage(activePage, "body", body)} /></div></div><p className="home-page-note">Use the toolbar to format text, add lists, tables, links, images and video. Use the draft and publish buttons above to choose when changes go live. The Contact Us page also includes a form that stores each enquiry for admin review.</p></>}</section>}
       {activeTab === "themes" && <>
       <section className="admin-panel home-editor-panel"><div className="home-panel-heading"><div><span className="home-step-index">04</span><h2>Brand theme</h2></div><small>Default homepage colors</small></div><div className="home-colors">{(["primary", "accent", "heroBackground", "pageBackground"] as const).map((key) => <ColorField key={key} label={{ primary: "Primary", accent: "Accent", heroBackground: "Hero background", pageBackground: "Page background" }[key]} value={content.theme[key]} onChange={(v) => updateGroup("theme", key, v)} />)}</div></section>
       <section className="admin-panel home-editor-panel"><div className="home-panel-heading"><div><span className="home-step-index">05</span><h2>Seasonal themes</h2></div><small>Set a theme and schedule its dates</small></div><div className="seasonal-add-row"><select value={newPreset} onChange={(e) => setNewPreset(e.target.value as SeasonalTheme["preset"])}><option value="christmas">Christmas</option><option value="new-year">New Year</option><option value="ramadan">Ramadan</option><option value="custom">Custom palette</option></select><button type="button" className="home-secondary" onClick={addTheme} disabled={content.seasonalThemes.length >= 12}>Add seasonal theme</button></div>{content.seasonalThemes.map((theme) => <article className="seasonal-theme-card" key={theme.id}><div className="seasonal-theme-top"><strong>{theme.name}</strong><label className="home-check"><input type="checkbox" checked={theme.enabled} onChange={(e) => updateTheme(theme.id, "enabled", e.target.checked)} /> Enabled</label><button type="button" className="home-remove" onClick={() => setContent((c) => ({ ...c, seasonalThemes: c.seasonalThemes.filter((t) => t.id !== theme.id) }))}>Remove</button></div><div className="home-fields"><TextField label="Theme name" value={theme.name} onChange={(v) => updateTheme(theme.id, "name", v)} /><TextField label="Announcement" value={theme.announcement} onChange={(v) => updateTheme(theme.id, "announcement", v)} /></div><div className="seasonal-date-row"><label className="home-field"><span>Starts</span><input type="date" value={theme.startsAt} onChange={(e) => updateTheme(theme.id, "startsAt", e.target.value)} /></label><label className="home-field"><span>Ends</span><input type="date" value={theme.endsAt} onChange={(e) => updateTheme(theme.id, "endsAt", e.target.value)} /></label></div><div className="home-colors compact">{(["primary", "accent", "heroBackground", "pageBackground"] as const).map((key) => <ColorField key={key} label={{ primary: "Primary", accent: "Accent", heroBackground: "Hero", pageBackground: "Page" }[key]} value={theme[key]} onChange={(v) => updateTheme(theme.id, key, v)} />)}</div></article>)}</section>

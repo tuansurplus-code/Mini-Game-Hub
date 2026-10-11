@@ -49,6 +49,89 @@ export function resolveActiveTheme(content: HomepageContent, now = new Date()): 
 }
 const colorPattern = /^#[0-9a-f]{6}$/i;
 const cleanText = (value: unknown, fallback: string, limit = 240) => typeof value === "string" ? value.trim().slice(0, limit) : fallback;
+
+const richTextTags = new Set(["p", "div", "h1", "h2", "h3", "h4", "br", "hr", "strong", "b", "em", "i", "u", "s", "sub", "sup", "ul", "ol", "li", "blockquote", "pre", "code", "span", "font", "a", "img", "video", "source", "table", "thead", "tbody", "tfoot", "tr", "th", "td"]);
+const voidRichTextTags = new Set(["br", "hr", "img", "source"]);
+const safeRichTextFonts = ["Arial, sans-serif", "Georgia, serif", "Verdana, sans-serif", "Trebuchet MS, sans-serif", "Tahoma, sans-serif", "system-ui, sans-serif"];
+function safeRichTextUrl(value: string, image = false) {
+  const compact = value.trim().replace(/[\u0000-\u0020\u007f]+/g, "");
+  if (image && /^data:image\/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=]+$/i.test(compact)) return compact;
+  if (/^(?:https?:|mailto:|tel:)/i.test(compact)) return compact;
+  if (compact.startsWith("/") && !compact.startsWith("//")) return compact;
+  return "";
+}
+function safeRichTextStyle(value: string) {
+  const allowed: string[] = [];
+  for (const declaration of value.split(";")) {
+    const split = declaration.indexOf(":");
+    if (split < 1) continue;
+    const key = declaration.slice(0, split).trim().toLowerCase();
+    const val = declaration.slice(split + 1).trim();
+    if ((key === "color" || key === "background-color") && /^(#[0-9a-f]{3,8}|(?:rgb|rgba)\([0-9.,% ]+\)|[a-z]{3,20})$/i.test(val)) allowed.push(`${key}:${val}`);
+    if (key === "font-family" && safeRichTextFonts.some((font) => font.toLowerCase() === val.replace(/['"]/g, "").toLowerCase())) allowed.push(`font-family:${val}`);
+    if (key === "font-size" && /^(?:[8-9]|[1-6][0-9]|7[0-2])px$/i.test(val)) allowed.push(`font-size:${val}`);
+    if (key === "text-align" && ["left", "center", "right", "justify"].includes(val.toLowerCase())) allowed.push(`text-align:${val.toLowerCase()}`);
+  }
+  return allowed.join(";");
+}
+function escapeRichAttribute(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+export function sanitizeRichText(value: unknown, limit = 200000): string {
+  if (typeof value !== "string") return "";
+  const input = value.slice(0, limit)
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<(script|style|iframe|object|embed|svg|math|form|textarea|button)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, "");
+  const tokens = input.match(/<[^>]*>|[^<]+/g) ?? [];
+  let output = "";
+  for (const token of tokens) {
+    if (!token.startsWith("<")) { output += token; continue; }
+    const closing = /^<\s*\//.test(token);
+    const match = token.match(/^<\s*\/?\s*([a-z0-9-]+)/i);
+    if (!match) continue;
+    const tag = match[1].toLowerCase();
+    if (!richTextTags.has(tag)) continue;
+    if (closing) {
+      if (!voidRichTextTags.has(tag)) output += `</${tag}>`;
+      continue;
+    }
+    const attrText = token.slice(match[0].length, token.length - 1);
+    const attributes: string[] = [];
+    const attrPattern = /([a-zA-Z_:][a-zA-Z0-9_:.-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g;
+    let attr: RegExpExecArray | null;
+    while ((attr = attrPattern.exec(attrText))) {
+      const name = attr[1].toLowerCase();
+      const raw = attr[2] ?? attr[3] ?? attr[4] ?? "";
+      if (name === "style") {
+        const style = safeRichTextStyle(raw);
+        if (style) attributes.push(`style="${escapeRichAttribute(style)}"`);
+      } else if (name === "align" && ["left", "center", "right", "justify"].includes(raw.toLowerCase())) {
+        attributes.push(`align="${raw.toLowerCase()}"`);
+      } else if (name === "href" && tag === "a") {
+        const url = safeRichTextUrl(raw);
+        if (url) attributes.push(`href="${escapeRichAttribute(url)}"`);
+      } else if (name === "src" && ["img", "video", "source"].includes(tag)) {
+        const url = safeRichTextUrl(raw, tag !== "video");
+        if (url) attributes.push(`src="${escapeRichAttribute(url)}"`);
+      } else if (name === "poster" && tag === "video") {
+        const url = safeRichTextUrl(raw, true);
+        if (url) attributes.push(`poster="${escapeRichAttribute(url)}"`);
+      } else if (["alt", "title"].includes(name) && ["a", "img", "video", "span", "td", "th"].includes(tag)) {
+        attributes.push(`${name}="${escapeRichAttribute(raw)}"`);
+      } else if (["width", "height"].includes(name) && ["img", "video", "table", "td", "th"].includes(tag) && /^\d{1,4}%?$/.test(raw)) {
+        attributes.push(`${name}="${raw}"`);
+      } else if (name === "controls" && tag === "video") {
+        attributes.push("controls");
+      } else if (name === "colspan" && ["td", "th"].includes(tag) && /^\d{1,2}$/.test(raw)) {
+        attributes.push(`colspan="${raw}"`);
+      } else if (name === "rowspan" && ["td", "th"].includes(tag) && /^\d{1,2}$/.test(raw)) {
+        attributes.push(`rowspan="${raw}"`);
+      }
+    }
+    output += `<${tag}${attributes.length ? ` ${attributes.join(" ")}` : ""}${voidRichTextTags.has(tag) ? ">" : ">"}`;
+  }
+  return output;
+}
 const cleanColor = (value: unknown, fallback: string) => typeof value === "string" && colorPattern.test(value) ? value : fallback;
 const cleanNumber = (value: unknown, fallback: number, min: number, max: number) => typeof value === "number" && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
 function normalizeTypography(raw: unknown, fallback: HomepageTypography): HomepageTypography {
@@ -74,10 +157,10 @@ export function normalizeHomepageContent(input: unknown): HomepageContent {
     how: { eyebrow: cleanText(value.how?.eyebrow, base.how.eyebrow, 80), title: cleanText(value.how?.title, base.how.title, 100), steps: base.how.steps.map((step, index) => ({ title: cleanText(value.how?.steps?.[index]?.title, step.title, 100), description: cleanText(value.how?.steps?.[index]?.description, step.description, 240) })) },
     footer: { copyright: cleanText(value.footer?.copyright, base.footer.copyright, 120), termsLabel: cleanText(value.footer?.termsLabel, base.footer.termsLabel, 60), privacyLabel: cleanText(value.footer?.privacyLabel, base.footer.privacyLabel, 60), pageLinksAlignment: ["left", "center", "right"].includes(value.footer?.pageLinksAlignment ?? "") ? value.footer!.pageLinksAlignment! : base.footer.pageLinksAlignment },
     pages: {
-      "terms-and-conditions": { title: cleanText(value.pages?.["terms-and-conditions"]?.title, base.pages["terms-and-conditions"].title, 100), body: cleanText(value.pages?.["terms-and-conditions"]?.body, "", 20000), showInFooter: value.pages?.["terms-and-conditions"]?.showInFooter === true },
-      "privacy-policy": { title: cleanText(value.pages?.["privacy-policy"]?.title, base.pages["privacy-policy"].title, 100), body: cleanText(value.pages?.["privacy-policy"]?.body, "", 20000), showInFooter: value.pages?.["privacy-policy"]?.showInFooter === true },
-      "about-us": { title: cleanText(value.pages?.["about-us"]?.title, base.pages["about-us"].title, 100), body: cleanText(value.pages?.["about-us"]?.body, "", 20000), showInFooter: value.pages?.["about-us"]?.showInFooter === true },
-      "contact-us": { title: cleanText(value.pages?.["contact-us"]?.title, base.pages["contact-us"].title, 100), body: cleanText(value.pages?.["contact-us"]?.body, "", 20000), showInFooter: value.pages?.["contact-us"]?.showInFooter === true },
+      "terms-and-conditions": { title: cleanText(value.pages?.["terms-and-conditions"]?.title, base.pages["terms-and-conditions"].title, 100), body: sanitizeRichText(value.pages?.["terms-and-conditions"]?.body), showInFooter: value.pages?.["terms-and-conditions"]?.showInFooter === true },
+      "privacy-policy": { title: cleanText(value.pages?.["privacy-policy"]?.title, base.pages["privacy-policy"].title, 100), body: sanitizeRichText(value.pages?.["privacy-policy"]?.body), showInFooter: value.pages?.["privacy-policy"]?.showInFooter === true },
+      "about-us": { title: cleanText(value.pages?.["about-us"]?.title, base.pages["about-us"].title, 100), body: sanitizeRichText(value.pages?.["about-us"]?.body), showInFooter: value.pages?.["about-us"]?.showInFooter === true },
+      "contact-us": { title: cleanText(value.pages?.["contact-us"]?.title, base.pages["contact-us"].title, 100), body: sanitizeRichText(value.pages?.["contact-us"]?.body), showInFooter: value.pages?.["contact-us"]?.showInFooter === true },
     },
     theme: { primary: cleanColor(value.theme?.primary, base.theme.primary), accent: cleanColor(value.theme?.accent, base.theme.accent), heroBackground: cleanColor(value.theme?.heroBackground, base.theme.heroBackground), pageBackground: cleanColor(value.theme?.pageBackground, base.theme.pageBackground) },
     sections: { showHero: value.sections?.showHero !== false, showGames: value.sections?.showGames !== false, showHow: value.sections?.showHow !== false, showFooter: value.sections?.showFooter !== false },
