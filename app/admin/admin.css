@@ -833,6 +833,23 @@ th {
 .homepage-preview-wrap.is-modal { inset:20px; transform:none; margin:auto; }
 .homepage-preview-wrap.is-modal::before { inset:-20px; }
 
+/* Compact, accessible icon actions for homepage management. */
+.home-icon-action { display:inline-flex; align-items:center; justify-content:center; flex:0 0 38px; width:38px; height:38px; padding:0; border:1px solid var(--admin-border,#d0d5dd); border-radius:9px; background:var(--admin-surface,#fff); color:var(--admin-muted,#475467); cursor:pointer; transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease; }
+.home-icon-action:hover:not(:disabled) { background:var(--admin-tag-bg,#f2f4f7); border-color:var(--admin-border-strong,#98a2b3); color:var(--admin-text,#101828); transform:translateY(-1px); }
+.home-icon-action:focus-visible { outline:3px solid color-mix(in srgb,var(--admin-primary,#2f6fed) 35%,transparent); outline-offset:2px; }
+.home-icon-action:disabled { cursor:not-allowed; opacity:.42; }
+.home-icon-action.is-publish { border-color:#a7e2c0; background:#ecfdf3; color:#087443; }
+.home-icon-action.is-publish:hover:not(:disabled) { border-color:#6fcca0; background:#dff8e9; color:#05603a; }
+.home-icon-action.is-danger { border-color:transparent; background:transparent; color:#d92d20; }
+.home-icon-action.is-danger:hover:not(:disabled) { border-color:#fecdca; background:#fef3f2; color:#b42318; }
+.homepage-top-actions .home-icon-action { align-self:end; }
+.home-template-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:auto; padding-top:8px; }
+.home-template-blank>.home-icon-action { margin-top:auto; align-self:flex-start; }
+.home-saved-actions { display:flex; align-items:center; justify-content:flex-end; gap:7px; }
+.home-saved-page { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; }
+.home-saved-page>.home-helper { grid-column:1/-1; margin:0; }
+@media(max-width:800px) { .home-saved-page { grid-template-columns:1fr; } .home-saved-actions { justify-content:flex-start; } .homepage-top-actions .home-icon-action { align-self:center; } }
+
 /* Focused navigation for the homepage manager prototype adaptation. */
 .home-manager-tabs,.home-editor-tabs { display:flex; align-items:center; flex-wrap:wrap; gap:6px; padding:6px; margin:0 0 18px; border:1px solid var(--admin-border,#e4e7ec); border-radius:12px; background:var(--admin-tag-bg,#f9fafb); }
 .home-manager-tabs button,.home-manager-tabs a,.home-editor-tabs button { display:inline-flex; align-items:center; justify-content:center; min-height:38px; border:0; border-radius:8px; padding:8px 12px; background:transparent; color:var(--admin-muted,#667085); font-size:13px; font-weight:750; text-decoration:none; white-space:nowrap; }
