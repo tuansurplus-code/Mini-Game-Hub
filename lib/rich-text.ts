@@ -3,7 +3,16 @@ const DROP_CONTENT_TAGS = /<(script|style|iframe|object|embed|svg|math|form)\b[^
 
 /** Allowlist the small set of rich text markup supported by the content page editor. */
 export function sanitizeRichText(input: string): string {
-  const source = input.slice(0, 100000).replace(DROP_CONTENT_TAGS, "").replace(/<!--[\s\S]*?-->/g, "");
+  const source = input.slice(0, 100000).replace(DROP_CONTENT_TAGS, "").replace(/<!--[\s\S]*?-->/g, "").replace(/<font\b([^>]*)>/gi, (_tag, rawAttrs: string) => {
+    const styles: string[] = [];
+    const face = rawAttrs.match(/\bface\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+    const color = rawAttrs.match(/\bcolor\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+    const faceValue = (face?.[1] ?? face?.[2] ?? face?.[3] ?? "").trim();
+    const colorValue = (color?.[1] ?? color?.[2] ?? color?.[3] ?? "").trim();
+    if (/^[a-z0-9 ,"'-]{1,80}$/i.test(faceValue)) styles.push(`font-family:${faceValue}`);
+    if (/^(#[0-9a-f]{3,8}|[a-z]{3,20})$/i.test(colorValue)) styles.push(`color:${colorValue}`);
+    return `<span${styles.length ? ` style="${styles.join(";")}"` : ""}>`;
+  }).replace(/<\/font\s*>/gi, "</span>");
   return source.replace(/<[^>]*>|[^<]+/g, (token) => {
     if (!token.startsWith("<")) return token.replace(/\u0000/g, "");
     const closing = /^<\s*\//.test(token);
