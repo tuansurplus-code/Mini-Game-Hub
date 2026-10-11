@@ -804,3 +804,11 @@ th {
 .homepage-preview[data-season="new-year"] .preview-seasonal-art span:nth-child(2n) { color:#dc55a1; }
 .homepage-preview[data-season="ramadan"] .preview-seasonal-art span { color:#c6a45d; }
 .homepage-preview[data-season="wesak"] .preview-seasonal-art span { color:#ed9911; }
+
+/* Match seasonal game card treatment in the editor preview. */
+.homepage-preview[data-season] .preview-game-cards article { box-shadow:0 5px 14px color-mix(in srgb,var(--home-primary) 12%,transparent); }
+.homepage-preview[data-season] .preview-card-art { color:var(--home-primary); }
+.homepage-preview[data-season="christmas"] .preview-seasonal-art span:nth-child(1),.homepage-preview[data-season="christmas"] .preview-seasonal-art span:nth-child(2) { opacity:.72; font-size:20px; }
+.homepage-preview[data-season="new-year"] .preview-seasonal-art span { opacity:.65; font-size:20px; }
+.homepage-preview[data-season="ramadan"] .preview-seasonal-art span { opacity:.62; font-size:21px; }
+.homepage-preview[data-season="wesak"] .preview-seasonal-art span { opacity:.68; font-size:22px; }
