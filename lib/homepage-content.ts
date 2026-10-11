@@ -4,21 +4,42 @@ export type SeasonalTheme = {
 };
 export type HomepageTypography = { fontFamily: string; fontSize: number; bold: boolean; italic: boolean; underline: boolean; alignment: "left" | "center" | "right"; headlineSize: number };
 export type HomepageGameCard = { id: "spin" | "scratch" | "pick-card"; title: string; description: string; action: string; icon: string; imageUrl: string; color: string; textColor: string; height: number; width: number; cornerRadius: number; textAlignment: "left" | "center" | "right" };
-export type ManagedPageSlug = "terms-and-conditions" | "privacy-policy" | "about-us" | "contact-us";
-export type ManagedPage = { title: string; body: string; showInFooter: boolean };
-export type ContactFormField = { id: string; label: string; type: "text" | "email" | "phone" | "select" | "textarea"; required: boolean; enabled: boolean; options: string[] };
-export type ContactFormConfig = { intro: string; submitLabel: string; fields: ContactFormField[] };
 export type HomepageContent = {
   header: { brand: string; logoUrl: string; showLogo: boolean; showBrand: boolean; announcement: string; showAnnouncement: boolean; navHome: string; navGames: string; navHow: string; navSignIn: string; navGetStarted: string; showHome: boolean; showGames: boolean; showHow: boolean; showSignIn: boolean; showGetStarted: boolean };
   hero: { eyebrow: string; title: string; highlight: string; description: string; primaryCta: string; secondaryCta: string };
   games: { eyebrow: string; title: string; description: string; columns: number; cards: HomepageGameCard[] };
   how: { eyebrow: string; title: string; steps: { title: string; description: string }[] };
-  footer: { copyright: string; termsLabel: string; privacyLabel: string; pageLinksAlignment: "left" | "center" | "right" };
-  pages: Record<ManagedPageSlug, ManagedPage>;
-  contactForm: ContactFormConfig;
+  footer: { copyright: string; termsLabel: string; privacyLabel: string; pages: { slug: "terms" | "privacy" | "about" | "contact"; label: string; enabled: boolean }[]; alignment: "left" | "center" | "right" };
   theme: { primary: string; accent: string; heroBackground: string; pageBackground: string };
   sections: { showHero: boolean; showGames: boolean; showHow: boolean; showFooter: boolean }; typography: Record<"header" | "hero" | "games" | "how" | "footer", HomepageTypography>; seasonalThemes: SeasonalTheme[];
 };
+export type SavedHomepagePage = { id: string; name: string; kind: "custom" | "wesak" | "christmas" | "ramadan" | "new-year"; content: HomepageContent; startsAt: string; endsAt: string; scheduled: boolean; published: boolean; createdAt: string; updatedAt: string };
+export type HomepageSiteTheme = { preset: "clean-white" | "soft-sky" | "sage-cream" | "warm-sunset" | "lavender-mist" | "custom"; colors: { primary: string; accent: string; heroBackground: string; pageBackground: string; cardBackground: string; footerBackground: string }; fonts: { header: string; body: string; footer: string } };
+export type HomepageManagerData = { pages: SavedHomepagePage[]; livePageId: string | null; defaultPageId: string | null; siteTheme: HomepageSiteTheme };
+export const DEFAULT_SITE_THEME: HomepageSiteTheme = { preset: "clean-white", colors: { primary: "#e31b23", accent: "#ff5b61", heroBackground: "#101828", pageBackground: "#f6f7f9", cardBackground: "#ffffff", footerBackground: "#101828" }, fonts: { header: "Arial, sans-serif", body: "Arial, sans-serif", footer: "Arial, sans-serif" } };
+export const DEFAULT_HOMEPAGE_MANAGER: HomepageManagerData = { pages: [], livePageId: null, defaultPageId: null, siteTheme: DEFAULT_SITE_THEME };
+export function normalizeHomepageManager(input: unknown): HomepageManagerData {
+  const raw = input && typeof input === "object" ? input as Partial<HomepageManagerData> : {};
+  const manager = raw.siteTheme && typeof raw.siteTheme === "object" ? raw.siteTheme : DEFAULT_SITE_THEME;
+  const color = (value: unknown, fallback: string) => typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
+  const fonts = ["Arial, sans-serif", "Georgia, serif", "Verdana, sans-serif", "Trebuchet MS, sans-serif", "Tahoma, sans-serif", "system-ui, sans-serif"];
+  const siteTheme: HomepageSiteTheme = {
+    preset: ["clean-white", "soft-sky", "sage-cream", "warm-sunset", "lavender-mist", "custom"].includes(manager.preset ?? "") ? manager.preset! : "clean-white",
+    colors: {
+      primary: color(manager.colors?.primary, DEFAULT_SITE_THEME.colors.primary), accent: color(manager.colors?.accent, DEFAULT_SITE_THEME.colors.accent),
+      heroBackground: color(manager.colors?.heroBackground, DEFAULT_SITE_THEME.colors.heroBackground), pageBackground: color(manager.colors?.pageBackground, DEFAULT_SITE_THEME.colors.pageBackground),
+      cardBackground: color(manager.colors?.cardBackground, DEFAULT_SITE_THEME.colors.cardBackground), footerBackground: color(manager.colors?.footerBackground, DEFAULT_SITE_THEME.colors.footerBackground),
+    },
+    fonts: { header: fonts.includes(manager.fonts?.header ?? "") ? manager.fonts!.header : DEFAULT_SITE_THEME.fonts.header, body: fonts.includes(manager.fonts?.body ?? "") ? manager.fonts!.body : DEFAULT_SITE_THEME.fonts.body, footer: fonts.includes(manager.fonts?.footer ?? "") ? manager.fonts!.footer : DEFAULT_SITE_THEME.fonts.footer },
+  };
+  const pages = Array.isArray(raw.pages) ? raw.pages.slice(0, 100).flatMap((page) => {
+    if (!page || typeof page !== "object" || typeof page.id !== "string" || typeof page.name !== "string") return [];
+    const kind = ["custom", "wesak", "christmas", "ramadan", "new-year"].includes(page.kind) ? page.kind : "custom";
+    return [{ id: page.id.slice(0, 64), name: page.name.trim().slice(0, 80), kind, content: normalizeHomepageContent(page.content), startsAt: typeof page.startsAt === "string" ? page.startsAt.slice(0, 10) : "", endsAt: typeof page.endsAt === "string" ? page.endsAt.slice(0, 10) : "", scheduled: page.scheduled === true, published: page.published === true, createdAt: typeof page.createdAt === "string" ? page.createdAt : new Date(0).toISOString(), updatedAt: typeof page.updatedAt === "string" ? page.updatedAt : new Date(0).toISOString() }];
+  }) : [];
+  const id = (value: unknown) => typeof value === "string" && pages.some((page) => page.id === value) ? value : null;
+  return { pages, livePageId: id(raw.livePageId), defaultPageId: id(raw.defaultPageId), siteTheme };
+}
 const defaultTypography = (): HomepageTypography => ({ fontFamily: "Arial, sans-serif", fontSize: 16, bold: false, italic: false, underline: false, alignment: "left", headlineSize: 36 });
 const baseCards: HomepageGameCard[] = [
   { id: "spin", title: "Spin the Wheel", description: "Spin the wheel and discover your reward.", action: "Spin Now", icon: "↻", imageUrl: "", color: "#e31b23", textColor: "#ffffff", height: 260, width: 100, cornerRadius: 16, textAlignment: "left" },
@@ -33,24 +54,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
   hero: { eyebrow: "CAMPAIGNS FOR YOUR BUSINESS", title: "Create. Engage.", highlight: "Reward.", description: "Turn Spin & Win, Scratch & Win and Pick a Card into branded campaigns for your customers. Choose a game to start building.", primaryCta: "Explore Games", secondaryCta: "How it works" },
   games: { eyebrow: "GAME ZONE", title: "Choose your game", description: "Choose a game to get started", columns: 3, cards: baseCards },
   how: { eyebrow: "SIMPLE & FAST", title: "How it works", steps: [{ title: "Choose a game", description: "Select Spin, Scratch or Pick a Card for your campaign." }, { title: "Build your campaign", description: "Sign in, customize your game and configure rewards." }, { title: "Publish and share", description: "Review your campaign and share its customer URL." }] },
-  footer: { copyright: "© 2026 Mini Game Hub", termsLabel: "Terms & Conditions", privacyLabel: "Privacy", pageLinksAlignment: "center" },
-  pages: {
-    "terms-and-conditions": { title: "Terms and Conditions", body: "", showInFooter: false },
-    "privacy-policy": { title: "Privacy Policy", body: "", showInFooter: false },
-    "about-us": { title: "About Us", body: "", showInFooter: false },
-    "contact-us": { title: "Contact Us", body: "", showInFooter: false },
-  },
-  contactForm: {
-    intro: "Fill out the form below and we will get back to you as soon as possible.",
-    submitLabel: "SEND MESSAGE",
-    fields: [
-      { id: "name", label: "Name", type: "text", required: true, enabled: true, options: [] },
-      { id: "email", label: "Email", type: "email", required: true, enabled: true, options: [] },
-      { id: "phone", label: "Telephone", type: "phone", required: true, enabled: true, options: [] },
-      { id: "subject", label: "Subject", type: "select", required: true, enabled: true, options: ["General enquiry", "Product enquiry", "Technical support", "Other"] },
-      { id: "details", label: "Message", type: "textarea", required: true, enabled: true, options: [] },
-    ],
-  },
+  footer: { copyright: "© 2026 Mini Game Hub", termsLabel: "Terms & Conditions", privacyLabel: "Privacy", pages: [{ slug: "terms", label: "Terms & Conditions", enabled: true }, { slug: "privacy", label: "Privacy Policy", enabled: true }, { slug: "about", label: "About Us", enabled: false }, { slug: "contact", label: "Contact Us", enabled: false }], alignment: "center" },
   theme: { primary: "#e31b23", accent: "#ff5b61", heroBackground: "#101828", pageBackground: "#f6f7f9" },
   sections: { showHero: true, showGames: true, showHow: true, showFooter: true },
   typography: { header: defaultTypography(), hero: { ...defaultTypography(), headlineSize: 48 }, games: defaultTypography(), how: defaultTypography(), footer: { ...defaultTypography(), fontSize: 13 } }, seasonalThemes: [],
@@ -63,89 +67,6 @@ export function resolveActiveTheme(content: HomepageContent, now = new Date()): 
 }
 const colorPattern = /^#[0-9a-f]{6}$/i;
 const cleanText = (value: unknown, fallback: string, limit = 240) => typeof value === "string" ? value.trim().slice(0, limit) : fallback;
-
-const richTextTags = new Set(["p", "div", "h1", "h2", "h3", "h4", "br", "hr", "strong", "b", "em", "i", "u", "s", "sub", "sup", "ul", "ol", "li", "blockquote", "pre", "code", "span", "font", "a", "img", "video", "source", "table", "thead", "tbody", "tfoot", "tr", "th", "td"]);
-const voidRichTextTags = new Set(["br", "hr", "img", "source"]);
-const safeRichTextFonts = ["Arial, sans-serif", "Georgia, serif", "Verdana, sans-serif", "Trebuchet MS, sans-serif", "Tahoma, sans-serif", "system-ui, sans-serif"];
-function safeRichTextUrl(value: string, image = false) {
-  const compact = value.trim().replace(/[\u0000-\u0020\u007f]+/g, "");
-  if (image && /^data:image\/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=]+$/i.test(compact)) return compact;
-  if (/^(?:https?:|mailto:|tel:)/i.test(compact)) return compact;
-  if (compact.startsWith("/") && !compact.startsWith("//")) return compact;
-  return "";
-}
-function safeRichTextStyle(value: string) {
-  const allowed: string[] = [];
-  for (const declaration of value.split(";")) {
-    const split = declaration.indexOf(":");
-    if (split < 1) continue;
-    const key = declaration.slice(0, split).trim().toLowerCase();
-    const val = declaration.slice(split + 1).trim();
-    if ((key === "color" || key === "background-color") && /^(#[0-9a-f]{3,8}|(?:rgb|rgba)\([0-9.,% ]+\)|[a-z]{3,20})$/i.test(val)) allowed.push(`${key}:${val}`);
-    if (key === "font-family" && safeRichTextFonts.some((font) => font.toLowerCase() === val.replace(/['"]/g, "").toLowerCase())) allowed.push(`font-family:${val}`);
-    if (key === "font-size" && /^(?:[8-9]|[1-6][0-9]|7[0-2])px$/i.test(val)) allowed.push(`font-size:${val}`);
-    if (key === "text-align" && ["left", "center", "right", "justify"].includes(val.toLowerCase())) allowed.push(`text-align:${val.toLowerCase()}`);
-  }
-  return allowed.join(";");
-}
-function escapeRichAttribute(value: string) {
-  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-export function sanitizeRichText(value: unknown, limit = 200000): string {
-  if (typeof value !== "string") return "";
-  const input = value.slice(0, limit)
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<(script|style|iframe|object|embed|svg|math|form|textarea|button)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, "");
-  const tokens = input.match(/<[^>]*>|[^<]+/g) ?? [];
-  let output = "";
-  for (const token of tokens) {
-    if (!token.startsWith("<")) { output += token; continue; }
-    const closing = /^<\s*\//.test(token);
-    const match = token.match(/^<\s*\/?\s*([a-z0-9-]+)/i);
-    if (!match) continue;
-    const tag = match[1].toLowerCase();
-    if (!richTextTags.has(tag)) continue;
-    if (closing) {
-      if (!voidRichTextTags.has(tag)) output += `</${tag}>`;
-      continue;
-    }
-    const attrText = token.slice(match[0].length, token.length - 1);
-    const attributes: string[] = [];
-    const attrPattern = /([a-zA-Z_:][a-zA-Z0-9_:.-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g;
-    let attr: RegExpExecArray | null;
-    while ((attr = attrPattern.exec(attrText))) {
-      const name = attr[1].toLowerCase();
-      const raw = attr[2] ?? attr[3] ?? attr[4] ?? "";
-      if (name === "style") {
-        const style = safeRichTextStyle(raw);
-        if (style) attributes.push(`style="${escapeRichAttribute(style)}"`);
-      } else if (name === "align" && ["left", "center", "right", "justify"].includes(raw.toLowerCase())) {
-        attributes.push(`align="${raw.toLowerCase()}"`);
-      } else if (name === "href" && tag === "a") {
-        const url = safeRichTextUrl(raw);
-        if (url) attributes.push(`href="${escapeRichAttribute(url)}"`);
-      } else if (name === "src" && ["img", "video", "source"].includes(tag)) {
-        const url = safeRichTextUrl(raw, tag !== "video");
-        if (url) attributes.push(`src="${escapeRichAttribute(url)}"`);
-      } else if (name === "poster" && tag === "video") {
-        const url = safeRichTextUrl(raw, true);
-        if (url) attributes.push(`poster="${escapeRichAttribute(url)}"`);
-      } else if (["alt", "title"].includes(name) && ["a", "img", "video", "span", "td", "th"].includes(tag)) {
-        attributes.push(`${name}="${escapeRichAttribute(raw)}"`);
-      } else if (["width", "height"].includes(name) && ["img", "video", "table", "td", "th"].includes(tag) && /^\d{1,4}%?$/.test(raw)) {
-        attributes.push(`${name}="${raw}"`);
-      } else if (name === "controls" && tag === "video") {
-        attributes.push("controls");
-      } else if (name === "colspan" && ["td", "th"].includes(tag) && /^\d{1,2}$/.test(raw)) {
-        attributes.push(`colspan="${raw}"`);
-      } else if (name === "rowspan" && ["td", "th"].includes(tag) && /^\d{1,2}$/.test(raw)) {
-        attributes.push(`rowspan="${raw}"`);
-      }
-    }
-    output += `<${tag}${attributes.length ? ` ${attributes.join(" ")}` : ""}${voidRichTextTags.has(tag) ? ">" : ">"}`;
-  }
-  return output;
-}
 const cleanColor = (value: unknown, fallback: string) => typeof value === "string" && colorPattern.test(value) ? value : fallback;
 const cleanNumber = (value: unknown, fallback: number, min: number, max: number) => typeof value === "number" && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
 function normalizeTypography(raw: unknown, fallback: HomepageTypography): HomepageTypography {
@@ -164,42 +85,12 @@ export function normalizeHomepageContent(input: unknown): HomepageContent {
     return [{ id: defaults.id, title: cleanText(card.title, defaults.title, 100), description: cleanText(card.description, defaults.description, 240), action: cleanText(card.action, defaults.action, 50), icon: cleanText(card.icon, defaults.icon, 8), imageUrl: cleanText(card.imageUrl, "", 1000), color: cleanColor(card.color, defaults.color), textColor: cleanColor(card.textColor, defaults.textColor), height: cleanNumber(card.height, defaults.height, 140, 600), width: cleanNumber(card.width, defaults.width, 50, 100), cornerRadius: cleanNumber(card.cornerRadius, defaults.cornerRadius, 0, 48), textAlignment: ["left", "center", "right"].includes(card.textAlignment ?? "") ? card.textAlignment! : defaults.textAlignment }];
   });
   const typ = value.typography as Partial<HomepageContent["typography"]> | undefined;
-  const rawContactFields = Array.isArray(value.contactForm?.fields) ? value.contactForm.fields.slice(0, 16) : [];
-  const contactFieldMap = new Map<string, ContactFormField>();
-  for (const raw of rawContactFields) {
-    const field = raw as Partial<ContactFormField>;
-    const id = cleanText(field.id, "", 40).toLowerCase();
-    if (!/^[a-z][a-z0-9-]{0,39}$/.test(id) || contactFieldMap.has(id)) continue;
-    const options = Array.isArray(field.options) ? field.options.slice(0, 20).map((item) => cleanText(item, "", 100)).filter(Boolean) : [];
-    const requestedType = ["text", "email", "phone", "select", "textarea"].includes(field.type ?? "") ? field.type! : "text";
-    const type = requestedType === "select" && !options.length ? "text" : requestedType;
-    contactFieldMap.set(id, { id, label: cleanText(field.label, "New field", 80), type, required: field.required === true, enabled: field.enabled !== false, options });
-  }
-  const contactFields = base.contactForm.fields.map((fallback) => {
-    const custom = contactFieldMap.get(fallback.id);
-    return custom ? { ...fallback, ...custom, options: custom.options.length ? custom.options : fallback.options } : fallback;
-  });
-  const reservedFieldIds = new Set(contactFields.map((field) => field.id));
-  for (const [id, field] of contactFieldMap) {
-    if (!reservedFieldIds.has(id) && contactFields.length < 16) { contactFields.push(field); reservedFieldIds.add(id); }
-  }
   return {
     header: { brand: cleanText(value.header?.brand, base.header.brand, 60), logoUrl: cleanText(value.header?.logoUrl, "", 1000), showLogo: value.header?.showLogo !== false, showBrand: value.header?.showBrand !== false, announcement: cleanText(value.header?.announcement, base.header.announcement), showAnnouncement: value.header?.showAnnouncement === true, navHome: cleanText(value.header?.navHome, base.header.navHome, 40), navGames: cleanText(value.header?.navGames, base.header.navGames, 40), navHow: cleanText(value.header?.navHow, base.header.navHow, 50), navSignIn: cleanText(value.header?.navSignIn, base.header.navSignIn, 40), navGetStarted: cleanText(value.header?.navGetStarted, base.header.navGetStarted, 40), showHome: value.header?.showHome !== false, showGames: value.header?.showGames !== false, showHow: value.header?.showHow !== false, showSignIn: value.header?.showSignIn !== false, showGetStarted: value.header?.showGetStarted !== false },
     hero: { eyebrow: cleanText(value.hero?.eyebrow, base.hero.eyebrow, 80), title: cleanText(value.hero?.title, base.hero.title, 100), highlight: cleanText(value.hero?.highlight, base.hero.highlight, 60), description: cleanText(value.hero?.description, base.hero.description, 500), primaryCta: cleanText(value.hero?.primaryCta, base.hero.primaryCta, 50), secondaryCta: cleanText(value.hero?.secondaryCta, base.hero.secondaryCta, 50) },
     games: { eyebrow: cleanText(value.games?.eyebrow, base.games.eyebrow, 80), title: cleanText(value.games?.title, base.games.title, 100), description: cleanText(value.games?.description, base.games.description, 100), columns: Math.round(cleanNumber(value.games?.columns, base.games.columns, 1, 4)), cards },
     how: { eyebrow: cleanText(value.how?.eyebrow, base.how.eyebrow, 80), title: cleanText(value.how?.title, base.how.title, 100), steps: base.how.steps.map((step, index) => ({ title: cleanText(value.how?.steps?.[index]?.title, step.title, 100), description: cleanText(value.how?.steps?.[index]?.description, step.description, 240) })) },
-    footer: { copyright: cleanText(value.footer?.copyright, base.footer.copyright, 120), termsLabel: cleanText(value.footer?.termsLabel, base.footer.termsLabel, 60), privacyLabel: cleanText(value.footer?.privacyLabel, base.footer.privacyLabel, 60), pageLinksAlignment: ["left", "center", "right"].includes(value.footer?.pageLinksAlignment ?? "") ? value.footer!.pageLinksAlignment! : base.footer.pageLinksAlignment },
-    contactForm: {
-      intro: cleanText(value.contactForm?.intro, base.contactForm.intro, 300),
-      submitLabel: cleanText(value.contactForm?.submitLabel, base.contactForm.submitLabel, 40),
-      fields: contactFields,
-    },
-    pages: {
-      "terms-and-conditions": { title: cleanText(value.pages?.["terms-and-conditions"]?.title, base.pages["terms-and-conditions"].title, 100), body: sanitizeRichText(value.pages?.["terms-and-conditions"]?.body), showInFooter: value.pages?.["terms-and-conditions"]?.showInFooter === true },
-      "privacy-policy": { title: cleanText(value.pages?.["privacy-policy"]?.title, base.pages["privacy-policy"].title, 100), body: sanitizeRichText(value.pages?.["privacy-policy"]?.body), showInFooter: value.pages?.["privacy-policy"]?.showInFooter === true },
-      "about-us": { title: cleanText(value.pages?.["about-us"]?.title, base.pages["about-us"].title, 100), body: sanitizeRichText(value.pages?.["about-us"]?.body), showInFooter: value.pages?.["about-us"]?.showInFooter === true },
-      "contact-us": { title: cleanText(value.pages?.["contact-us"]?.title, base.pages["contact-us"].title, 100), body: sanitizeRichText(value.pages?.["contact-us"]?.body), showInFooter: value.pages?.["contact-us"]?.showInFooter === true },
-    },
+    footer: { copyright: cleanText(value.footer?.copyright, base.footer.copyright, 120), termsLabel: cleanText(value.footer?.termsLabel, base.footer.termsLabel, 60), privacyLabel: cleanText(value.footer?.privacyLabel, base.footer.privacyLabel, 60), pages: Array.isArray(value.footer?.pages) ? value.footer!.pages!.slice(0, 4).flatMap((item) => item && ["terms", "privacy", "about", "contact"].includes(item.slug) ? [{ slug: item.slug, label: cleanText(item.label, item.slug, 60), enabled: item.enabled === true }] : []) : base.footer.pages, alignment: ["left", "center", "right"].includes(value.footer?.alignment ?? "") ? value.footer!.alignment! : base.footer.alignment },
     theme: { primary: cleanColor(value.theme?.primary, base.theme.primary), accent: cleanColor(value.theme?.accent, base.theme.accent), heroBackground: cleanColor(value.theme?.heroBackground, base.theme.heroBackground), pageBackground: cleanColor(value.theme?.pageBackground, base.theme.pageBackground) },
     sections: { showHero: value.sections?.showHero !== false, showGames: value.sections?.showGames !== false, showHow: value.sections?.showHow !== false, showFooter: value.sections?.showFooter !== false },
     typography: { header: normalizeTypography(typ?.header, base.typography.header), hero: normalizeTypography(typ?.hero, base.typography.hero), games: normalizeTypography(typ?.games, base.typography.games), how: normalizeTypography(typ?.how, base.typography.how), footer: normalizeTypography(typ?.footer, base.typography.footer) },
