@@ -545,3 +545,8 @@
 @keyframes christmas-sleigh-flight { from { transform:translateX(-100%); } to { transform:translateX(calc(100vw + 310px)); } }
 @media (max-width:800px) { .home-public.home-template-christmas .seasonal-santa { width:180px; bottom:12px; } }
 @media (prefers-reduced-motion:reduce) { .home-public.home-template-christmas .seasonal-santa { animation:none; left:auto; right:12px; transform:none; } }
+
+/* Half-size sleigh with the original transparent background preserved. */
+.home-public.home-template-christmas .seasonal-santa { width:clamp(90px,11vw,155px); }
+@keyframes christmas-sleigh-flight { from { transform:translateX(-100%); } to { transform:translateX(calc(100vw + 100%)); } }
+@media (max-width:800px) { .home-public.home-template-christmas .seasonal-santa { width:90px; } }
