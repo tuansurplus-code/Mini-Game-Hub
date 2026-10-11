@@ -313,3 +313,222 @@
   background: #ee4d9a !important;
   color: #fff !important;
 }
+
+
+/* Responsive finishing for the four approved seasonal homepage layouts. */
+.home-public.home-template-christmas,
+.home-public.home-template-new-year,
+.home-public.home-template-ramadan,
+.home-public.home-template-wesak { min-height: 100vh; }
+.home-public.home-template-christmas .topbar,
+.home-public.home-template-new-year .topbar,
+.home-public.home-template-ramadan .topbar,
+.home-public.home-template-wesak .topbar {
+  width: min(100%, 1320px);
+  min-height: 62px;
+  margin: 0 auto;
+  padding: 8px clamp(18px, 3vw, 40px);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.home-public.home-template-christmas .hero,
+.home-public.home-template-new-year .hero,
+.home-public.home-template-ramadan .hero,
+.home-public.home-template-wesak .hero {
+  width: min(100%, 1320px);
+  min-height: clamp(250px, 30vh, 330px);
+  margin: 0 auto;
+  padding: clamp(24px, 3vw, 42px) clamp(20px, 5vw, 72px);
+  border-radius: 0;
+  color: #26354b;
+  overflow: hidden;
+}
+.home-public.home-template-new-year { background: linear-gradient(180deg,#f4f9ff 0%,#e8f3ff 58%,#fbfdff 100%); }
+.home-public.home-template-new-year .hero {
+  background-color: #edf6ff;
+  background-image: radial-gradient(ellipse at 80% 105%,#d8e9ff 0 22%,transparent 23%),radial-gradient(ellipse at 25% 110%,#e8e3ff 0 28%,transparent 29%),linear-gradient(180deg,#edf7ff,#f5f6ff);
+}
+.home-public.home-template-ramadan { background: linear-gradient(180deg,#fbfbf4 0%,#f4f5e9 100%); }
+.home-public.home-template-ramadan .hero {
+  background-color: #f8f9f1;
+  background-image: radial-gradient(ellipse at 12% 110%,#e4e9d7 0 25%,transparent 26%),radial-gradient(ellipse at 75% 118%,#e8ecd9 0 31%,transparent 32%),linear-gradient(180deg,#fafbf5,#f1f3e8);
+}
+.home-public.home-template-wesak { background: linear-gradient(180deg,#fffaf0 0%,#fff5df 58%,#fffdf6 100%); }
+.home-public.home-template-wesak .hero {
+  background-color: #fff8e9;
+  background-image: radial-gradient(ellipse at 10% 108%,#f0dfb6 0 26%,transparent 27%),radial-gradient(ellipse at 80% 115%,#f5e6c7 0 31%,transparent 32%),linear-gradient(180deg,#fffaf0,#fff4dd);
+}
+.home-public.home-template-christmas { background: linear-gradient(180deg,#fbf8f2 0%,#f8f3eb 100%); }
+.home-public.home-template-christmas .hero {
+  min-height: clamp(250px, 30vh, 330px);
+  background-color: #fbf8f2;
+  background-size: 150px 150px,180px 180px,210px 210px,145px 145px,auto;
+}
+.home-public.home-template-new-year .hero,
+.home-public.home-template-ramadan .hero,
+.home-public.home-template-wesak .hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  text-align: center;
+}
+.home-public.home-template-new-year .hero > div:first-child,
+.home-public.home-template-ramadan .hero > div:first-child,
+.home-public.home-template-wesak .hero > div:first-child {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 850px);
+  margin: 0 auto;
+}
+.home-public.home-template-new-year .hero-art,
+.home-public.home-template-ramadan .hero-art,
+.home-public.home-template-wesak .hero-art {
+  position: absolute;
+  z-index: 0;
+  top: 18px;
+  right: 4%;
+  width: min(27%,300px);
+  height: auto;
+  margin: 0;
+  opacity: .98;
+}
+.home-public.home-template-new-year .hero-art.has-template-art { aspect-ratio: 1.75; }
+.home-public.home-template-ramadan .hero-art.has-template-art,
+.home-public.home-template-wesak .hero-art.has-template-art { aspect-ratio: 1.3; }
+.home-public.home-template-new-year .hero-actions,
+.home-public.home-template-ramadan .hero-actions,
+.home-public.home-template-wesak .hero-actions { justify-content: center; }
+.home-public.home-template-christmas .games,
+.home-public.home-template-new-year .games,
+.home-public.home-template-ramadan .games,
+.home-public.home-template-wesak .games {
+  width: min(100%, 1320px);
+  margin: 12px auto 36px;
+  padding: 0 clamp(18px, 3vw, 40px);
+}
+.home-public.home-template-christmas .games .section-head,
+.home-public.home-template-new-year .games .section-head,
+.home-public.home-template-ramadan .games .section-head,
+.home-public.home-template-wesak .games .section-head { display: none; }
+.home-public.home-template-christmas .games .grid,
+.home-public.home-template-new-year .games .grid,
+.home-public.home-template-ramadan .games .grid,
+.home-public.home-template-wesak .games .grid { gap: clamp(14px,1.5vw,24px); }
+.home-public.home-template-christmas .home-game-card,
+.home-public.home-template-new-year .home-game-card,
+.home-public.home-template-ramadan .home-game-card,
+.home-public.home-template-wesak .home-game-card {
+  background: #fffefa !important;
+  border: 1px solid #fff !important;
+  border-radius: 18px !important;
+  box-shadow: 0 8px 24px #34405412 !important;
+  color: #26354b !important;
+}
+.home-public.home-template-christmas .home-game-card .game-visual,
+.home-public.home-template-new-year .home-game-card .game-visual,
+.home-public.home-template-ramadan .home-game-card .game-visual,
+.home-public.home-template-wesak .home-game-card .game-visual {
+  min-height: 0;
+  margin: clamp(8px,1vw,14px) clamp(8px,1vw,14px) 0;
+  border-radius: 12px !important;
+}
+.home-public.home-template-christmas .home-game-card .game-visual small,
+.home-public.home-template-new-year .home-game-card .game-visual small,
+.home-public.home-template-ramadan .home-game-card .game-visual small,
+.home-public.home-template-wesak .home-game-card .game-visual small { display: none; }
+.home-public.home-template-christmas .home-game-card .card-body,
+.home-public.home-template-new-year .home-game-card .card-body,
+.home-public.home-template-ramadan .home-game-card .card-body,
+.home-public.home-template-wesak .home-game-card .card-body {
+  padding: 12px clamp(14px,2vw,24px) clamp(16px,2vw,22px);
+  text-align: center !important;
+}
+.home-public.home-template-christmas .hero h1,
+.home-public.home-template-christmas .home-game-card h3,
+.home-public.home-template-wesak .hero h1,
+.home-public.home-template-wesak .home-game-card h3 { font-family: Georgia,serif !important; }
+.home-public.home-template-christmas .home-game-card .play,
+.home-public.home-template-new-year .home-game-card .play,
+.home-public.home-template-ramadan .home-game-card .play,
+.home-public.home-template-wesak .home-game-card .play {
+  min-height: 38px;
+  width: auto;
+  min-width: 130px;
+  align-self: center;
+  justify-content: center;
+  padding: 9px 20px;
+  border-radius: 24px;
+}
+.home-public.home-template-christmas .home-game-card .play { background:#e7eadf!important;color:#304539!important; }
+.home-public.home-template-ramadan .home-game-card .play { background:#fffefa!important;color:#31594d!important;border:1px solid #cdb77e; }
+.home-public.home-template-wesak .home-game-card .play { background:#e5a11b!important;color:#fff!important; }
+.home-public.home-template-new-year .home-game-card:nth-child(odd) .play { background:#16bde7!important;color:#fff!important; }
+.home-public.home-template-new-year .home-game-card:nth-child(even) .play { background:#ee4d9a!important;color:#fff!important; }
+.home-public.home-template-christmas .hero::before { display:none; }
+.home-public.home-template-christmas .home-seasonal-decoration { opacity:1; }
+.home-public.home-template-christmas .seasonal-spark { display:none; }
+.home-public.home-template-christmas .seasonal-pine {
+  position:absolute;
+  top:70px;
+  width:clamp(68px,8vw,110px);
+  height:auto;
+  opacity:.92;
+  background-repeat:no-repeat;
+}
+.home-public.home-template-christmas .seasonal-pine.pine-left { left:0; }
+.home-public.home-template-christmas .seasonal-pine.pine-right { right:0; }
+.home-public.home-template-christmas .seasonal-flake {
+  position:absolute;
+  top:-36px;
+  display:block;
+  animation-name:seasonal-snowfall;
+  animation-timing-function:linear;
+  animation-iteration-count:infinite;
+  pointer-events:none;
+}
+.home-public.home-template-christmas .seasonal-flake svg { display:block;width:100%;height:100%;overflow:visible; }
+.home-public.home-template-christmas .seasonal-flake path {
+  fill:none;
+  stroke:#9b887a;
+  stroke-width:1.55;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  filter:drop-shadow(0 1px 1px #fff);
+}
+.home-public.home-template-christmas .seasonal-santa {
+  display:block;
+  position:absolute;
+  left:50%;
+  bottom:18px;
+  width:min(265px,42vw);
+  height:auto;
+  aspect-ratio:265/52;
+  transform:translateX(-50%);
+  opacity:1;
+  animation:none;
+  background-repeat:no-repeat;
+}
+@keyframes seasonal-snowfall {
+  from { transform:translate3d(0,-40px,0) rotate(0deg); }
+  to { transform:translate3d(38px,105vh,0) rotate(320deg); }
+}
+@media (max-width: 800px) {
+  .home-public.home-template-christmas .topbar,
+  .home-public.home-template-new-year .topbar,
+  .home-public.home-template-ramadan .topbar,
+  .home-public.home-template-wesak .topbar { padding:8px 16px; }
+  .home-public.home-template-christmas .hero,
+  .home-public.home-template-new-year .hero,
+  .home-public.home-template-ramadan .hero,
+  .home-public.home-template-wesak .hero { min-height:230px;padding:24px 18px; }
+  .home-public.home-template-new-year .hero > div:first-child,
+  .home-public.home-template-ramadan .hero > div:first-child,
+  .home-public.home-template-wesak .hero > div:first-child { max-width:100%; }
+  .home-public.home-template-new-year .hero-art,
+  .home-public.home-template-ramadan .hero-art,
+  .home-public.home-template-wesak .hero-art { top:8px;right:8px;width:84px;opacity:.3; }
+  .home-public.home-template-christmas .games .grid,
+  .home-public.home-template-new-year .games .grid,
+  .home-public.home-template-ramadan .games .grid,
+  .home-public.home-template-wesak .games .grid { grid-template-columns:1fr; }
+}

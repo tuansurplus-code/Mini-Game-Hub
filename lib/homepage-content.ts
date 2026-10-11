@@ -15,13 +15,13 @@ export type HomepageContent = {
 };
 export type SavedHomepagePage = { id: string; name: string; kind: "custom" | "wesak" | "christmas" | "ramadan" | "new-year"; content: HomepageContent; startsAt: string; endsAt: string; scheduled: boolean; published: boolean; createdAt: string; updatedAt: string };
 export const TEMPLATE_ARTWORK_CROPS = {
-  wesak: { hero: [695, 20, 265, 210], spin: [144, 243, 208, 178], scratch: [389, 245, 199, 171], "pick-card": [627, 245, 191, 171] },
-  christmas: { spin: [80, 289, 241, 123], scratch: [370, 288, 226, 125], "pick-card": [640, 288, 239, 125], sleigh: [390, 543, 265, 52] },
-  ramadan: { hero: [610, 23, 292, 226], spin: [151, 250, 203, 190], scratch: [393, 249, 204, 188], "pick-card": [637, 251, 176, 190] },
+  wesak: { hero: [775, 58, 165, 160], spin: [146, 252, 198, 162], scratch: [392, 252, 188, 162], "pick-card": [630, 252, 180, 162] },
+  christmas: { spin: [80, 289, 241, 123], scratch: [370, 288, 226, 125], "pick-card": [640, 288, 239, 125], sleigh: [390, 543, 265, 52], "pine-left": [0, 0, 90, 75], "pine-right": [870, 0, 90, 75] },
+  ramadan: { hero: [650, 35, 280, 205], spin: [151, 257, 198, 155], scratch: [390, 257, 184, 155], "pick-card": [617, 257, 187, 155] },
   "new-year": { hero: [515, 25, 445, 255], spin: [88, 291, 246, 136], scratch: [362, 291, 237, 136], "pick-card": [627, 291, 252, 136] },
 } as const;
 export function getTemplateArtworkStyle(url: string): Record<string, string> | null {
-  const match = url.match(/^\/template-previews\/(wesak|christmas|ramadan|new-year)\.svg\?crop=(hero|spin|scratch|pick-card|sleigh)$/);
+  const match = url.match(/^\/template-previews\/(wesak|christmas|ramadan|new-year)\.svg\?crop=(hero|spin|scratch|pick-card|sleigh|pine-left|pine-right)$/);
   if (!match) return null;
   const [, kind, area] = match;
   const box = TEMPLATE_ARTWORK_CROPS[kind as keyof typeof TEMPLATE_ARTWORK_CROPS][area as keyof typeof TEMPLATE_ARTWORK_CROPS[keyof typeof TEMPLATE_ARTWORK_CROPS]];
@@ -32,6 +32,7 @@ export function getTemplateArtworkStyle(url: string): Record<string, string> | n
     backgroundSize: `${(960 / width) * 100}% auto`,
     backgroundPosition: `${(x / (960 - width)) * 100}% ${(y / (601 - height)) * 100}%`,
     backgroundRepeat: "no-repeat",
+    aspectRatio: `${width}/${height}`,
   };
 }
 export type HomepageSiteTheme = { preset: "clean-white" | "soft-sky" | "sage-cream" | "warm-sunset" | "lavender-mist" | "custom"; colors: { primary: string; accent: string; heroBackground: string; pageBackground: string; cardBackground: string; footerBackground: string }; fonts: { header: string; body: string; footer: string } };
