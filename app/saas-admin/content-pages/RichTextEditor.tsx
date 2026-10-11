@@ -9,13 +9,30 @@ const formats = [{ label: "Paragraph", value: "p" }, { label: "Heading 1", value
 export default function RichTextEditor({ value, onChange, disabled = false }: { value: string; onChange: (html: string) => void; disabled?: boolean }) {
   const editor = useRef<HTMLDivElement>(null);
   const skipExternalUpdate = useRef(false);
+  const savedRange = useRef<Range | null>(null);
   const [sourceMode, setSourceMode] = useState(false);
   useEffect(() => {
     if (skipExternalUpdate.current) { skipExternalUpdate.current = false; return; }
     if (editor.current && editor.current.innerHTML !== sanitizeRichText(value)) editor.current.innerHTML = sanitizeRichText(value);
   }, [value, sourceMode]);
-  function run(command: string, argument?: string) {
+  useEffect(() => {
+    const rememberSelection = () => {
+      const selection = window.getSelection();
+      if (selection?.rangeCount && editor.current?.contains(selection.anchorNode)) savedRange.current = selection.getRangeAt(0).cloneRange();
+    };
+    document.addEventListener("selectionchange", rememberSelection);
+    return () => document.removeEventListener("selectionchange", rememberSelection);
+  }, []);
+  function restoreSelection() {
     editor.current?.focus();
+    if (savedRange.current && editor.current?.contains(savedRange.current.commonAncestorContainer)) {
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(savedRange.current);
+    }
+  }
+  function run(command: string, argument?: string) {
+    restoreSelection();
     document.execCommand(command, false, argument);
     changed();
   }
@@ -39,7 +56,7 @@ export default function RichTextEditor({ value, onChange, disabled = false }: { 
       {button("• List", "Bulleted list", "insertUnorderedList")}{button("1. List", "Numbered list", "insertOrderedList")}
       {button("⇤", "Align left", "justifyLeft")}{button("↔", "Align center", "justifyCenter")}{button("⇥", "Align right", "justifyRight")}
       <button type="button" title="Insert link" aria-label="Insert link" disabled={disabled || sourceMode} onMouseDown={event => event.preventDefault()} onClick={insertLink}>Link</button>
-      <button type="button" title="Insert table" disabled={disabled || sourceMode} onMouseDown={event => event.preventDefault()} onClick={() => { editor.current?.focus(); document.execCommand("insertHTML", false, "<table><tbody><tr><td>Cell</td><td>Cell</td></tr><tr><td>Cell</td><td>Cell</td></tr></tbody></table><p><br></p>"); changed(); }}>Table</button>
+      <button type="button" title="Insert table" disabled={disabled || sourceMode} onMouseDown={event => event.preventDefault()} onClick={() => { restoreSelection(); document.execCommand("insertHTML", false, "<table><tbody><tr><td>Cell</td><td>Cell</td></tr><tr><td>Cell</td><td>Cell</td></tr></tbody></table><p><br></p>"); changed(); }}>Table</button>
       <button type="button" className={sourceMode ? "active" : ""} title="Edit HTML source" disabled={disabled} onClick={() => setSourceMode(current => !current)}>{sourceMode ? "Rich text" : "Source"}</button>
     </div>
     {sourceMode ? <textarea className="rich-text-source" aria-label="HTML source" value={value} disabled={disabled} onChange={event => onChange(event.target.value)} spellCheck={false} /> : <div ref={editor} className="rich-text-canvas" contentEditable={!disabled} suppressContentEditableWarning onInput={changed} onBlur={changed} role="textbox" aria-label="Page content" aria-multiline="true" />}
