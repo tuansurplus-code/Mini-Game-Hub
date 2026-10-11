@@ -930,3 +930,114 @@
   .home-public.home-template-wesak .home-game-card h3 { font-size:21px !important; }
   .home-public.home-template-wesak .home-game-card .play { min-width:138px; }
 }
+
+/* Wesak final alignment: use the approved full-scene artwork as the page backdrop. */
+.home-public.home-template-wesak {
+  background-color:#fff8e8;
+  background-image:url("/template-previews/wesak.svg");
+  background-size:100% 100vh;
+  background-position:center -60px;
+  background-repeat:no-repeat;
+  background-attachment:scroll;
+}
+.home-public.home-template-wesak .hero {
+  background:transparent !important;
+}
+.home-public.home-template-wesak .hero > div:first-child {
+  width:min(100%,900px);
+  max-width:900px;
+}
+.home-public.home-template-wesak .hero-art,
+.home-public.home-template-wesak .home-seasonal-decoration {
+  display:none !important;
+}
+.home-public.home-template-wesak .home-game-card .game-visual-contained {
+  height:205px !important;
+  min-height:205px !important;
+  display:grid;
+  place-items:center;
+  background-color:#fff3d6 !important;
+  overflow:hidden;
+}
+.home-public.home-template-wesak .game-visual-art {
+  display:block;
+  height:100%;
+  max-width:100%;
+  flex:none;
+  background-repeat:no-repeat;
+}
+@media(max-width:800px) {
+  .home-public.home-template-wesak {
+    background-size:auto 100vh;
+    background-position:center -48px;
+  }
+  .home-public.home-template-wesak .hero > div:first-child {
+    width:100%;
+    max-width:100%;
+  }
+  .home-public.home-template-wesak .home-game-card .game-visual-contained {
+    height:210px !important;
+    min-height:210px !important;
+  }
+}
+
+/* Soften the mockup's built-in sample copy under live Wesak content. */
+.home-public.home-template-wesak .hero {
+  isolation:isolate;
+}
+.home-public.home-template-wesak .hero::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse 78% 75% at 50% 52%,#fff8e9 0%,#fff8e9f5 58%,#fff8e9c9 78%,transparent 100%),
+    linear-gradient(180deg,transparent 48%,#fff8e9e8 100%);
+}
+.home-public.home-template-wesak .hero > div:first-child {
+  position:relative;
+  z-index:1;
+}
+.home-public.home-template-wesak .how {
+  position:relative;
+  isolation:isolate;
+}
+.home-public.home-template-wesak .how::before {
+  content:"";
+  position:absolute;
+  inset:-20px 0;
+  z-index:-1;
+  pointer-events:none;
+  background:radial-gradient(ellipse at center,#fff8e8f4 0%,#fff8e8e8 62%,transparent 100%);
+}
+
+/* Hide the flattened mockup's sample title, cards, and footer marks behind live sections. */
+.home-public.home-template-wesak .hero::before {
+  background:
+    radial-gradient(ellipse 72% 25% at 50% 24%,#fff8e9 0 72%,#fff8e9f5 88%,transparent 100%),
+    radial-gradient(ellipse 78% 75% at 50% 52%,#fff8e9 0%,#fff8e9f5 58%,#fff8e9c9 78%,transparent 100%),
+    linear-gradient(180deg,transparent 48%,#fff8e9e8 100%);
+}
+.home-public.home-template-wesak .games {
+  position:relative;
+  background:radial-gradient(ellipse 110% 110% at center,#fff8e8 0 74%,#fff8e8ef 88%,transparent 100%);
+}
+.home-public.home-template-wesak .how::before {
+  background:radial-gradient(ellipse 100% 100% at center,#fff8e8 0 72%,#fff8e8f4 88%,transparent 100%);
+}
+
+/* Keep the Wesak lantern borders visible while masking only the mockup's duplicate center content. */
+.home-public.home-template-wesak .hero > div:first-child {
+  text-align:center !important;
+}
+.home-public.home-template-wesak .hero h1,
+.home-public.home-template-wesak .hero p {
+  text-align:center !important;
+}
+.home-public.home-template-wesak .hero::before {
+  background:
+    radial-gradient(ellipse 36% 28% at 50% 22%,#fff8e9 0 76%,#fff8e9f1 92%,transparent 100%),
+    radial-gradient(ellipse 40% 22% at 50% 56%,#fff8e9 0 74%,#fff8e9ed 92%,transparent 100%),
+    radial-gradient(ellipse 58% 28% at 50% 86%,#fff8e9 0 70%,#fff8e9ec 88%,transparent 100%);
+}
