@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
-import { DEFAULT_HOMEPAGE_CONTENT, resolveActiveTheme, type HomepageContent, type HomepageTypography, type ManagedPageSlug } from "../lib/homepage-content";
+import { DEFAULT_HOMEPAGE_CONTENT, resolveActiveTheme, type HomepageContent, type HomepageTypography, type ManagedPageSlug, type SeasonalTheme } from "../lib/homepage-content";
 
 const FOOTER_PAGES: ManagedPageSlug[] = ["terms-and-conditions", "privacy-policy", "about-us", "contact-us"];
 const gameMeta = {
@@ -14,6 +14,23 @@ const gameMeta = {
 } as const;
 function textStyle(t: HomepageTypography, heading = false): CSSProperties {
   return { fontFamily: t.fontFamily, fontSize: `${heading ? t.headlineSize : t.fontSize}px`, fontWeight: t.bold ? 800 : undefined, fontStyle: t.italic ? "italic" : undefined, textDecoration: t.underline ? "underline" : undefined, textAlign: t.alignment };
+}
+function SeasonalEffects({ preset }: { preset: SeasonalTheme["preset"] | undefined }) {
+  if (!preset || preset === "custom") return null;
+  return <div className={`seasonal-effects seasonal-effects-${preset}`} aria-hidden="true">
+    {preset === "christmas" && <>
+      <span className="seasonal-snow snow-one">❄</span><span className="seasonal-snow snow-two">❄</span><span className="seasonal-snow snow-three">❄</span><span className="seasonal-snow snow-four">❄</span><span className="seasonal-sleigh">🎅🛷</span>
+    </>}
+    {preset === "new-year" && <>
+      <span className="seasonal-firework firework-one">✳</span><span className="seasonal-firework firework-two">✳</span><span className="seasonal-ribbon ribbon-one">〰</span><span className="seasonal-ribbon ribbon-two">〰</span><span className="seasonal-ribbon ribbon-three">〰</span>
+    </>}
+    {preset === "ramadan" && <>
+      <span className="seasonal-moon">☾</span><span className="seasonal-star star-one">✦</span><span className="seasonal-star star-two">✦</span><span className="seasonal-lantern lantern-one">🏮</span><span className="seasonal-lantern lantern-two">🏮</span>
+    </>}
+    {preset === "wesak" && <>
+      <span className="seasonal-wesak-lantern">🏮</span><span className="seasonal-lotus">🪷</span><span className="seasonal-temple">🛕</span><span className="seasonal-lamp">🪔</span>
+    </>}
+  </div>;
 }
 export default function Home() {
   const [signedIn, setSignedIn] = useState(false);
@@ -35,7 +52,7 @@ export default function Home() {
   const colors = activeTheme ?? content.theme;
   const homeStyle = { "--home-primary": colors.primary, "--home-accent": colors.accent, "--home-hero": colors.heroBackground, "--home-bg": colors.pageBackground } as CSSProperties;
   const headerStyle = textStyle(content.typography.header);
-  return <main className="home-public" style={homeStyle}>
+  return <main className="home-public" data-season={activeTheme?.preset} style={homeStyle}><SeasonalEffects preset={activeTheme?.preset} />
     <header className="topbar" style={headerStyle}>
       <Link href="/" className="brand" aria-label="Mini Game Hub home">{content.header.showLogo && (content.header.logoUrl ? <img className="home-logo" src={content.header.logoUrl} alt="" /> : <span className="brandmark">M</span>)}{content.header.showBrand && <span>{content.header.brand}</span>}</Link>
       <nav aria-label="Main navigation">{signedIn ? <><Link className="nav" href="/admin">Dashboard</Link><Link className="nav" href="/admin/campaigns">Campaigns</Link><Link className="nav" href="/admin/games">Games</Link><Link className="nav" href="/admin/reports">Reports</Link><Link className="primary small" href="/admin/settings">Account</Link></> : <>{content.header.showHome && <Link className="nav active" href="/" aria-current="page">{content.header.navHome}</Link>}{content.header.showGames && <a className="nav" href="#games">{content.header.navGames}</a>}{content.header.showHow && <a className="nav" href="#how">{content.header.navHow}</a>}{content.header.showSignIn && <Link className="nav" href="/login">{content.header.navSignIn}</Link>}{content.header.showGetStarted && <Link className="primary small" href="/signup">{content.header.navGetStarted}</Link>}</>}</nav>

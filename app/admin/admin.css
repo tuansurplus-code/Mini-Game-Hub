@@ -786,3 +786,21 @@ th {
 .home-draft-save-row,.home-draft-load-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:12px; }
 .home-draft-save-row .primary-btn,.home-draft-load-row .home-secondary { min-height:40px; white-space:nowrap; }
 @media(max-width:480px) { .home-draft-save-row,.home-draft-load-row { grid-template-columns:1fr; } }
+
+
+/* Seasonal decoration in the homepage editor preview. */
+.homepage-preview[data-season] { position:relative; isolation:isolate; background:var(--home-bg); }
+.homepage-preview[data-season]>.preview-seasonal-art { position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+.homepage-preview[data-season]>.preview-seasonal-art span { position:absolute; color:var(--home-primary); opacity:.26; font-size:15px; }
+.homepage-preview[data-season]>.preview-seasonal-art span:nth-child(1) { top:18px; left:12px; }
+.homepage-preview[data-season]>.preview-seasonal-art span:nth-child(2) { top:92px; right:12px; }
+.homepage-preview[data-season]>.preview-seasonal-art span:nth-child(3) { right:14px; bottom:8px; }
+.homepage-preview[data-season] .preview-header,.homepage-preview[data-season] .preview-hero,.homepage-preview[data-season] .preview-body,.homepage-preview[data-season]>footer { position:relative; z-index:1; }
+.homepage-preview[data-season] .preview-hero { color:#253044; background:var(--home-hero); }
+.homepage-preview[data-season] .preview-hero small,.homepage-preview[data-season] .preview-body>small { color:var(--home-primary); }
+.homepage-preview[data-season] .preview-hero p { color:#526071; }
+.homepage-preview[data-season] .preview-hero h3 b { color:var(--home-accent); }
+.homepage-preview[data-season="christmas"] .preview-seasonal-art span { color:#b93840; }
+.homepage-preview[data-season="new-year"] .preview-seasonal-art span:nth-child(2n) { color:#dc55a1; }
+.homepage-preview[data-season="ramadan"] .preview-seasonal-art span { color:#c6a45d; }
+.homepage-preview[data-season="wesak"] .preview-seasonal-art span { color:#ed9911; }
