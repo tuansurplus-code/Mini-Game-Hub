@@ -46,3 +46,5 @@
 .home-template-wesak .seasonal-spark { opacity:.52; }
 
 @media(max-width:800px){.homepage-preview .preview-hero:has(.preview-hero-art){grid-template-columns:1fr}.preview-hero-art{max-height:180px}}
+
+.home-template-christmas .hero{grid-template-columns:1fr}.home-template-christmas .hero>div:first-child{max-width:760px;margin-inline:auto}.home-template-christmas .hero p{margin-inline:auto}.home-template-christmas .hero-art{display:none}.home-template-christmas .hero-actions{justify-content:center}
