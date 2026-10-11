@@ -136,6 +136,7 @@ export default function HomepageManager() {
         "new-year": { eyebrow: "NEW YEAR SPECIAL", title: "Start the year", highlight: "with a win.", description: "Welcome the new year with games and rewards for your customers." },
       };
       Object.assign(next.hero, copy[kind]);
+      if (kind === "christmas") next.typography.hero.alignment = "center";
       const colors = THEME_COLORS[kind];
       next.theme = { ...colors };
       next.hero.backgroundImageUrl = TEMPLATE_ART[kind].hero;
