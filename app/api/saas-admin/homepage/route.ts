@@ -58,6 +58,12 @@ export async function PATCH(request: Request) {
   const now = new Date().toISOString();
   const publishedPageId = typeof body.publishedPageId === "string" && manager.pages.some(page => page.id === body.publishedPageId) ? body.publishedPageId : null;
   if (body.action === "publish" && !publishedPageId) return reply({ error: "Save or choose a page before publishing." }, 400);
+  const db = createSupabaseAdminClient();
+  const { data: currentHome, error: currentHomeError } = await db.from("homepage_content").select("published,published_at").eq("id", true).maybeSingle();
+  if (currentHomeError) {
+    console.error("Unable to read current homepage content", currentHomeError);
+    return reply({ error: "Unable to read the current live homepage. Please retry." }, 500);
+  }
   const savedPages = manager.pages.map(page => ({
     id: page.id,
     name: page.name,
@@ -70,7 +76,6 @@ export async function PATCH(request: Request) {
     created_by: actor.user.id,
     updated_at: page.updatedAt,
   }));
-  const db = createSupabaseAdminClient();
   if (savedPages.length) {
     const { error: draftsError } = await db.from("homepage_drafts").upsert(savedPages, { onConflict: "id" });
     if (draftsError) {
@@ -92,13 +97,20 @@ export async function PATCH(request: Request) {
     }
   }
   const storedManager = { ...manager, pages: [] };
-  const values: Record<string, unknown> = { draft: content, manager: storedManager, updated_by: actor.user.id, updated_at: now };
+  const values: Record<string, unknown> = {
+    draft: content,
+    published: body.action === "publish" ? content : currentHome?.published ?? normalizeHomepageContent(null),
+    manager: storedManager,
+    updated_by: actor.user.id,
+    updated_at: now,
+  };
   if (body.action === "publish") {
-    values.published = content;
     values.published_at = now;
     values.published_manager = storedManager;
+  } else if (currentHome?.published_at) {
+    values.published_at = currentHome.published_at;
   }
-  const { error } = await createSupabaseAdminClient().from("homepage_content").upsert({ id: true, ...values }, { onConflict: "id" });
+  const { error } = await db.from("homepage_content").upsert({ id: true, ...values }, { onConflict: "id" });
   if (error) {
     console.error("Unable to save homepage content", error);
     return reply({ error: "Unable to save homepage settings." }, 500);
