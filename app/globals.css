@@ -27,3 +27,20 @@
 .home-public .home-game-card .game-visual small { color:inherit; }
 @media(max-width:800px) { .home-public .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:520px) { .home-public .grid { grid-template-columns:1fr; } }
+
+
+.home-site-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.home-footer-page-links { display: flex; align-items: center; justify-content: center; gap: 18px; flex: 1; flex-wrap: wrap; }
+.home-footer-page-links a { color: inherit; text-decoration: none; }
+.home-footer-page-links a:hover { text-decoration: underline; }
+.home-public .home-site-footer { text-align: inherit; }
+.preview-page-links { display: flex; gap: 6px; flex-wrap: wrap; }
+.public-content-page { min-height: 100svh; padding: clamp(24px, 6vw, 72px) 18px; background: #f6f7f9; color: #101828; }
+.public-content-shell { max-width: 900px; margin: 0 auto; padding: clamp(24px, 5vw, 56px); border: 1px solid #eaecf0; border-radius: 20px; background: #fff; box-shadow: 0 16px 40px #1018280d; }
+.public-content-back { display: inline-flex; margin-bottom: 32px; color: #475467; font-size: 14px; text-decoration: none; }
+.public-content-back:hover { color: #101828; text-decoration: underline; }
+.public-content-brand { margin: 0 0 8px; color: #667085; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.public-content-shell h1 { margin: 0 0 24px; color: #101828; font-size: clamp(30px, 5vw, 44px); line-height: 1.12; }
+.public-content-copy { color: #344054; font-size: 16px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.public-content-empty { color: #667085; }
+@media (max-width: 600px) { .home-site-footer { align-items: flex-start; flex-direction: column; } .home-footer-page-links { justify-content: flex-start !important; flex: auto; } .public-content-shell { border-radius: 14px; } }

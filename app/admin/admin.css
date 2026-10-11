@@ -711,3 +711,13 @@ th {
   .home-editor-subtabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .home-editor-subtabs button { padding-inline: 6px; }
 }
+
+
+.home-footer-pages { display: grid; gap: 12px; margin: 22px 0 8px; padding: 16px; border: 1px solid #eaecf0; border-radius: 12px; background: #fcfcfd; }
+.home-footer-pages > div:first-child p { margin: 5px 0 0; color: #667085; font-size: 12px; }
+.home-page-toggles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px 16px; }
+.home-page-alignment { max-width: 280px; }
+.home-page-content-field textarea { min-height: 320px; line-height: 1.6; }
+.home-page-note { margin: 14px 0 0; color: #667085; font-size: 12px; line-height: 1.5; }
+.home-page-tabs { margin-top: 4px; }
+@media (max-width: 520px) { .home-page-toggles { grid-template-columns: 1fr; } .home-page-content-field textarea { min-height: 240px; } }

@@ -4,12 +4,15 @@ export type SeasonalTheme = {
 };
 export type HomepageTypography = { fontFamily: string; fontSize: number; bold: boolean; italic: boolean; underline: boolean; alignment: "left" | "center" | "right"; headlineSize: number };
 export type HomepageGameCard = { id: "spin" | "scratch" | "pick-card"; title: string; description: string; action: string; icon: string; imageUrl: string; color: string; textColor: string; height: number; width: number; cornerRadius: number; textAlignment: "left" | "center" | "right" };
+export type ManagedPageSlug = "terms-and-conditions" | "privacy-policy" | "about-us" | "contact-us";
+export type ManagedPage = { title: string; body: string; showInFooter: boolean };
 export type HomepageContent = {
   header: { brand: string; logoUrl: string; showLogo: boolean; showBrand: boolean; announcement: string; showAnnouncement: boolean; navHome: string; navGames: string; navHow: string; navSignIn: string; navGetStarted: string; showHome: boolean; showGames: boolean; showHow: boolean; showSignIn: boolean; showGetStarted: boolean };
   hero: { eyebrow: string; title: string; highlight: string; description: string; primaryCta: string; secondaryCta: string };
   games: { eyebrow: string; title: string; description: string; columns: number; cards: HomepageGameCard[] };
   how: { eyebrow: string; title: string; steps: { title: string; description: string }[] };
-  footer: { copyright: string; termsLabel: string; privacyLabel: string };
+  footer: { copyright: string; termsLabel: string; privacyLabel: string; pageLinksAlignment: "left" | "center" | "right" };
+  pages: Record<ManagedPageSlug, ManagedPage>;
   theme: { primary: string; accent: string; heroBackground: string; pageBackground: string };
   sections: { showHero: boolean; showGames: boolean; showHow: boolean; showFooter: boolean }; typography: Record<"header" | "hero" | "games" | "how" | "footer", HomepageTypography>; seasonalThemes: SeasonalTheme[];
 };
@@ -27,7 +30,13 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
   hero: { eyebrow: "CAMPAIGNS FOR YOUR BUSINESS", title: "Create. Engage.", highlight: "Reward.", description: "Turn Spin & Win, Scratch & Win and Pick a Card into branded campaigns for your customers. Choose a game to start building.", primaryCta: "Explore Games", secondaryCta: "How it works" },
   games: { eyebrow: "GAME ZONE", title: "Choose your game", description: "Choose a game to get started", columns: 3, cards: baseCards },
   how: { eyebrow: "SIMPLE & FAST", title: "How it works", steps: [{ title: "Choose a game", description: "Select Spin, Scratch or Pick a Card for your campaign." }, { title: "Build your campaign", description: "Sign in, customize your game and configure rewards." }, { title: "Publish and share", description: "Review your campaign and share its customer URL." }] },
-  footer: { copyright: "© 2026 Mini Game Hub", termsLabel: "Terms & Conditions", privacyLabel: "Privacy" },
+  footer: { copyright: "© 2026 Mini Game Hub", termsLabel: "Terms & Conditions", privacyLabel: "Privacy", pageLinksAlignment: "center" },
+  pages: {
+    "terms-and-conditions": { title: "Terms and Conditions", body: "", showInFooter: false },
+    "privacy-policy": { title: "Privacy Policy", body: "", showInFooter: false },
+    "about-us": { title: "About Us", body: "", showInFooter: false },
+    "contact-us": { title: "Contact Us", body: "", showInFooter: false },
+  },
   theme: { primary: "#e31b23", accent: "#ff5b61", heroBackground: "#101828", pageBackground: "#f6f7f9" },
   sections: { showHero: true, showGames: true, showHow: true, showFooter: true },
   typography: { header: defaultTypography(), hero: { ...defaultTypography(), headlineSize: 48 }, games: defaultTypography(), how: defaultTypography(), footer: { ...defaultTypography(), fontSize: 13 } }, seasonalThemes: [],
@@ -63,7 +72,13 @@ export function normalizeHomepageContent(input: unknown): HomepageContent {
     hero: { eyebrow: cleanText(value.hero?.eyebrow, base.hero.eyebrow, 80), title: cleanText(value.hero?.title, base.hero.title, 100), highlight: cleanText(value.hero?.highlight, base.hero.highlight, 60), description: cleanText(value.hero?.description, base.hero.description, 500), primaryCta: cleanText(value.hero?.primaryCta, base.hero.primaryCta, 50), secondaryCta: cleanText(value.hero?.secondaryCta, base.hero.secondaryCta, 50) },
     games: { eyebrow: cleanText(value.games?.eyebrow, base.games.eyebrow, 80), title: cleanText(value.games?.title, base.games.title, 100), description: cleanText(value.games?.description, base.games.description, 100), columns: Math.round(cleanNumber(value.games?.columns, base.games.columns, 1, 4)), cards },
     how: { eyebrow: cleanText(value.how?.eyebrow, base.how.eyebrow, 80), title: cleanText(value.how?.title, base.how.title, 100), steps: base.how.steps.map((step, index) => ({ title: cleanText(value.how?.steps?.[index]?.title, step.title, 100), description: cleanText(value.how?.steps?.[index]?.description, step.description, 240) })) },
-    footer: { copyright: cleanText(value.footer?.copyright, base.footer.copyright, 120), termsLabel: cleanText(value.footer?.termsLabel, base.footer.termsLabel, 60), privacyLabel: cleanText(value.footer?.privacyLabel, base.footer.privacyLabel, 60) },
+    footer: { copyright: cleanText(value.footer?.copyright, base.footer.copyright, 120), termsLabel: cleanText(value.footer?.termsLabel, base.footer.termsLabel, 60), privacyLabel: cleanText(value.footer?.privacyLabel, base.footer.privacyLabel, 60), pageLinksAlignment: ["left", "center", "right"].includes(value.footer?.pageLinksAlignment ?? "") ? value.footer!.pageLinksAlignment! : base.footer.pageLinksAlignment },
+    pages: {
+      "terms-and-conditions": { title: cleanText(value.pages?.["terms-and-conditions"]?.title, base.pages["terms-and-conditions"].title, 100), body: cleanText(value.pages?.["terms-and-conditions"]?.body, "", 20000), showInFooter: value.pages?.["terms-and-conditions"]?.showInFooter === true },
+      "privacy-policy": { title: cleanText(value.pages?.["privacy-policy"]?.title, base.pages["privacy-policy"].title, 100), body: cleanText(value.pages?.["privacy-policy"]?.body, "", 20000), showInFooter: value.pages?.["privacy-policy"]?.showInFooter === true },
+      "about-us": { title: cleanText(value.pages?.["about-us"]?.title, base.pages["about-us"].title, 100), body: cleanText(value.pages?.["about-us"]?.body, "", 20000), showInFooter: value.pages?.["about-us"]?.showInFooter === true },
+      "contact-us": { title: cleanText(value.pages?.["contact-us"]?.title, base.pages["contact-us"].title, 100), body: cleanText(value.pages?.["contact-us"]?.body, "", 20000), showInFooter: value.pages?.["contact-us"]?.showInFooter === true },
+    },
     theme: { primary: cleanColor(value.theme?.primary, base.theme.primary), accent: cleanColor(value.theme?.accent, base.theme.accent), heroBackground: cleanColor(value.theme?.heroBackground, base.theme.heroBackground), pageBackground: cleanColor(value.theme?.pageBackground, base.theme.pageBackground) },
     sections: { showHero: value.sections?.showHero !== false, showGames: value.sections?.showGames !== false, showHow: value.sections?.showHow !== false, showFooter: value.sections?.showFooter !== false },
     typography: { header: normalizeTypography(typ?.header, base.typography.header), hero: normalizeTypography(typ?.hero, base.typography.hero), games: normalizeTypography(typ?.games, base.typography.games), how: normalizeTypography(typ?.how, base.typography.how), footer: normalizeTypography(typ?.footer, base.typography.footer) },
