@@ -761,3 +761,172 @@
   .home-public.home-template-wesak .home-game-card h3 { font-size:30px !important; }
   .home-public.home-template-wesak .seasonal-spark { opacity:.3; }
 }
+
+
+/* Wesak refinements from the full-width lantern reference. */
+.home-public.home-template-wesak {
+  min-height:100vh;
+  overflow-x:hidden;
+  background:#fff8e8;
+  background-image:
+    radial-gradient(ellipse at 5% 24%,#fff0c8 0,transparent 30%),
+    radial-gradient(ellipse at 96% 38%,#f8e8bc 0,transparent 32%),
+    linear-gradient(180deg,#fffaf0 0%,#fff3d6 55%,#fffaf0 100%);
+}
+.home-public.home-template-wesak .topbar {
+  width:100%;
+  max-width:none;
+  min-height:68px;
+  padding:8px max(22px,calc((100% - 1200px)/2));
+  background:#fffdf6;
+}
+.home-public.home-template-wesak .hero {
+  width:100%;
+  max-width:none;
+  min-height:310px;
+  margin:0;
+  padding:30px 24px 34px;
+  border-radius:0;
+  box-shadow:none;
+  background-color:transparent;
+  background-image:
+    radial-gradient(ellipse at 5% 108%,#f1e1b8 0 19%,transparent 20%),
+    radial-gradient(ellipse at 28% 116%,#f9eacb 0 21%,transparent 22%),
+    radial-gradient(ellipse at 78% 115%,#f1dfb6 0 24%,transparent 25%),
+    radial-gradient(ellipse at 98% 105%,#faedcf 0 20%,transparent 21%),
+    linear-gradient(180deg,#fff6df 0%,#fff5dd 100%);
+}
+.home-public.home-template-wesak .hero > div:first-child {
+  width:min(100%,760px);
+  max-width:calc(100% - 300px);
+}
+.home-public.home-template-wesak .hero h1 {
+  font-size:clamp(42px,4.3vw,62px) !important;
+  line-height:1;
+}
+.home-public.home-template-wesak .hero p {
+  margin:16px auto 22px;
+  font-size:18px;
+}
+.home-public.home-template-wesak .hero-art {
+  top:8px;
+  right:2%;
+  width:clamp(210px,23vw,310px);
+  opacity:1;
+}
+.home-public.home-template-wesak .games {
+  width:min(100%,1200px);
+  margin:0 auto 42px;
+  padding:0 14px;
+}
+.home-public.home-template-wesak .games .grid {
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:18px;
+}
+.home-public.home-template-wesak .home-game-card {
+  height:350px !important;
+  min-height:350px !important;
+  width:100% !important;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid #fffdf6 !important;
+  border-radius:22px !important;
+  background:#fffaf0 !important;
+  box-shadow:0 12px 28px #8560181c !important;
+}
+.home-public.home-template-wesak .home-game-card .game-visual {
+  height:205px !important;
+  min-height:205px;
+  flex:none;
+  margin:10px 10px 0;
+  border-radius:16px !important;
+}
+.home-public.home-template-wesak .home-game-card .card-body {
+  min-height:0;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  padding:7px 14px 10px;
+  text-align:center !important;
+}
+.home-public.home-template-wesak .home-game-card h3 {
+  margin:0 0 4px;
+  color:#873b13 !important;
+  font-size:clamp(22px,1.9vw,27px) !important;
+  line-height:1.05;
+  white-space:nowrap;
+}
+.home-public.home-template-wesak .home-game-card p {
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  margin:0 0 5px;
+  color:#6a5534 !important;
+  font-size:14px !important;
+  line-height:1.25;
+}
+.home-public.home-template-wesak .home-game-card .play {
+  min-height:40px;
+  width:max-content;
+  min-width:150px;
+  align-self:center;
+  margin-top:auto;
+  padding:8px 20px;
+  border-radius:24px;
+  background:#efa51a !important;
+  color:#fff !important;
+  font-size:16px;
+}
+.home-public.home-template-wesak .seasonal-spark {
+  width:100px;
+  height:100px;
+  top:145px;
+  opacity:.42;
+}
+.home-public.home-template-wesak .seasonal-spark.one { right:9vw; }
+.home-public.home-template-wesak .seasonal-spark.two { left:8vw; top:175px; }
+.home-public.home-template-wesak .seasonal-motif { display:none; }
+@media(max-width:800px) {
+  .home-public.home-template-wesak .topbar {
+    min-height:60px;
+    padding:8px 16px;
+  }
+  .home-public.home-template-wesak .hero {
+    min-height:300px;
+    padding:34px 18px 28px;
+  }
+  .home-public.home-template-wesak .hero > div:first-child {
+    width:100%;
+    max-width:100%;
+    padding-top:60px;
+  }
+  .home-public.home-template-wesak .hero h1 {
+    font-size:clamp(34px,9vw,48px) !important;
+  }
+  .home-public.home-template-wesak .hero-art {
+    top:2px;
+    right:8px;
+    width:112px;
+    opacity:.8;
+  }
+  .home-public.home-template-wesak .games { padding:0 16px; }
+  .home-public.home-template-wesak .games .grid {
+    grid-template-columns:1fr !important;
+    gap:16px;
+  }
+  .home-public.home-template-wesak .home-game-card {
+    height:350px !important;
+    min-height:350px !important;
+  }
+  .home-public.home-template-wesak .home-game-card .game-visual {
+    height:210px !important;
+    min-height:210px;
+  }
+}
+@media(max-width:420px) {
+  .home-public.home-template-wesak .home-game-card h3 { font-size:21px !important; }
+  .home-public.home-template-wesak .home-game-card .play { min-width:138px; }
+}
