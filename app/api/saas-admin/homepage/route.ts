@@ -41,7 +41,7 @@ export async function PATCH(request: Request) {
   try { body = await request.json(); } catch { return reply({ error: "Invalid request." }, 400); }
   if (body.action !== "save" && body.action !== "publish") return reply({ error: "Choose save draft or publish." }, 400);
   const content = normalizeHomepageContent(body.content);
-  const manager = normalizeHomepageManager(body.manager);
+  let manager = normalizeHomepageManager(body.manager);
   for (const page of manager.pages) {
     const start = page.startsAt ? Date.parse(`${page.startsAt}T00:00:00Z`) : NaN;
     const end = page.endsAt ? Date.parse(`${page.endsAt}T23:59:59Z`) : NaN;
@@ -63,6 +63,33 @@ export async function PATCH(request: Request) {
   if (currentHomeError) {
     console.error("Unable to read current homepage content", currentHomeError);
     return reply({ error: "Unable to read the current live homepage. Please retry." }, 500);
+  }
+  let endedSchedules: Array<{ id: string; name: string }> = [];
+  if (body.action === "publish") {
+    const publishingPage = manager.pages.find(page => page.id === publishedPageId);
+    if (publishingPage && !publishingPage.scheduled) {
+      const { data: scheduleRows, error: scheduleError } = await db.from("homepage_drafts")
+        .select("id,name,published,published_scheduled,published_starts_at,published_ends_at");
+      if (scheduleError) {
+        console.error("Unable to check active homepage schedules", scheduleError);
+        return reply({ error: "Unable to check the active page schedule. Please retry." }, 500);
+      }
+      const today = todayColombo();
+      endedSchedules = (scheduleRows ?? [])
+        .filter(row => row.published && row.published_scheduled && row.published_starts_at
+          && row.published_starts_at <= today
+          && (!row.published_ends_at || today <= row.published_ends_at))
+        .map(row => ({ id: row.id, name: row.name }));
+      const endedIds = new Set(endedSchedules.map(page => page.id));
+      if (endedIds.size) {
+        manager = {
+          ...manager,
+          pages: manager.pages.map(page => endedIds.has(page.id)
+            ? { ...page, scheduled: false, updatedAt: now }
+            : page),
+        };
+      }
+    }
   }
   const savedPages = manager.pages.map(page => ({
     id: page.id,
@@ -95,6 +122,15 @@ export async function PATCH(request: Request) {
       console.error("Unable to save published page snapshot", publishPageError ?? "Published page row not found");
       return reply({ error: "Unable to save the page you selected for publishing." }, 500);
     }
+    if (endedSchedules.length) {
+      const { error: scheduleUpdateError } = await db.from("homepage_drafts")
+        .update({ published_scheduled: false })
+        .in("id", endedSchedules.map(page => page.id));
+      if (scheduleUpdateError) {
+        console.error("Unable to end active homepage schedules", scheduleUpdateError);
+        return reply({ error: "The page was saved, but its active schedule could not be ended." }, 500);
+      }
+    }
   }
   const storedManager = { ...manager, pages: [] };
   const values: Record<string, unknown> = {
@@ -115,7 +151,17 @@ export async function PATCH(request: Request) {
     console.error("Unable to save homepage content", error);
     return reply({ error: "Unable to save homepage settings." }, 500);
   }
-  return reply({ saved: true, action: body.action, updatedAt: now, publishedAt: body.action === "publish" ? now : null });
+  return reply({
+    saved: true,
+    action: body.action,
+    updatedAt: now,
+    publishedAt: body.action === "publish" ? now : null,
+    manager,
+    interruptedSchedules: endedSchedules.map(page => page.name),
+    livePageId: body.action === "publish" && !manager.pages.find(page => page.id === publishedPageId)?.scheduled
+      ? publishedPageId
+      : manager.livePageId,
+  });
 }
 
 export async function DELETE(request: Request) {
