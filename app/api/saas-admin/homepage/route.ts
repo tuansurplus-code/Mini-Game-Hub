@@ -58,13 +58,38 @@ export async function PATCH(request: Request) {
   const now = new Date().toISOString();
   const publishedPageId = typeof body.publishedPageId === "string" && manager.pages.some(page => page.id === body.publishedPageId) ? body.publishedPageId : null;
   if (body.action === "publish" && !publishedPageId) return reply({ error: "Save or choose a page before publishing." }, 400);
-  const savedPages = manager.pages.map(page => {
-    const publishingPage = body.action === "publish" && page.id === publishedPageId;
-    return { id: page.id, name: page.name, kind: page.kind, content: page.content, starts_at: page.startsAt || null, ends_at: page.endsAt || null, scheduled: page.scheduled, published: page.published || publishingPage, ...(publishingPage ? { published_content: page.content, published_starts_at: page.startsAt || null, published_ends_at: page.endsAt || null, published_scheduled: page.scheduled } : {}), created_by: actor.user.id, updated_at: page.updatedAt };
-  });
+  const savedPages = manager.pages.map(page => ({
+    id: page.id,
+    name: page.name,
+    kind: page.kind,
+    content: page.content,
+    starts_at: page.startsAt || null,
+    ends_at: page.endsAt || null,
+    scheduled: page.scheduled,
+    published: page.published || (body.action === "publish" && page.id === publishedPageId),
+    created_by: actor.user.id,
+    updated_at: page.updatedAt,
+  }));
+  const db = createSupabaseAdminClient();
   if (savedPages.length) {
-    const { error: draftsError } = await createSupabaseAdminClient().from("homepage_drafts").upsert(savedPages, { onConflict: "id" });
-    if (draftsError) return reply({ error: "Unable to save page templates." }, 500);
+    const { error: draftsError } = await db.from("homepage_drafts").upsert(savedPages, { onConflict: "id" });
+    if (draftsError) {
+      console.error("Unable to save page templates", draftsError);
+      return reply({ error: "Unable to save page templates." }, 500);
+    }
+  }
+  if (body.action === "publish" && publishedPageId) {
+    const publishingPage = manager.pages.find(page => page.id === publishedPageId)!;
+    const { data: publishedRow, error: publishPageError } = await db.from("homepage_drafts").update({
+      published_content: publishingPage.content,
+      published_starts_at: publishingPage.startsAt || null,
+      published_ends_at: publishingPage.endsAt || null,
+      published_scheduled: publishingPage.scheduled,
+    }).eq("id", publishedPageId).select("id").maybeSingle();
+    if (publishPageError || !publishedRow) {
+      console.error("Unable to save published page snapshot", publishPageError ?? "Published page row not found");
+      return reply({ error: "Unable to save the page you selected for publishing." }, 500);
+    }
   }
   const storedManager = { ...manager, pages: [] };
   const values: Record<string, unknown> = { draft: content, manager: storedManager, updated_by: actor.user.id, updated_at: now };
@@ -73,14 +98,9 @@ export async function PATCH(request: Request) {
     values.published_at = now;
     values.published_manager = storedManager;
   }
-  const { data: savedHomepage, error } = await createSupabaseAdminClient()
-    .from("homepage_content")
-    .update(values)
-    .eq("id", true)
-    .select("id")
-    .maybeSingle();
-  if (error || !savedHomepage) {
-    console.error("Unable to save homepage content", error ?? "Homepage row not found");
+  const { error } = await createSupabaseAdminClient().from("homepage_content").upsert({ id: true, ...values }, { onConflict: "id" });
+  if (error) {
+    console.error("Unable to save homepage content", error);
     return reply({ error: "Unable to save homepage settings." }, 500);
   }
   return reply({ saved: true, action: body.action, updatedAt: now, publishedAt: body.action === "publish" ? now : null });
