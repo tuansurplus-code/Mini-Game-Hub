@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getPlatformAdmin } from "../../../../lib/platform-auth";
 import { normalizeHomepageManager } from "../../../../lib/homepage-content";
 import { createSupabaseAdminClient } from "../../../../lib/supabase-admin";
+import { sanitizeRichText } from "../../../../lib/rich-text";
 
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
 const slugs = ["terms", "privacy", "about", "contact"] as const;
@@ -17,7 +18,8 @@ export async function GET() {
     db.from("homepage_content").select("manager").eq("id", true).maybeSingle(),
   ]);
   if (error) return json({ error: "Unable to load content pages." }, 500);
-  return json({ pages: data, theme: normalizeHomepageManager(home?.manager).siteTheme, canEdit: ["owner", "admin"].includes(actor.role) });
+  const pages = (data ?? []).map((page) => ({ ...page, draft: { ...page.draft, body: sanitizeRichText(page.draft?.body ?? "") }, published: { ...page.published, body: sanitizeRichText(page.published?.body ?? "") } }));
+  return json({ pages, theme: normalizeHomepageManager(home?.manager).siteTheme, canEdit: ["owner", "admin"].includes(actor.role) });
 }
 
 export async function PATCH(request: Request) {
@@ -30,7 +32,7 @@ export async function PATCH(request: Request) {
   const slug = body.slug as Slug;
   const content = body.content && typeof body.content === "object" ? body.content as Record<string, unknown> : {};
   const cleanText = (v: unknown, limit: number) => typeof v === "string" ? v.slice(0, limit) : "";
-  const pageContent: { body: string; fields?: FormField[] } = { body: cleanText(content.body, 100000) };
+  const pageContent: { body: string; fields?: FormField[] } = { body: sanitizeRichText(cleanText(content.body, 100000)) };
   if (slug === "contact") {
     const fields = Array.isArray(content.fields) ? content.fields.slice(0, 20) : [];
     const ids = new Set<string>();

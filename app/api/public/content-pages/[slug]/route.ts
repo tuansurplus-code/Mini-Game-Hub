@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { normalizeHomepageManager } from "../../../../../lib/homepage-content";
 import { createSupabaseAdminClient } from "../../../../../lib/supabase-admin";
+import { sanitizeRichText } from "../../../../../lib/rich-text";
 
 export async function GET(_request: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params;
@@ -11,5 +12,6 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
     db.from("homepage_content").select("published_manager").eq("id", true).maybeSingle(),
   ]);
   if (error || !page) return NextResponse.json({ error: "Page not found." }, { status: 404 });
-  return NextResponse.json({ page, theme: normalizeHomepageManager(home?.published_manager).siteTheme }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
+  const safePage = { ...page, published: { ...page.published, body: sanitizeRichText(page.published?.body ?? "") } };
+  return NextResponse.json({ page: safePage, theme: normalizeHomepageManager(home?.published_manager).siteTheme }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
 }
