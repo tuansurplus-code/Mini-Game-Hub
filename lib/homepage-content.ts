@@ -14,6 +14,26 @@ export type HomepageContent = {
   sections: { showHero: boolean; showGames: boolean; showHow: boolean; showFooter: boolean }; typography: Record<"header" | "hero" | "games" | "how" | "footer", HomepageTypography>; seasonalThemes: SeasonalTheme[];
 };
 export type SavedHomepagePage = { id: string; name: string; kind: "custom" | "wesak" | "christmas" | "ramadan" | "new-year"; content: HomepageContent; startsAt: string; endsAt: string; scheduled: boolean; published: boolean; createdAt: string; updatedAt: string };
+export const TEMPLATE_ARTWORK_CROPS = {
+  wesak: { hero: [695, 20, 265, 210], spin: [144, 243, 208, 178], scratch: [389, 245, 199, 171], "pick-card": [627, 245, 191, 171] },
+  christmas: { spin: [80, 289, 241, 123], scratch: [370, 288, 226, 125], "pick-card": [640, 288, 239, 125] },
+  ramadan: { hero: [610, 23, 292, 226], spin: [151, 250, 203, 190], scratch: [393, 249, 204, 188], "pick-card": [637, 251, 176, 190] },
+  "new-year": { hero: [515, 25, 445, 255], spin: [88, 291, 246, 136], scratch: [362, 291, 237, 136], "pick-card": [627, 291, 252, 136] },
+} as const;
+export function getTemplateArtworkStyle(url: string): Record<string, string> | null {
+  const match = url.match(/^\\/template-previews\\/(wesak|christmas|ramadan|new-year)\\.svg\\?crop=(hero|spin|scratch|pick-card)$/);
+  if (!match) return null;
+  const [, kind, area] = match;
+  const box = TEMPLATE_ARTWORK_CROPS[kind as keyof typeof TEMPLATE_ARTWORK_CROPS][area as keyof typeof TEMPLATE_ARTWORK_CROPS[keyof typeof TEMPLATE_ARTWORK_CROPS]];
+  if (!box) return null;
+  const [x, y, width, height] = box;
+  return {
+    backgroundImage: `url("/template-previews/${kind}.svg")`,
+    backgroundSize: `${(960 / width) * 100}% auto`,
+    backgroundPosition: `${(x / (960 - width)) * 100}% ${(y / (601 - height)) * 100}%`,
+    backgroundRepeat: "no-repeat",
+  };
+}
 export type HomepageSiteTheme = { preset: "clean-white" | "soft-sky" | "sage-cream" | "warm-sunset" | "lavender-mist" | "custom"; colors: { primary: string; accent: string; heroBackground: string; pageBackground: string; cardBackground: string; footerBackground: string }; fonts: { header: string; body: string; footer: string } };
 export type HomepageManagerData = { pages: SavedHomepagePage[]; livePageId: string | null; defaultPageId: string | null; siteTheme: HomepageSiteTheme };
 export const DEFAULT_SITE_THEME: HomepageSiteTheme = { preset: "clean-white", colors: { primary: "#e31b23", accent: "#ff5b61", heroBackground: "#101828", pageBackground: "#f6f7f9", cardBackground: "#ffffff", footerBackground: "#101828" }, fonts: { header: "Arial, sans-serif", body: "Arial, sans-serif", footer: "Arial, sans-serif" } };
