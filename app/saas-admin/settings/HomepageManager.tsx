@@ -117,7 +117,12 @@ export default function HomepageManager() {
       } else setManager(nextManager);
       setActivePageId(id);
       setMetadata((m) => ({ ...m, updatedAt: result.updatedAt, publishedAt: result.publishedAt ?? m.publishedAt, livePageId }));
-      setStatus(action === "publish" ? `${name} published.` : `${name} saved as a draft.`);
+      const endedScheduleMessage = Array.isArray(result.interruptedSchedules) && result.interruptedSchedules.length
+        ? ` Active schedule ended for ${result.interruptedSchedules.join(", ")}.`
+        : "";
+      setStatus(action === "publish"
+        ? page.scheduled ? `${name} published and scheduled.` : `${name} published and set live.${endedScheduleMessage}`
+        : `${name} saved as a draft.`);
     }
     catch (e) { setStatus(e instanceof Error ? e.message : "Unable to save settings."); } finally { setBusy(false); }
   }
@@ -140,14 +145,19 @@ export default function HomepageManager() {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Unable to publish this page.");
-      setManager(nextManager);
+      setManager(result.manager ?? nextManager);
       setMetadata((current) => ({
         ...current,
         updatedAt: result.updatedAt ?? now,
         publishedAt: result.publishedAt ?? now,
-        livePageId: page.scheduled ? current.livePageId : page.id,
+        livePageId: result.livePageId ?? (page.scheduled ? current.livePageId : page.id),
       }));
-      setStatus(page.scheduled ? `${page.name} published and scheduled.` : `${page.name} published and set live.`);
+      const endedScheduleMessage = Array.isArray(result.interruptedSchedules) && result.interruptedSchedules.length
+        ? ` Active schedule ended for ${result.interruptedSchedules.join(", ")}.`
+        : "";
+      setStatus(page.scheduled
+        ? `${page.name} published and scheduled.`
+        : `${page.name} published and set live.${endedScheduleMessage}`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Unable to publish this page.");
     } finally { setBusy(false); }
