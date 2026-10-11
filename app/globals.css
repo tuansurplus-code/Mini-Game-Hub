@@ -538,3 +538,10 @@
 .home-public.home-template-christmas .seasonal-flake { color:#78c4dc !important; }
 .home-public.home-template-christmas .seasonal-flake path { fill:none; stroke:#78c4dc; stroke-width:4.5; stroke-linecap:square; stroke-linejoin:miter; filter:drop-shadow(0 1px 1px #fff); }
 .home-public.home-template-christmas .seasonal-flake circle { stroke:none; }
+
+/* Animate the provided transparent Santa and sleigh artwork across the Christmas page. */
+.home-public.home-template-christmas .seasonal-santa { display:block; position:absolute; left:0; top:auto; bottom:18px; width:clamp(180px,22vw,310px); height:auto; aspect-ratio:auto; opacity:.94; transform:translateX(-100%); animation:christmas-sleigh-flight 36s linear infinite; background:none; background-image:none; background-size:contain; background-repeat:no-repeat; will-change:transform; }
+.home-public.home-template-christmas .seasonal-santa img { display:block; width:100%; height:auto; }
+@keyframes christmas-sleigh-flight { from { transform:translateX(-100%); } to { transform:translateX(calc(100vw + 310px)); } }
+@media (max-width:800px) { .home-public.home-template-christmas .seasonal-santa { width:180px; bottom:12px; } }
+@media (prefers-reduced-motion:reduce) { .home-public.home-template-christmas .seasonal-santa { animation:none; left:auto; right:12px; transform:none; } }
