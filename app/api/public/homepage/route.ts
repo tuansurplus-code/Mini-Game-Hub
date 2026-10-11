@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { normalizeHomepageContent, normalizeHomepageManager } from "../../../../lib/homepage-content";
 import { createSupabaseAdminClient } from "../../../../lib/supabase-admin";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   try {
@@ -29,7 +30,7 @@ export async function GET() {
     content.typography.games.fontFamily = fonts.body;
     content.typography.how.fontFamily = fonts.body;
     return NextResponse.json({ content, pageName: page?.name ?? "Homepage", pageKind: page?.kind ?? "custom" }, {
-      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
+      headers: { "Cache-Control": "no-store, max-age=0" },
     });
   } catch (error) {
     console.error("Unable to load published homepage content", error);
