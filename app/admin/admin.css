@@ -249,11 +249,12 @@ th {
 .homepage-preview { --home-primary:#e31b23; --home-accent:#ff5b61; --home-hero:#101828; --home-bg:#f6f7f9; overflow:hidden; border:1px solid #eaecf0; border-radius:12px; background:var(--home-bg); font-family:inherit; }
 .homepage-preview>header { padding:13px 14px; border-bottom:1px solid #eaecf0; background:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }
 .preview-announcement { padding:8px 12px; text-align:center; background:var(--home-primary); color:#fff; font-size:9px; }
-.preview-hero { margin:10px; padding:19px 16px; border-radius:12px; color:#fff; background:var(--home-hero); }
-.preview-hero small,.preview-body>small { color:#98a2b3; font-size:8px; font-weight:900; letter-spacing:.1em; }
+.preview-hero { margin:10px; padding:19px 16px; border-radius:12px; color:var(--home-hero-text,#fff); background:var(--home-hero); }
+.preview-hero small { color:var(--home-primary); font-size:8px; font-weight:900; letter-spacing:.1em; }
+.preview-body>small { color:#7b8492; font-size:8px; font-weight:900; letter-spacing:.1em; }
 .preview-hero h3 { margin:12px 0 8px; font-size:25px; line-height:1.05; }
-.preview-hero h3 b { color:var(--home-accent); }
-.preview-hero p { margin:0 0 12px; color:#d0d5dd; font-size:9px; line-height:1.5; }
+.preview-hero h3 em { color:var(--home-accent); font-style:normal; }
+.preview-hero p { margin:0 0 12px; color:color-mix(in srgb,var(--home-hero-text,#fff) 76%,transparent); font-size:9px; line-height:1.5; }
 .preview-hero button { border-radius:7px; padding:8px 10px; background:var(--home-primary); color:#fff; font-size:9px; font-weight:800; }
 .preview-body { padding:10px 16px 18px; }
 .preview-body>small { color:#7b8492; }
