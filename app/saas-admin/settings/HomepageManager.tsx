@@ -124,7 +124,7 @@ export default function HomepageManager() {
     const next = structuredClone(DEFAULT_HOMEPAGE_CONTENT);
     next.seasonalThemes = [];
     if (kind === "custom") {
-      next.hero = { eyebrow: "", title: "", highlight: "", description: "", primaryCta: "Get started", secondaryCta: "How it works" };
+      next.hero = { eyebrow: "", title: "", highlight: "", description: "", primaryCta: "Get started", secondaryCta: "How it works", backgroundImageUrl: "" };
       next.games = { eyebrow: "", title: "", description: "", columns: 3, cards: [] };
       next.how = { eyebrow: "", title: "", steps: [] };
     }
