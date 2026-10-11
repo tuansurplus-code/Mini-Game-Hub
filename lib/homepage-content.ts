@@ -21,7 +21,7 @@ export const TEMPLATE_ARTWORK_CROPS = {
   "new-year": { hero: [515, 25, 445, 255], spin: [88, 291, 246, 136], scratch: [362, 291, 237, 136], "pick-card": [627, 291, 252, 136] },
 } as const;
 export function getTemplateArtworkStyle(url: string): Record<string, string> | null {
-  const match = url.match(/^\\/template-previews\\/(wesak|christmas|ramadan|new-year)\\.svg\\?crop=(hero|spin|scratch|pick-card)$/);
+  const match = url.match(/^\/template-previews\/(wesak|christmas|ramadan|new-year)\.svg\?crop=(hero|spin|scratch|pick-card)$/);
   if (!match) return null;
   const [, kind, area] = match;
   const box = TEMPLATE_ARTWORK_CROPS[kind as keyof typeof TEMPLATE_ARTWORK_CROPS][area as keyof typeof TEMPLATE_ARTWORK_CROPS[keyof typeof TEMPLATE_ARTWORK_CROPS]];
