@@ -73,9 +73,14 @@ export async function PATCH(request: Request) {
     values.published_at = now;
     values.published_manager = storedManager;
   }
-  const { error } = await createSupabaseAdminClient().from("homepage_content").upsert({ id: true, ...values }, { onConflict: "id" });
-  if (error) {
-    console.error("Unable to save homepage content", error);
+  const { data: savedHomepage, error } = await createSupabaseAdminClient()
+    .from("homepage_content")
+    .update(values)
+    .eq("id", true)
+    .select("id")
+    .maybeSingle();
+  if (error || !savedHomepage) {
+    console.error("Unable to save homepage content", error ?? "Homepage row not found");
     return reply({ error: "Unable to save homepage settings." }, 500);
   }
   return reply({ saved: true, action: body.action, updatedAt: now, publishedAt: body.action === "publish" ? now : null });
