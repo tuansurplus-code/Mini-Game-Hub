@@ -16,12 +16,12 @@ export type HomepageContent = {
 export type SavedHomepagePage = { id: string; name: string; kind: "custom" | "wesak" | "christmas" | "ramadan" | "new-year"; content: HomepageContent; startsAt: string; endsAt: string; scheduled: boolean; published: boolean; createdAt: string; updatedAt: string };
 export const TEMPLATE_ARTWORK_CROPS = {
   wesak: { hero: [695, 20, 265, 210], spin: [144, 243, 208, 178], scratch: [389, 245, 199, 171], "pick-card": [627, 245, 191, 171] },
-  christmas: { spin: [80, 289, 241, 123], scratch: [370, 288, 226, 125], "pick-card": [640, 288, 239, 125] },
+  christmas: { spin: [80, 289, 241, 123], scratch: [370, 288, 226, 125], "pick-card": [640, 288, 239, 125], sleigh: [390, 543, 265, 52] },
   ramadan: { hero: [610, 23, 292, 226], spin: [151, 250, 203, 190], scratch: [393, 249, 204, 188], "pick-card": [637, 251, 176, 190] },
   "new-year": { hero: [515, 25, 445, 255], spin: [88, 291, 246, 136], scratch: [362, 291, 237, 136], "pick-card": [627, 291, 252, 136] },
 } as const;
 export function getTemplateArtworkStyle(url: string): Record<string, string> | null {
-  const match = url.match(/^\/template-previews\/(wesak|christmas|ramadan|new-year)\.svg\?crop=(hero|spin|scratch|pick-card)$/);
+  const match = url.match(/^\/template-previews\/(wesak|christmas|ramadan|new-year)\.svg\?crop=(hero|spin|scratch|pick-card|sleigh)$/);
   if (!match) return null;
   const [, kind, area] = match;
   const box = TEMPLATE_ARTWORK_CROPS[kind as keyof typeof TEMPLATE_ARTWORK_CROPS][area as keyof typeof TEMPLATE_ARTWORK_CROPS[keyof typeof TEMPLATE_ARTWORK_CROPS]];
