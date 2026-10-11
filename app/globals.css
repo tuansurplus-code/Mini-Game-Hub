@@ -44,4 +44,5 @@
 .home-template-christmas .seasonal-motif { color:#b64038; }
 .home-template-ramadan .seasonal-spark { opacity:.48; }
 .home-template-wesak .seasonal-spark { opacity:.52; }
-\n@media(max-width:800px){.homepage-preview .preview-hero:has(.preview-hero-art){grid-template-columns:1fr}.preview-hero-art{max-height:180px}}\n
+
+@media(max-width:800px){.homepage-preview .preview-hero:has(.preview-hero-art){grid-template-columns:1fr}.preview-hero-art{max-height:180px}}
