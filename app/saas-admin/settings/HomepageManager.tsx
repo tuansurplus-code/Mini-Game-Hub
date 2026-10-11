@@ -22,10 +22,10 @@ const READY_TEMPLATES = [
   { kind: "new-year", name: "New Year", note: "The finalized fireworks design in cool blue with bright celebration colors.", preview: "/template-previews/new-year.svg" },
 ] as const;
 const THEME_COLORS: Record<SeasonalTheme["preset"], Pick<SeasonalTheme, "primary" | "accent" | "heroBackground" | "pageBackground">> = {
-  christmas: { primary: "#b4232c", accent: "#35a36b", heroBackground: "#163529", pageBackground: "#f4f8f4" },
-  "new-year": { primary: "#a77812", accent: "#f2cc63", heroBackground: "#182039", pageBackground: "#f7f6f1" },
-  ramadan: { primary: "#14816f", accent: "#d9b45a", heroBackground: "#123b3a", pageBackground: "#f3f8f5" },
-  wesak: { primary: "#bf542d", accent: "#efae31", heroBackground: "#71351f", pageBackground: "#fff7df" },
+  christmas: { primary: "#b64038", accent: "#3e634f", heroBackground: "#fbf7f1", pageBackground: "#fffdfa" },
+  "new-year": { primary: "#10b7df", accent: "#ed4b9b", heroBackground: "#edf6ff", pageBackground: "#f8fbff" },
+  ramadan: { primary: "#315d50", accent: "#d9ad50", heroBackground: "#f0f3e9", pageBackground: "#fbfaf4" },
+  wesak: { primary: "#e9a21c", accent: "#c95a28", heroBackground: "#fff5df", pageBackground: "#fffbf2" },
   custom: { primary: "#e31b23", accent: "#ff5b61", heroBackground: "#101828", pageBackground: "#f6f7f9" },
 };
 function TextField({ label, value, onChange, multiline = false }: { label: string; value: string; onChange: (value: string) => void; multiline?: boolean }) {
@@ -129,10 +129,19 @@ export default function HomepageManager() {
         "new-year": { eyebrow: "NEW YEAR SPECIAL", title: "Start the year", highlight: "with a win.", description: "Welcome the new year with games and rewards for your customers." },
       };
       Object.assign(next.hero, copy[kind]);
+      const colors = THEME_COLORS[kind];
+      next.theme = { ...colors };
+      const cardColors: Record<Exclude<SavedHomepagePage["kind"], "custom">, string[]> = {
+        wesak: ["#fff1ce", "#fff8e8", "#f8ecd7"],
+        christmas: ["#f4eee6", "#fbf4eb", "#f2eee7"],
+        ramadan: ["#eef2e5", "#fbf5e7", "#edf1e8"],
+        "new-year": ["#eaf4ff", "#f8eafb", "#e7f7ff"],
+      };
+      next.games.cards = next.games.cards.map((card, index) => ({ ...card, color: cardColors[kind][index % cardColors[kind].length], textColor: "#24334a", cornerRadius: 20 }));
     }
     const now = new Date().toISOString(); const id = crypto.randomUUID();
     const page: SavedHomepagePage = { id, name, kind, content: next, startsAt: "", endsAt: "", scheduled: false, published: false, createdAt: now, updatedAt: now };
-    setContent(next); setActivePageId(id); setPageName(name); setManager((m) => ({ ...m, pages: [...m.pages, page] })); setActivePanel("editor"); setEditorSection("header"); setStatus(`${name} is ready. Edit it below, then save as a draft.`);
+    setContent(next); setActivePageId(id); setPageName(name); setManager((m) => ({ ...m, ...(kind !== "custom" ? { siteTheme: { ...m.siteTheme, preset: "custom", colors: { ...m.siteTheme.colors, ...THEME_COLORS[kind] } } } : {}), pages: [...m.pages, page] })); setActivePanel("editor"); setEditorSection("header"); setStatus(`${name} is ready with its seasonal colors. Preview it, then save as a draft.`);
   }
   function loadPage(page: SavedHomepagePage) { setContent(structuredClone(page.content)); setActivePageId(page.id); setPageName(page.name); setActivePanel("editor"); setEditorSection("header"); setStatus(`${page.name} loaded into the editor.`); }
   function editPage(page: SavedHomepagePage) { if (page.published) { newPage(page.kind, `${page.name} draft`); setContent(structuredClone(page.content)); } else loadPage(page); }
