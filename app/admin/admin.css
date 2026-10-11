@@ -724,7 +724,7 @@ th {
 .home-theme-dots { display:flex; }
 .home-theme-dots i { width:22px; height:22px; border-radius:50%; border:2px solid #fff; margin-right:-5px; box-shadow:0 0 0 1px #d0d5dd; }
 .home-type-theme { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:18px; }
-.home-schedule-row { display:grid; grid-template-columns:minmax(180px,1fr) repeat(2,minmax(150px,220px)); gap:12px; align-items:end; border-top:1px solid #eaecf0; padding:14px 0; }
+.home-schedule-row { display:grid; grid-template-columns:minmax(180px,1fr) repeat(2,minmax(150px,220px)) auto; gap:12px; align-items:end; border-top:1px solid #eaecf0; padding:14px 0 0; flex:1 0 100%; width:100%; }
 .home-top-actions { align-items:flex-end; }
 .homepage-top-actions { align-items:flex-end; max-width:750px; }
 .home-link-button { display:inline-flex; text-decoration:none; align-items:center; }
