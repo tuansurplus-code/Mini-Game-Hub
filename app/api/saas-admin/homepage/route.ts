@@ -39,7 +39,7 @@ export async function PATCH(request: Request) {
   if (!actor || !["owner", "admin"].includes(actor.role)) return reply({ error: "Only Super Admins and Admins can change homepage settings." }, 403);
   let body: { content?: unknown; manager?: unknown; action?: unknown; publishedPageId?: unknown };
   try { body = await request.json(); } catch { return reply({ error: "Invalid request." }, 400); }
-  if (body.action !== "save" && body.action !== "publish") return reply({ error: "Choose save draft or publish." }, 400);
+  if (body.action !== "save" && body.action !== "publish" && body.action !== "unpublish") return reply({ error: "Choose save draft, publish, or unpublish." }, 400);
   const content = normalizeHomepageContent(body.content);
   let manager = normalizeHomepageManager(body.manager);
   for (const page of manager.pages) {
@@ -57,7 +57,7 @@ export async function PATCH(request: Request) {
   }
   const now = new Date().toISOString();
   const publishedPageId = typeof body.publishedPageId === "string" && manager.pages.some(page => page.id === body.publishedPageId) ? body.publishedPageId : null;
-  if (body.action === "publish" && !publishedPageId) return reply({ error: "Save or choose a page before publishing." }, 400);
+  if ((body.action === "publish" || body.action === "unpublish") && !publishedPageId) return reply({ error: "Choose a saved page first." }, 400);
   const db = createSupabaseAdminClient();
   const { data: currentHome, error: currentHomeError } = await db.from("homepage_content").select("published,published_at").eq("id", true).maybeSingle();
   if (currentHomeError) {
@@ -99,7 +99,7 @@ export async function PATCH(request: Request) {
     starts_at: page.startsAt || null,
     ends_at: page.endsAt || null,
     scheduled: page.scheduled,
-    published: page.published || (body.action === "publish" && page.id === publishedPageId),
+    published: body.action === "unpublish" && page.id === publishedPageId ? false : page.published || (body.action === "publish" && page.id === publishedPageId),
     created_by: actor.user.id,
     updated_at: page.updatedAt,
   }));
@@ -108,6 +108,13 @@ export async function PATCH(request: Request) {
     if (draftsError) {
       console.error("Unable to save page templates", draftsError);
       return reply({ error: "Unable to save page templates." }, 500);
+    }
+  }
+  if (body.action === "unpublish" && publishedPageId) {
+    const { error: unpublishError } = await db.from("homepage_drafts").update({ published: false, published_content: null, published_starts_at: null, published_ends_at: null, published_scheduled: false }).eq("id", publishedPageId);
+    if (unpublishError) {
+      console.error("Unable to unpublish homepage page", unpublishError);
+      return reply({ error: "Unable to unpublish this page." }, 500);
     }
   }
   if (body.action === "publish" && publishedPageId) {
@@ -132,10 +139,27 @@ export async function PATCH(request: Request) {
       }
     }
   }
+  let defaultStyle = false;
+  let remainingPublished: Array<{ id: string; published_scheduled: boolean; published_content: unknown }> = [];
+  if (body.action === "unpublish") {
+    const { data: rows, error: remainingError } = await db.from("homepage_drafts")
+      .select("id,published,published_scheduled,published_content");
+    if (remainingError) return reply({ error: "Page unpublished, but live homepage status could not be refreshed." }, 500);
+    remainingPublished = (rows ?? []).filter(row => row.published && row.published_content != null);
+    const remainingIds = new Set(remainingPublished.map(row => row.id));
+    const preferredDefault = manager.defaultPageId && remainingIds.has(manager.defaultPageId) ? manager.defaultPageId : null;
+    const preferredLive = manager.livePageId && remainingIds.has(manager.livePageId) ? manager.livePageId : null;
+    const nextDefault = preferredDefault ?? preferredLive ?? remainingPublished.find(row => !row.published_scheduled)?.id ?? null;
+    manager = { ...manager, defaultPageId: nextDefault, livePageId: nextDefault };
+    defaultStyle = remainingPublished.length === 0;
+  }
   const storedManager = { ...manager, pages: [] };
+  const fallbackPage = remainingPublished.find(row => row.id === manager.defaultPageId);
   const values: Record<string, unknown> = {
     draft: content,
-    published: body.action === "publish" ? content : currentHome?.published ?? normalizeHomepageContent(null),
+    published: body.action === "publish" ? content
+      : body.action === "unpublish" ? (fallbackPage?.published_content ?? normalizeHomepageContent(null))
+      : currentHome?.published ?? normalizeHomepageContent(null),
     manager: storedManager,
     updated_by: actor.user.id,
     updated_at: now,
@@ -143,6 +167,9 @@ export async function PATCH(request: Request) {
   if (body.action === "publish") {
     values.published_at = now;
     values.published_manager = storedManager;
+  } else if (body.action === "unpublish") {
+    values.published_manager = storedManager;
+    values.published_at = remainingPublished.length ? currentHome?.published_at ?? now : null;
   } else if (currentHome?.published_at) {
     values.published_at = currentHome.published_at;
   }
@@ -157,6 +184,7 @@ export async function PATCH(request: Request) {
     updatedAt: now,
     publishedAt: body.action === "publish" ? now : null,
     manager,
+    defaultStyle,
     interruptedSchedules: endedSchedules.map(page => page.name),
     livePageId: body.action === "publish" && !manager.pages.find(page => page.id === publishedPageId)?.scheduled
       ? publishedPageId
