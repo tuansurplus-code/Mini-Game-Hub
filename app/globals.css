@@ -532,3 +532,9 @@
   .home-public.home-template-ramadan .games .grid,
   .home-public.home-template-wesak .games .grid { grid-template-columns:1fr; }
 }
+
+/* Christmas card sizing and snowflake design from the approved reference. */
+.home-public.home-template-christmas .home-game-card { height:350px !important; min-height:350px !important; }
+.home-public.home-template-christmas .seasonal-flake { color:#78c4dc !important; }
+.home-public.home-template-christmas .seasonal-flake path { fill:none; stroke:#78c4dc; stroke-width:4.5; stroke-linecap:square; stroke-linejoin:miter; filter:drop-shadow(0 1px 1px #fff); }
+.home-public.home-template-christmas .seasonal-flake circle { stroke:none; }
