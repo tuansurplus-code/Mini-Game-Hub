@@ -141,3 +141,30 @@
   .seasonal-moon,.seasonal-star { opacity:.16; }
   .seasonal-sleigh { font-size:18px; }
 }
+
+
+/* Stronger seasonal styling to match the selected theme mockups while keeping content clear. */
+.home-public { position:relative; isolation:isolate; overflow:clip; }
+.home-public > .seasonal-effects { inset:0; }
+.home-public[data-season] .home-game-card { box-shadow:0 12px 34px color-mix(in srgb,var(--home-primary) 10%,transparent); }
+.home-public[data-season] .home-game-card .game-visual small { color:var(--home-primary); opacity:.9; }
+.home-public[data-season] .game-visual::after { opacity:.28; }
+.seasonal-snow { color:#d6efff; opacity:.95; font-size:24px; text-shadow:0 1px 8px rgba(75,130,170,.3); }
+.seasonal-snow.snow-two,.seasonal-snow.snow-four { font-size:18px; }
+.seasonal-sleigh { z-index:2; font-size:32px; filter:drop-shadow(0 2px 3px rgba(90,40,40,.18)); }
+.seasonal-moon { color:#a9852f; opacity:.42; font-size:48px; text-shadow:0 2px 14px rgba(185,150,65,.2); }
+.seasonal-star { color:#bc922d; opacity:.56; font-size:21px; text-shadow:0 1px 9px rgba(185,150,65,.25); }
+.seasonal-lantern { opacity:.55; font-size:30px; filter:drop-shadow(0 3px 6px rgba(140,110,45,.15)); }
+.seasonal-firework { opacity:.56; font-size:48px; text-shadow:0 0 18px color-mix(in srgb,currentColor 36%,transparent); }
+.seasonal-ribbon { opacity:.62; font-size:38px; text-shadow:0 2px 8px color-mix(in srgb,currentColor 22%,transparent); }
+.seasonal-wesak-lantern,.seasonal-lotus,.seasonal-temple,.seasonal-lamp { opacity:.58; font-size:34px; filter:drop-shadow(0 3px 7px rgba(140,90,20,.18)); }
+.seasonal-wesak-lantern { color:#dc8b10; }
+.seasonal-lotus { color:#cc4b46; }
+.seasonal-temple { color:#df8d22; }
+.seasonal-lamp { color:#e3a31c; }
+@media(max-width:600px) {
+ .seasonal-moon { font-size:34px; }
+ .seasonal-firework { font-size:34px; }
+ .seasonal-ribbon { font-size:30px; }
+ .seasonal-wesak-lantern,.seasonal-lotus,.seasonal-temple,.seasonal-lamp { font-size:25px; opacity:.52; }
+}
