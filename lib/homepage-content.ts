@@ -6,6 +6,8 @@ export type HomepageTypography = { fontFamily: string; fontSize: number; bold: b
 export type HomepageGameCard = { id: "spin" | "scratch" | "pick-card"; title: string; description: string; action: string; icon: string; imageUrl: string; color: string; textColor: string; height: number; width: number; cornerRadius: number; textAlignment: "left" | "center" | "right" };
 export type ManagedPageSlug = "terms-and-conditions" | "privacy-policy" | "about-us" | "contact-us";
 export type ManagedPage = { title: string; body: string; showInFooter: boolean };
+export type ContactFormField = { id: string; label: string; type: "text" | "email" | "phone" | "select" | "textarea"; required: boolean; enabled: boolean; options: string[] };
+export type ContactFormConfig = { intro: string; submitLabel: string; fields: ContactFormField[] };
 export type HomepageContent = {
   header: { brand: string; logoUrl: string; showLogo: boolean; showBrand: boolean; announcement: string; showAnnouncement: boolean; navHome: string; navGames: string; navHow: string; navSignIn: string; navGetStarted: string; showHome: boolean; showGames: boolean; showHow: boolean; showSignIn: boolean; showGetStarted: boolean };
   hero: { eyebrow: string; title: string; highlight: string; description: string; primaryCta: string; secondaryCta: string };
@@ -13,6 +15,7 @@ export type HomepageContent = {
   how: { eyebrow: string; title: string; steps: { title: string; description: string }[] };
   footer: { copyright: string; termsLabel: string; privacyLabel: string; pageLinksAlignment: "left" | "center" | "right" };
   pages: Record<ManagedPageSlug, ManagedPage>;
+  contactForm: ContactFormConfig;
   theme: { primary: string; accent: string; heroBackground: string; pageBackground: string };
   sections: { showHero: boolean; showGames: boolean; showHow: boolean; showFooter: boolean }; typography: Record<"header" | "hero" | "games" | "how" | "footer", HomepageTypography>; seasonalThemes: SeasonalTheme[];
 };
@@ -36,6 +39,17 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     "privacy-policy": { title: "Privacy Policy", body: "", showInFooter: false },
     "about-us": { title: "About Us", body: "", showInFooter: false },
     "contact-us": { title: "Contact Us", body: "", showInFooter: false },
+  },
+  contactForm: {
+    intro: "Fill out the form below and we will get back to you as soon as possible.",
+    submitLabel: "SEND MESSAGE",
+    fields: [
+      { id: "name", label: "Name", type: "text", required: true, enabled: true, options: [] },
+      { id: "email", label: "Email", type: "email", required: true, enabled: true, options: [] },
+      { id: "phone", label: "Telephone", type: "phone", required: true, enabled: true, options: [] },
+      { id: "subject", label: "Subject", type: "select", required: true, enabled: true, options: ["General enquiry", "Product enquiry", "Technical support", "Other"] },
+      { id: "details", label: "Message", type: "textarea", required: true, enabled: true, options: [] },
+    ],
   },
   theme: { primary: "#e31b23", accent: "#ff5b61", heroBackground: "#101828", pageBackground: "#f6f7f9" },
   sections: { showHero: true, showGames: true, showHow: true, showFooter: true },
@@ -150,12 +164,36 @@ export function normalizeHomepageContent(input: unknown): HomepageContent {
     return [{ id: defaults.id, title: cleanText(card.title, defaults.title, 100), description: cleanText(card.description, defaults.description, 240), action: cleanText(card.action, defaults.action, 50), icon: cleanText(card.icon, defaults.icon, 8), imageUrl: cleanText(card.imageUrl, "", 1000), color: cleanColor(card.color, defaults.color), textColor: cleanColor(card.textColor, defaults.textColor), height: cleanNumber(card.height, defaults.height, 140, 600), width: cleanNumber(card.width, defaults.width, 50, 100), cornerRadius: cleanNumber(card.cornerRadius, defaults.cornerRadius, 0, 48), textAlignment: ["left", "center", "right"].includes(card.textAlignment ?? "") ? card.textAlignment! : defaults.textAlignment }];
   });
   const typ = value.typography as Partial<HomepageContent["typography"]> | undefined;
+  const rawContactFields = Array.isArray(value.contactForm?.fields) ? value.contactForm.fields.slice(0, 16) : [];
+  const contactFieldMap = new Map<string, ContactFormField>();
+  for (const raw of rawContactFields) {
+    const field = raw as Partial<ContactFormField>;
+    const id = cleanText(field.id, "", 40).toLowerCase();
+    if (!/^[a-z][a-z0-9-]{0,39}$/.test(id) || contactFieldMap.has(id)) continue;
+    const options = Array.isArray(field.options) ? field.options.slice(0, 20).map((item) => cleanText(item, "", 100)).filter(Boolean) : [];
+    const requestedType = ["text", "email", "phone", "select", "textarea"].includes(field.type ?? "") ? field.type! : "text";
+    const type = requestedType === "select" && !options.length ? "text" : requestedType;
+    contactFieldMap.set(id, { id, label: cleanText(field.label, "New field", 80), type, required: field.required === true, enabled: field.enabled !== false, options });
+  }
+  const contactFields = base.contactForm.fields.map((fallback) => {
+    const custom = contactFieldMap.get(fallback.id);
+    return custom ? { ...fallback, ...custom, options: custom.options.length ? custom.options : fallback.options } : fallback;
+  });
+  const reservedFieldIds = new Set(contactFields.map((field) => field.id));
+  for (const [id, field] of contactFieldMap) {
+    if (!reservedFieldIds.has(id) && contactFields.length < 16) { contactFields.push(field); reservedFieldIds.add(id); }
+  }
   return {
     header: { brand: cleanText(value.header?.brand, base.header.brand, 60), logoUrl: cleanText(value.header?.logoUrl, "", 1000), showLogo: value.header?.showLogo !== false, showBrand: value.header?.showBrand !== false, announcement: cleanText(value.header?.announcement, base.header.announcement), showAnnouncement: value.header?.showAnnouncement === true, navHome: cleanText(value.header?.navHome, base.header.navHome, 40), navGames: cleanText(value.header?.navGames, base.header.navGames, 40), navHow: cleanText(value.header?.navHow, base.header.navHow, 50), navSignIn: cleanText(value.header?.navSignIn, base.header.navSignIn, 40), navGetStarted: cleanText(value.header?.navGetStarted, base.header.navGetStarted, 40), showHome: value.header?.showHome !== false, showGames: value.header?.showGames !== false, showHow: value.header?.showHow !== false, showSignIn: value.header?.showSignIn !== false, showGetStarted: value.header?.showGetStarted !== false },
     hero: { eyebrow: cleanText(value.hero?.eyebrow, base.hero.eyebrow, 80), title: cleanText(value.hero?.title, base.hero.title, 100), highlight: cleanText(value.hero?.highlight, base.hero.highlight, 60), description: cleanText(value.hero?.description, base.hero.description, 500), primaryCta: cleanText(value.hero?.primaryCta, base.hero.primaryCta, 50), secondaryCta: cleanText(value.hero?.secondaryCta, base.hero.secondaryCta, 50) },
     games: { eyebrow: cleanText(value.games?.eyebrow, base.games.eyebrow, 80), title: cleanText(value.games?.title, base.games.title, 100), description: cleanText(value.games?.description, base.games.description, 100), columns: Math.round(cleanNumber(value.games?.columns, base.games.columns, 1, 4)), cards },
     how: { eyebrow: cleanText(value.how?.eyebrow, base.how.eyebrow, 80), title: cleanText(value.how?.title, base.how.title, 100), steps: base.how.steps.map((step, index) => ({ title: cleanText(value.how?.steps?.[index]?.title, step.title, 100), description: cleanText(value.how?.steps?.[index]?.description, step.description, 240) })) },
     footer: { copyright: cleanText(value.footer?.copyright, base.footer.copyright, 120), termsLabel: cleanText(value.footer?.termsLabel, base.footer.termsLabel, 60), privacyLabel: cleanText(value.footer?.privacyLabel, base.footer.privacyLabel, 60), pageLinksAlignment: ["left", "center", "right"].includes(value.footer?.pageLinksAlignment ?? "") ? value.footer!.pageLinksAlignment! : base.footer.pageLinksAlignment },
+    contactForm: {
+      intro: cleanText(value.contactForm?.intro, base.contactForm.intro, 300),
+      submitLabel: cleanText(value.contactForm?.submitLabel, base.contactForm.submitLabel, 40),
+      fields: contactFields,
+    },
     pages: {
       "terms-and-conditions": { title: cleanText(value.pages?.["terms-and-conditions"]?.title, base.pages["terms-and-conditions"].title, 100), body: sanitizeRichText(value.pages?.["terms-and-conditions"]?.body), showInFooter: value.pages?.["terms-and-conditions"]?.showInFooter === true },
       "privacy-policy": { title: cleanText(value.pages?.["privacy-policy"]?.title, base.pages["privacy-policy"].title, 100), body: sanitizeRichText(value.pages?.["privacy-policy"]?.body), showInFooter: value.pages?.["privacy-policy"]?.showInFooter === true },

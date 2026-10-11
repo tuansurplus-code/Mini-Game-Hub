@@ -751,3 +751,15 @@ th {
 .contact-submission-card p { margin:8px 0; color:#475467; font-size:13px; }
 .contact-submission-details { color:#344054; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; }
 @media(max-width:600px) { .page-editor-toolbar { gap:3px; padding:6px; } .page-editor-tool { min-width:34px; min-height:34px; } .page-editor-select select { max-width:112px; } .contact-submission-head { flex-direction:column; } }
+
+.home-fields.home-page-editor-fields { grid-template-columns:minmax(0,1fr); }
+.home-page-content-field { min-width:0; }
+.contact-form-settings { display:grid; gap:16px; margin-top:22px; padding:20px; border:1px solid #eaecf0; border-radius:12px; background:#fcfcfd; }
+.contact-form-settings h3 { margin:0 0 5px; }
+.contact-form-settings > div:first-child p { margin:0; color:#667085; font-size:13px; }
+.contact-field-list { display:grid; gap:12px; }
+.contact-field-admin-card { padding:16px; border:1px solid #eaecf0; border-radius:10px; background:#fff; }
+.contact-field-admin-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+.contact-field-admin-card .home-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.contact-field-admin-card .home-format-options { margin-top:12px; }
+@media(max-width:700px) { .contact-field-admin-card .home-fields { grid-template-columns:minmax(0,1fr); } .contact-form-settings { padding:14px; } }

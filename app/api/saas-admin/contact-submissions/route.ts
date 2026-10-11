@@ -8,7 +8,7 @@ export async function GET() {
   const actor = await getPlatformAdmin();
   if (!actor) return reply({ error: "Platform access required." }, 403);
   const { data, error } = await createSupabaseAdminClient().from("contact_submissions")
-    .select("id,name,phone_number,email,details,created_at")
+    .select("id,name,phone_number,email,responses,created_at")
     .order("created_at", { ascending: false })
     .limit(100);
   if (error) {
