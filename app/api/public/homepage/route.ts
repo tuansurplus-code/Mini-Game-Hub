@@ -21,7 +21,7 @@ export async function GET() {
     const latestScheduled = manager.pages.filter(page => page.published && page.scheduled && page.startsAt && page.startsAt <= today).sort((a, b) => b.startsAt.localeCompare(a.startsAt))[0];
     const active = latestScheduled && (!latestScheduled.endsAt || today <= latestScheduled.endsAt) ? latestScheduled : null;
     const page = active ?? manager.pages.find(item => item.published && item.id === manager.defaultPageId) ?? manager.pages.find(item => item.published && item.id === manager.livePageId);
-    const content = normalizeHomepageContent(page?.content ?? data?.published);
+    const content = normalizeHomepageContent(page?.content ?? null);
     const { fonts } = manager.siteTheme;
     content.typography.header.fontFamily = fonts.header;
     content.typography.footer.fontFamily = fonts.footer;
