@@ -781,3 +781,8 @@ th {
 .page-submissions-toggle { display:inline-flex; align-items:center; min-height:38px; width:max-content; margin:12px 0 0; padding:0 14px; text-decoration:none; }
 @media(max-width:760px) { .home-draft-controls { grid-template-columns:1fr 1fr; } .home-draft-controls .home-field:last-child { grid-column:1/-1; order:-1; } }
 @media(max-width:480px) { .home-draft-controls { grid-template-columns:1fr; } .home-draft-controls .home-field:last-child { grid-column:auto; } .contact-submission-head > div { justify-items:start; } }
+
+.home-draft-controls { display:grid; grid-template-columns:1fr; gap:14px; }
+.home-draft-save-row,.home-draft-load-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:12px; }
+.home-draft-save-row .primary-btn,.home-draft-load-row .home-secondary { min-height:40px; white-space:nowrap; }
+@media(max-width:480px) { .home-draft-save-row,.home-draft-load-row { grid-template-columns:1fr; } }

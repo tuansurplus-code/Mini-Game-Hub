@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPlatformAdmin } from "../../../../lib/platform-auth";
-import { normalizeHomepageContent, type HomepageContent } from "../../../../lib/homepage-content";
+import { DEFAULT_HOMEPAGE_CONTENT, normalizeHomepageContent, type HomepageContent } from "../../../../lib/homepage-content";
 import { createSupabaseAdminClient } from "../../../../lib/supabase-admin";
 
 const reply = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -40,20 +40,31 @@ export async function PATCH(request: Request) {
     }
   }
   const now = new Date().toISOString();
-  const values: Record<string, unknown> = { draft: content, updated_by: actor.user.id, updated_at: now };
-  if (body.action === "publish") {
-    values.published = content;
-    values.published_at = now;
+  const supabase = createSupabaseAdminClient();
+  const { data: existing, error: readError } = await supabase.from("homepage_content")
+    .select("published,published_at").eq("id", true).maybeSingle();
+  if (readError) {
+    console.error("Unable to read homepage content before saving", readError);
+    return reply({ error: "Unable to save homepage settings." }, 500);
   }
-  const { error } = await createSupabaseAdminClient().from("homepage_content").upsert({ id: true, ...values }, { onConflict: "id" });
+  const published = body.action === "publish" ? content : existing?.published ?? DEFAULT_HOMEPAGE_CONTENT;
+  const publishedAt = body.action === "publish" ? now : existing?.published_at ?? null;
+  const { error } = await supabase.from("homepage_content").upsert({
+    id: true,
+    draft: content,
+    published,
+    published_at: publishedAt,
+    updated_by: actor.user.id,
+    updated_at: now,
+  }, { onConflict: "id" });
   if (error) {
     console.error("Unable to save homepage content", error);
     return reply({ error: "Unable to save homepage settings." }, 500);
   }
   let savedDraft: { id: string; name: string; content: HomepageContent; created_at: string } | null = null;
   if (body.action === "save") {
-    const requestedName = typeof body.name === "string" ? body.name.trim().slice(0, 80) : "";
-    const name = requestedName || `Homepage draft · ${new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Colombo" }).format(new Date(now))}`;
+    const name = typeof body.name === "string" ? body.name.trim().slice(0, 80) : "";
+    if (!name) return reply({ error: "Add a name before saving this version." }, 400);
     const { data: saved, error: draftError } = await createSupabaseAdminClient().from("homepage_drafts")
       .insert({ name, content, created_by: actor.user.id })
       .select("id,name,content,created_at").single();
