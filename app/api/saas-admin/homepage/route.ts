@@ -157,7 +157,7 @@ export async function PATCH(request: Request) {
   const fallbackPage = remainingPublished.find(row => row.id === manager.defaultPageId);
   const values: Record<string, unknown> = {
     draft: content,
-    published: body.action === "publish" ? content
+    published: body.action === "publish" ? (manager.pages.find(page => page.id === manager.defaultPageId && page.published && !page.scheduled)?.content ?? (manager.pages.find(page => page.id === publishedPageId)?.scheduled ? normalizeHomepageContent(null) : content))
       : body.action === "unpublish" ? (fallbackPage?.published_content ?? normalizeHomepageContent(null))
       : currentHome?.published ?? normalizeHomepageContent(null),
     manager: storedManager,
