@@ -843,3 +843,8 @@ th {
 .homepage-editor-grid.is-editing { display:block; }
 .home-editor-fieldset { width:100%; }
 @media(max-width:760px) { .home-manager-tabs { overflow-x:auto; flex-wrap:nowrap; justify-content:flex-start; } .home-manager-tabs button,.home-manager-tabs a { flex:0 0 auto; } .homepage-top-actions .home-field { flex:1 1 100%; } }
+
+.homepage-preview .preview-hero:has(.preview-hero-art){display:grid;grid-template-columns:minmax(0,1fr) minmax(140px,.7fr);gap:20px;align-items:center}
+.preview-hero-copy{min-width:0}
+.preview-hero-art{display:block;width:100%;aspect-ratio:1.75;max-height:220px;object-fit:cover;background-repeat:no-repeat;border-radius:18px;mix-blend-mode:multiply}
+@media(max-width:800px){.homepage-preview .preview-hero:has(.preview-hero-art){grid-template-columns:1fr}.preview-hero-art{max-height:180px}}
