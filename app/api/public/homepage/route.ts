@@ -22,8 +22,7 @@ export async function GET() {
     const active = latestScheduled && (!latestScheduled.endsAt || today <= latestScheduled.endsAt) ? latestScheduled : null;
     const page = active ?? manager.pages.find(item => item.published && item.id === manager.defaultPageId) ?? manager.pages.find(item => item.published && item.id === manager.livePageId);
     const content = normalizeHomepageContent(page?.content ?? data?.published);
-    const { colors, fonts } = manager.siteTheme;
-    content.theme = { primary: colors.primary, accent: colors.accent, heroBackground: colors.heroBackground, pageBackground: colors.pageBackground };
+    const { fonts } = manager.siteTheme;
     content.typography.header.fontFamily = fonts.header;
     content.typography.footer.fontFamily = fonts.footer;
     content.typography.hero.fontFamily = fonts.body;
