@@ -8,17 +8,17 @@ import { requireAdmin } from "../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../lib/supabase-server";
 
 const links = [
-  { label: "Overview", href: "/admin" },
-  { label: "Campaigns", href: "/admin/campaigns" },
-  { label: "Games", href: "/admin/games" },
-  { label: "Prizes", href: "/admin/prizes" },
-  { label: "Coupons", href: "/admin/coupons" },
-  { label: "Winner History", href: "/admin/winners" },
-  { label: "Reports", href: "/admin/reports" },
-  { label: "Team", href: "/admin/team" },
-  { label: "Billing", href: "/admin/billing" },
-  { label: "Account", href: "/admin/settings" },
-];
+  { label: "Overview", href: "/admin", icon: "overview" },
+  { label: "Campaigns", href: "/admin/campaigns", icon: "campaign" },
+  { label: "Games", href: "/admin/games", icon: "game" },
+  { label: "Prizes", href: "/admin/prizes", icon: "prize" },
+  { label: "Coupons", href: "/admin/coupons", icon: "coupon" },
+  { label: "Winner History", href: "/admin/winners", icon: "winner" },
+  { label: "Reports", href: "/admin/reports", icon: "reports" },
+  { label: "Team", href: "/admin/team", icon: "team" },
+  { label: "Billing", href: "/admin/billing", icon: "billing" },
+  { label: "Account", href: "/admin/settings", icon: "account" },
+] as const;
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, workspaceId, role } = await requireAdmin();

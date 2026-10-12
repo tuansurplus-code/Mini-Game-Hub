@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { AdminIcon, type AdminIconName } from "./AdminIcon";
 
-type NavLink = { label: string; href: string } | { section: string };
+type NavLink = { label: string; href: string; icon?: AdminIconName } | { section: string };
 
-export default function AdminNavigation({ links }: { links: NavLink[] }) {
+export default function AdminNavigation({ links }: { links: readonly NavLink[] }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -19,7 +20,7 @@ export default function AdminNavigation({ links }: { links: NavLink[] }) {
       onClick={() => setOpen(value => !value)}
     >
       <span>{open ? "Close menu" : "Menu"}</span>
-      <span aria-hidden="true">{open ? "×" : "☰"}</span>
+      <span aria-hidden="true"><AdminIcon name={open ? "close" : "overview"} size={18} /></span>
     </button>
     <nav id="admin-navigation-links" className={`admin-nav ${open ? "is-open" : ""}`} aria-label="Admin navigation">
       {links.map(item => {
@@ -31,7 +32,7 @@ export default function AdminNavigation({ links }: { links: NavLink[] }) {
           aria-current={active ? "page" : undefined}
           className={active ? "is-active" : undefined}
           onClick={() => setOpen(false)}
-        >{item.label}</Link>;
+        ><>{item.icon && <AdminIcon name={item.icon} size={17} />}<span>{item.label}</span></></Link>;
       })}
     </nav>
   </div>;

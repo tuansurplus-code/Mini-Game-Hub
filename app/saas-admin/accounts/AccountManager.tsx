@@ -5,7 +5,7 @@ import { FormEvent, useState } from "react";
 type Workspace = { id: string; name: string; slug: string; status: string; created_at: string; memberCount: number; campaignCount: number; planName: string; subscriptionStatus?: string; periodEnd?: string };
 type Props = { initial: Workspace[]; canManage: boolean };
 type Draft = { id?: string; name: string; slug: string; email: string; fullName: string; status: string };
-const input = { width: "100%", padding: 11, border: "1px solid #cbd5e1", borderRadius: 8, boxSizing: "border-box" as const };
+const input = { width: "100%", padding: 11, border: "1px solid var(--admin-control-border)", borderRadius: 8, boxSizing: "border-box" as const };
 
 export default function AccountManager({ initial, canManage }: Props) {
   const [rows, setRows] = useState(initial);
@@ -58,9 +58,9 @@ export default function AccountManager({ initial, canManage }: Props) {
   }
 
   return <>
-    {error && <p role="alert" className="admin-panel" style={{ color: "#991b1b" }}>{error}</p>}
-    {notice && <p role="status" className="admin-panel" style={{ color: "#065f46" }}>{notice}</p>}
-    {credentials && <div className="admin-panel" style={{ border: "2px solid #2563eb", marginBottom: 18 }}>
+    {error && <p role="alert" className="admin-panel" style={{ color: "var(--admin-danger)" }}>{error}</p>}
+    {notice && <p role="status" className="admin-panel" style={{ color: "var(--admin-success)" }}>{notice}</p>}
+    {credentials && <div className="admin-panel" style={{ border: "2px solid var(--admin-info)", marginBottom: 18 }}>
       <h2>Customer login created — copy these credentials</h2><p>Email: <b>{credentials.email}</b></p><p>Temporary password: <code style={{ overflowWrap: "anywhere" }}>{credentials.password}</code></p>
       <p>This password is shown once. The customer will be asked to change it after first sign-in.</p><button onClick={() => setCredentials(null)}>I saved these details</button>
     </div>}
@@ -71,7 +71,7 @@ export default function AccountManager({ initial, canManage }: Props) {
         <thead><tr><th>Workspace</th><th>URL</th><th>Status</th><th>Plan</th><th>Members</th><th>Campaigns</th><th>Created</th>{canManage && <th>Actions</th>}</tr></thead>
         <tbody>{rows.map(row => <tr key={row.id}>
           <td><strong>{row.name}</strong></td><td>{row.slug}</td><td><span className="status-pill">{row.status}</span></td>
-          <td><strong>{row.planName}</strong>{row.subscriptionStatus && <div style={{ color: "#6b7280", fontSize: 12 }}>{row.subscriptionStatus.replace(/_/g, " ")}{row.periodEnd ? ` · through ${new Date(row.periodEnd).toLocaleDateString("en-LK")}` : ""}</div>}</td>
+          <td><strong>{row.planName}</strong>{row.subscriptionStatus && <div style={{ color: "var(--admin-muted)", fontSize: 12 }}>{row.subscriptionStatus.replace(/_/g, " ")}{row.periodEnd ? ` · through ${new Date(row.periodEnd).toLocaleDateString("en-LK")}` : ""}</div>}</td>
           <td>{row.memberCount}</td><td>{row.campaignCount}</td><td>{new Date(row.created_at).toLocaleDateString("en-LK")}</td>
           {canManage && <td style={{ whiteSpace: "nowrap" }}><button onClick={() => startEdit(row)}>Edit</button>{row.status !== "disabled" ? <button style={{ marginLeft: 8 }} onClick={() => void disable(row)}>Disable</button> : <button style={{ marginLeft: 8 }} onClick={() => void setStatus(row, "active")}>Re-enable</button>}</td>}
         </tr>)}</tbody>
@@ -79,7 +79,7 @@ export default function AccountManager({ initial, canManage }: Props) {
       {!rows.length && <p>No customer accounts yet.</p>}
     </div>
     {draft && <div role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setDraft(null); }} style={{ position: "fixed", inset: 0, zIndex: 1000, display: "grid", placeItems: "center", padding: 20, background: "rgba(0,0,0,.58)" }}>
-      <section role="dialog" aria-modal="true" aria-labelledby="account-dialog-title" className="admin-panel" style={{ width: "min(520px, 100%)", maxHeight: "calc(100vh - 40px)", overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: 16, padding: 26, boxShadow: "0 24px 80px rgba(0,0,0,.35)" }}>
+      <section role="dialog" aria-modal="true" aria-labelledby="account-dialog-title" className="admin-panel" style={{ width: "min(520px, 100%)", maxHeight: "calc(100vh - 40px)", overflowY: "auto", border: "1px solid var(--admin-control-border)", borderRadius: 16, padding: 26, boxShadow: "0 24px 80px rgba(0,0,0,.35)" }}>
       <form onSubmit={save} style={{ display: "grid", gap: 14 }}>
         <h2 id="account-dialog-title" style={{ margin: 0 }}>{draft.id ? "Edit Customer Account" : "Create Customer Account"}</h2>
         <label>Workspace name<input required maxLength={120} style={input} value={draft.name} onChange={e => setName(e.target.value)} /></label>
@@ -87,9 +87,9 @@ export default function AccountManager({ initial, canManage }: Props) {
         {draft.id ? <label>Status<select style={input} value={draft.status} onChange={e => setDraft({ ...draft, status: e.target.value })}><option value="active">Active</option><option value="suspended">Suspended</option><option value="disabled">Disabled</option></select></label> : <>
           <label>Workspace owner name<input required maxLength={120} style={input} value={draft.fullName} onChange={e => setDraft({ ...draft, fullName: e.target.value })} /></label>
           <label>Workspace owner email<input required type="email" maxLength={254} style={input} value={draft.email} onChange={e => setDraft({ ...draft, email: e.target.value })} /></label>
-          <p style={{ margin: 0, fontSize: 13, color: "#6b7280" }}>A new customer login will be created as the workspace owner. Its temporary password appears once after creation.</p>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--admin-muted)" }}>A new customer login will be created as the workspace owner. Its temporary password appears once after creation.</p>
         </>}
-        {error && <p role="alert" style={{ margin: 0, color: "#991b1b" }}>{error}</p>}
+        {error && <p role="alert" style={{ margin: 0, color: "var(--admin-danger)" }}>{error}</p>}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}><button type="button" disabled={saving} onClick={() => { setDraft(null); setError(""); }}>Cancel</button><button className="primary-btn" disabled={saving}>{saving ? "Saving…" : draft.id ? "Save Changes" : "Create Account"}</button></div>
       </form>
       </section>

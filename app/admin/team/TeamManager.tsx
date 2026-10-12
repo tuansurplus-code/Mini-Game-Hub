@@ -8,8 +8,8 @@ type Member = { user_id: string; email: string | null; role: Role; created_at: s
 type Invitation = { id: string; email: string; role: "admin" | "editor"; created_at: string; expires_at: string };
 type Props = { role: Role };
 
-const inputStyle = { width: "100%", padding: "11px 12px", border: "1px solid #d1d5db", borderRadius: 8, boxSizing: "border-box" as const };
-const smallButton = { border: "1px solid #d1d5db", borderRadius: 8, background: "white", padding: "8px 11px", cursor: "pointer" };
+const inputStyle = { width: "100%", padding: "11px 12px", border: "1px solid var(--admin-control-border)", borderRadius: 8, boxSizing: "border-box" as const };
+const smallButton = { border: "1px solid var(--admin-control-border)", borderRadius: 8, background: "white", padding: "8px 11px", cursor: "pointer" };
 
 export default function TeamManager({ role }: Props) {
   const owner = role === "owner";
@@ -139,25 +139,25 @@ export default function TeamManager({ role }: Props) {
     }
   }
 
-  const cardStyle = { background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: 20, marginBottom: 20 } as const;
+  const cardStyle = { background: "white", border: "1px solid var(--admin-border)", borderRadius: 12, padding: 20, marginBottom: 20 } as const;
 
   return <div>
-    {error && <div role="alert" style={{ ...cardStyle, color: "#991b1b", background: "#fef2f2", borderColor: "#fecaca" }}>{error}</div>}
-    {message && <div role="status" aria-live="polite" style={{ ...cardStyle, color: "#065f46", background: "#ecfdf5", borderColor: "#a7f3d0" }}>{message}</div>}
+    {error && <div role="alert" style={{ ...cardStyle, color: "var(--admin-danger)", background: "var(--admin-danger-bg)", borderColor: "var(--admin-danger-border)" }}>{error}</div>}
+    {message && <div role="status" aria-live="polite" style={{ ...cardStyle, color: "var(--admin-success)", background: "var(--admin-success-bg)", borderColor: "var(--admin-success-border)" }}>{message}</div>}
 
     {owner && <div style={{ marginBottom: 18 }}>
       <button type="button" className="primary-btn" onClick={() => { setError(""); setMessage(""); setShowCreateForm(true); }}>+ Create Account</button>
       <AdminModal open={showCreateForm} title="Create a team account" onClose={() => { setShowCreateForm(false); setCreatedAccount(null); }} maxWidth={760}>
-        <p style={{ color: "#5b6472", marginTop: 0 }}>Add the person to this workspace. Confirm their email address first. A temporary password appears once after creation; share it privately.</p>
+        <p style={{ color: "var(--admin-muted)", marginTop: 0 }}>Add the person to this workspace. Confirm their email address first. A temporary password appears once after creation; share it privately.</p>
         <form onSubmit={createAccount} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12, alignItems: "end" }}>
           <label>Full name<input style={inputStyle} type="text" maxLength={120} autoComplete="name" value={fullName} onChange={event => setFullName(event.target.value)} placeholder="Team member" /></label>
           <label>Email address<input style={inputStyle} type="email" required maxLength={254} autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="teammate@company.com" /></label>
           <label>Role<select style={inputStyle} value={memberRole} onChange={event => setMemberRole(event.target.value as "admin" | "editor" | "viewer")}><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select></label>
           <button className="primary-btn" disabled={working === "create"}>{working === "create" ? "Creating…" : "Create account"}</button>
         </form>
-        {createdAccount && <div style={{ marginTop: 18, padding: 16, borderRadius: 10, border: "1px solid #fcd34d", background: "#fffbeb" }}>
+        {createdAccount && <div style={{ marginTop: 18, padding: 16, borderRadius: 10, border: "1px solid var(--admin-warning-border)", background: "var(--admin-warning-bg)" }}>
           <strong>Temporary password for {createdAccount.email}</strong>
-          <p style={{ margin: "6px 0 10px", color: "#5b6472" }}>Copy it now and share it privately. It disappears when you close or refresh this page.</p>
+          <p style={{ margin: "6px 0 10px", color: "var(--admin-muted)" }}>Copy it now and share it privately. It disappears when you close or refresh this page.</p>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <input aria-label="Temporary password" style={{ ...inputStyle, flex: "1 1 220px" }} readOnly value={createdAccount.password} onFocus={event => event.currentTarget.select()} />
             <button type="button" style={smallButton} onClick={() => void copyTemporaryPassword()}>Copy password</button>
@@ -188,7 +188,7 @@ export default function TeamManager({ role }: Props) {
     </section>
     {owner && invitations.length > 0 && <section style={cardStyle}>
       <h2 style={{ marginTop: 0 }}>Older pending invitations</h2>
-      <p style={{ color: "#5b6472" }}>These links were created before account creation changed. Revoke any link that should no longer work.</p>
+      <p style={{ color: "var(--admin-muted)" }}>These links were created before account creation changed. Revoke any link that should no longer work.</p>
       <div style={{ overflowX: "auto" }}>
         <table className="admin-table" style={{ minWidth: 520, width: "100%" }}>
           <thead><tr><th>Email</th><th>Role</th><th>Expires</th><th>Status</th><th>Action</th></tr></thead>

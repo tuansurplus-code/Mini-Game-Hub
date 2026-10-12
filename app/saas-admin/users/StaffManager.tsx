@@ -7,7 +7,7 @@ type Staff = { user_id: string; email: string; full_name: string; contact_number
 type Audit = { id: string; actor_id: string; target_id: string; action: string; created_at: string; before_state: { role?: PlatformRole; active?: boolean } | null; after_state: { role: PlatformRole; active: boolean } };
 type Form = { userId?: string; email: string; fullName: string; contactNumber: string; role: PlatformRole; active: boolean };
 const emptyForm: Form = { email: "", fullName: "", contactNumber: "", role: "support", active: true };
-const inputStyle = { width: "100%", boxSizing: "border-box" as const, padding: 11, borderRadius: 8, border: "1px solid #cbd5e1", background: "white", color: "#111827" };
+const inputStyle = { width: "100%", boxSizing: "border-box" as const, padding: 11, borderRadius: 8, border: "1px solid var(--admin-control-border)", background: "white", color: "var(--admin-fg)" };
 
 export default function StaffManager() {
   const [staff, setStaff] = useState<Staff[]>([]);
@@ -57,9 +57,9 @@ export default function StaffManager() {
 
   return <section>
     <div className="admin-header"><div><div className="eyebrow">PLATFORM ACCESS</div><h1>Users & Roles</h1><p>Manage the people who operate Mini-Game Hub.</p></div>{canManage && <button className="primary-btn" onClick={() => { setError(""); setForm({ ...emptyForm }); }}>Create Staff Account</button>}</div>
-    {!form && error && <p role="alert" className="admin-panel" style={{ color: "#b91c1c" }}>{error}</p>}
+    {!form && error && <p role="alert" className="admin-panel" style={{ color: "var(--admin-danger)" }}>{error}</p>}
     {message && <p role="status">{message}</p>}
-    {credential && <div className="admin-panel" style={{ border: "2px solid #2563eb", marginBottom: 20 }}>
+    {credential && <div className="admin-panel" style={{ border: "2px solid var(--admin-info)", marginBottom: 20 }}>
       <h2>Account created — save these details</h2><p><b>Email:</b> {credential.email}</p><p><b>Temporary password:</b> <code style={{ overflowWrap: "anywhere" }}>{credential.password}</code></p>
       <p>Share these details securely. The password is shown only here and must be changed on first sign-in at <b>/saas-login</b>. No email has been sent.</p>
       <button type="button" onClick={() => setCredential(null)}>I have saved the details</button>
@@ -80,10 +80,10 @@ export default function StaffManager() {
     </tbody></table></div>
     <div className="admin-panel" style={{ marginTop: 20, overflowX: "auto" }}><h2>Recent staff access changes</h2>{audit.length === 0 ? <p>No staff changes recorded yet.</p> : <table className="admin-table"><thead><tr><th>When</th><th>Changed by</th><th>Account</th><th>Change</th></tr></thead><tbody>{audit.map(a => <tr key={a.id}><td>{new Date(a.created_at).toLocaleString()}</td><td>{name(a.actor_id)}</td><td>{name(a.target_id)}</td><td>{a.action === "delete" ? "Removed platform access" : a.action === "create" ? "Created" : "Updated"}{a.action !== "delete" && <>: {a.before_state?.role ? `${platformRoleLabels[a.before_state.role]} → ` : ""}{platformRoleLabels[a.after_state.role]} · {a.after_state.active ? "Active" : "Inactive"}</>}</td></tr>)}</tbody></table>}</div>
     {form && <div role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setForm(null); }} style={{ position: "fixed", inset: 0, zIndex: 1000, display: "grid", placeItems: "center", padding: 20, background: "rgba(0,0,0,.58)" }}>
-      <section role="dialog" aria-modal="true" aria-labelledby="staff-dialog-title" className="admin-panel" style={{ width: "min(480px, 100%)", maxHeight: "calc(100vh - 40px)", overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: 16, padding: 28, boxShadow: "0 24px 80px rgba(0,0,0,.35)" }}>
+      <section role="dialog" aria-modal="true" aria-labelledby="staff-dialog-title" className="admin-panel" style={{ width: "min(480px, 100%)", maxHeight: "calc(100vh - 40px)", overflowY: "auto", border: "1px solid var(--admin-control-border)", borderRadius: 16, padding: 28, boxShadow: "0 24px 80px rgba(0,0,0,.35)" }}>
       <form onSubmit={submit} style={{ display: "grid", gap: 16 }}>
         <h2 id="staff-dialog-title" style={{ margin: 0 }}>{form.userId ? "Edit Staff Access" : "Create Staff Account"}</h2>
-        {error && <p role="alert" style={{ color: "#b91c1c" }}>{error}</p>}
+        {error && <p role="alert" style={{ color: "var(--admin-danger)" }}>{error}</p>}
         <label>Full name<input autoFocus required maxLength={120} style={inputStyle} value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} /></label>
         <label>Email<input type="email" required maxLength={254} disabled={Boolean(form.userId)} style={inputStyle} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></label>
         <label>Contact number<input type="tel" required minLength={7} maxLength={25} style={inputStyle} value={form.contactNumber} onChange={e => setForm({ ...form, contactNumber: e.target.value })} /></label>

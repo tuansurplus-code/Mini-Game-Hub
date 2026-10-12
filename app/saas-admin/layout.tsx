@@ -7,21 +7,21 @@ import AdminThemeControl from "../admin/AdminThemeControl";
 import { requirePlatformAdmin } from "../../lib/platform-auth";
 
 const links = [
-  { label: "Overview", href: "/saas-admin" },
+  { label: "Overview", icon: "overview", href: "/saas-admin" },
   { section: "PUBLIC WEBSITE" },
-  { label: "Homepage Layout", href: "/saas-admin/settings" },
-  { label: "Content Pages", href: "/saas-admin/content-pages" },
-  { label: "Contact Submissions", href: "/saas-admin/contact-submissions" },
+  { label: "Homepage Layout", icon: "website", href: "/saas-admin/settings" },
+  { label: "Content Pages", icon: "content", href: "/saas-admin/content-pages" },
+  { label: "Contact Submissions", icon: "contact", href: "/saas-admin/contact-submissions" },
   { section: "CUSTOMER OPERATIONS" },
-  { label: "Accounts", href: "/saas-admin/accounts" },
-  { label: "Workspace Memberships", href: "/saas-admin/memberships" },
+  { label: "Accounts", icon: "team", href: "/saas-admin/accounts" },
+  { label: "Workspace Memberships", icon: "membership", href: "/saas-admin/memberships" },
   { section: "SAAS CONFIGURATION" },
-  { label: "Platform Staff", href: "/saas-admin/users" },
-  { label: "Game Templates", href: "/saas-admin/templates" },
-  { label: "Plans & Limits", href: "/saas-admin/plans" },
-  { label: "Subscription Requests", href: "/saas-admin/subscriptions" },
-  { label: "Usage", href: "/saas-admin/usage" },
-];
+  { label: "Platform Staff", icon: "staff", href: "/saas-admin/users" },
+  { label: "Game Templates", icon: "template", href: "/saas-admin/templates" },
+  { label: "Plans & Limits", icon: "plans", href: "/saas-admin/plans" },
+  { label: "Subscription Requests", icon: "subscription", href: "/saas-admin/subscriptions" },
+  { label: "Usage", icon: "usage", href: "/saas-admin/usage" },
+] as const;
 
 export default async function SaaSAdminLayout({ children }: { children: React.ReactNode }) {
   const { user, role } = await requirePlatformAdmin();

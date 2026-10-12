@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 
 export type Membership = { user_id: string; email: string; workspace_id: string; workspace_name: string; workspace_slug: string; workspace_status: string; login_status: "active" | "deactivated" | "unknown"; role: "owner" | "admin" | "editor" | "viewer"; created_at: string };
 type Workspace = { id: string; name: string; slug: string };
-const input = { width: "100%", padding: 11, border: "1px solid #cbd5e1", borderRadius: 8, boxSizing: "border-box" as const };
+const input = { width: "100%", padding: 11, border: "1px solid var(--admin-control-border)", borderRadius: 8, boxSizing: "border-box" as const };
 const labels: Record<Membership["role"], string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer" };
 
 export default function MembershipManager({ initial, workspaces, canManage }: { initial: Membership[]; workspaces: Workspace[]; canManage: boolean }) {
@@ -75,17 +75,17 @@ export default function MembershipManager({ initial, workspaces, canManage }: { 
   }
 
   return <>
-    {error && <p role="alert" className="admin-panel" style={{ color: "#991b1b" }}>{error}</p>}{notice && <p role="status" className="admin-panel" style={{ color: "#065f46" }}>{notice}</p>}
-    {temporaryCredential && <div className="admin-panel" role="status" style={{ borderColor: "#d6a542" }}><strong>Temporary password for {temporaryCredential.email}</strong><p style={{ margin: "8px 0", fontFamily: "monospace", fontSize: 16, userSelect: "all" }}>{temporaryCredential.password}</p><p style={{ margin: "0 0 12px", color: "#6b7280", fontSize: 13 }}>Share this password privately. The customer must set a new password at their next sign-in.</p><button type="button" onClick={() => void navigator.clipboard.writeText(temporaryCredential.password).then(() => setNotice("Temporary password copied."), () => setError("Copy failed. Select the password and copy it manually."))}>Copy password</button></div>}
+    {error && <p role="alert" className="admin-panel" style={{ color: "var(--admin-danger)" }}>{error}</p>}{notice && <p role="status" className="admin-panel" style={{ color: "var(--admin-success)" }}>{notice}</p>}
+    {temporaryCredential && <div className="admin-panel" role="status" style={{ borderColor: "var(--admin-warning-border)" }}><strong>Temporary password for {temporaryCredential.email}</strong><p style={{ margin: "8px 0", fontFamily: "monospace", fontSize: 16, userSelect: "all" }}>{temporaryCredential.password}</p><p style={{ margin: "0 0 12px", color: "var(--admin-muted)", fontSize: 13 }}>Share this password privately. The customer must set a new password at their next sign-in.</p><button type="button" onClick={() => void navigator.clipboard.writeText(temporaryCredential.password).then(() => setNotice("Temporary password copied."), () => setError("Copy failed. Select the password and copy it manually."))}>Copy password</button></div>}
     {!canManage && <div className="admin-panel">Only Super Admins can add, change, activate, deactivate or remove customer workspace memberships and reset customer passwords.</div>}
     <div className="admin-panel" style={{ overflowX: "auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 8 }}><h2 style={{ margin: 0 }}>Workspace memberships</h2>{canManage && <button className="primary-btn" onClick={() => { setError(""); setDraft({ workspaceId: workspaces[0]?.id ?? "", email: "", role: "admin" }); }}>Add Member</button>}</div>
-      <p style={{ margin: "0 0 14px", color: "#6b7280", fontSize: 13 }}>Role and removal apply to this workspace. Login activation and password reset apply to the customer login across all workspaces.</p>
+      <p style={{ margin: "0 0 14px", color: "var(--admin-muted)", fontSize: 13 }}>Role and removal apply to this workspace. Login activation and password reset apply to the customer login across all workspaces.</p>
       <table className="admin-table" style={{ minWidth: 1120 }}><thead><tr><th>Customer login</th><th>Workspace</th><th>Workspace role</th><th>Login status</th><th>Workspace status</th><th>Joined</th>{canManage && <th>Actions</th>}</tr></thead>
         <tbody>{rows.map(row => { const edited = roleChanges[key(row)] ?? row.role; const ownerCount = rows.filter(other => other.workspace_id === row.workspace_id && other.role === "owner").length;
           return <tr key={key(row)}><td>{row.email}</td><td><strong>{row.workspace_name}</strong><br /><small>{row.workspace_slug}</small></td>
             <td>{canManage ? <select aria-label={`Role for ${row.email}`} value={edited} disabled={saving || (row.role === "owner" && ownerCount === 1)} onChange={e => setRoleChanges(current => ({ ...current, [key(row)]: e.target.value as Membership["role"] }))}>{Object.entries(labels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select> : labels[row.role]}</td>
-            <td><span style={{ color: row.login_status === "active" ? "#15803d" : row.login_status === "deactivated" ? "#b91c1c" : "#6b7280" }}>{row.login_status === "active" ? "Active" : row.login_status === "deactivated" ? "Deactivated" : "Unknown"}</span></td><td>{row.workspace_status}</td><td>{new Date(row.created_at).toLocaleDateString("en-LK")}</td>
+            <td><span style={{ color: row.login_status === "active" ? "var(--admin-success)" : row.login_status === "deactivated" ? "var(--admin-danger)" : "var(--admin-muted)" }}>{row.login_status === "active" ? "Active" : row.login_status === "deactivated" ? "Deactivated" : "Unknown"}</span></td><td>{row.workspace_status}</td><td>{new Date(row.created_at).toLocaleDateString("en-LK")}</td>
             {canManage && <td style={{ whiteSpace: "nowrap" }}>{edited !== row.role && <button disabled={saving} onClick={() => void saveRole(row)}>Save</button>}<button disabled={saving || row.login_status === "unknown"} style={{ marginLeft: 8 }} onClick={() => void changeLoginStatus(row)}>{row.login_status === "deactivated" ? "Activate" : "Deactivate"}</button><button disabled={saving || row.login_status === "unknown"} style={{ marginLeft: 8 }} onClick={() => void resetPassword(row)}>Reset password</button><button disabled={saving || (row.role === "owner" && ownerCount === 1)} style={{ marginLeft: 8 }} onClick={() => void remove(row)}>Remove</button></td>}
           </tr>;
         })}</tbody>
@@ -93,13 +93,13 @@ export default function MembershipManager({ initial, workspaces, canManage }: { 
       {!rows.length && <p>No customer workspace memberships yet.</p>}
     </div>
     {draft && <div role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setDraft(null); }} style={{ position: "fixed", inset: 0, zIndex: 1000, display: "grid", placeItems: "center", padding: 20, background: "rgba(0,0,0,.58)" }}>
-      <section role="dialog" aria-modal="true" aria-labelledby="add-workspace-member-title" className="admin-panel" style={{ width: "min(480px, 100%)", maxHeight: "calc(100vh - 40px)", overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: 16, padding: 26, boxShadow: "0 24px 80px rgba(0,0,0,.35)" }}>
+      <section role="dialog" aria-modal="true" aria-labelledby="add-workspace-member-title" className="admin-panel" style={{ width: "min(480px, 100%)", maxHeight: "calc(100vh - 40px)", overflowY: "auto", border: "1px solid var(--admin-control-border)", borderRadius: 16, padding: 26, boxShadow: "0 24px 80px rgba(0,0,0,.35)" }}>
       <form onSubmit={add} style={{ display: "grid", gap: 14 }}><h2 id="add-workspace-member-title" style={{ margin: 0 }}>Add Workspace Member</h2>
         <label>Workspace<select required style={input} value={draft.workspaceId} onChange={e => setDraft({ ...draft, workspaceId: e.target.value })}>{workspaces.map(workspace => <option key={workspace.id} value={workspace.id}>{workspace.name}</option>)}</select></label>
         <label>Existing customer login email<input required type="email" style={input} value={draft.email} onChange={e => setDraft({ ...draft, email: e.target.value })} /></label>
         <label>Workspace role<select style={input} value={draft.role} onChange={e => setDraft({ ...draft, role: e.target.value as Membership["role"] })}>{Object.entries(labels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-        <p style={{ margin: 0, color: "#6b7280", fontSize: 13 }}>The email must already have a customer login. Platform staff access remains separate.</p>
-        {error && <p role="alert" style={{ margin: 0, color: "#991b1b" }}>{error}</p>}
+        <p style={{ margin: 0, color: "var(--admin-muted)", fontSize: 13 }}>The email must already have a customer login. Platform staff access remains separate.</p>
+        {error && <p role="alert" style={{ margin: 0, color: "var(--admin-danger)" }}>{error}</p>}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}><button type="button" disabled={saving} onClick={() => { setDraft(null); setError(""); }}>Cancel</button><button className="primary-btn" disabled={saving || !workspaces.length}>{saving ? "Adding…" : "Add Member"}</button></div>
       </form>
       </section>

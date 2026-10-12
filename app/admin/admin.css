@@ -865,3 +865,161 @@ th {
 .preview-hero-copy{min-width:0}
 .preview-hero-art{display:block;width:100%;aspect-ratio:1.75;max-height:220px;object-fit:cover;background-repeat:no-repeat;border-radius:18px;mix-blend-mode:multiply}
 @media(max-width:800px){.homepage-preview .preview-hero:has(.preview-hero-art){grid-template-columns:1fr}.preview-hero-art{max-height:180px}}
+
+/* Shared admin UI foundation: semantic colors and reusable action controls. */
+.admin-shell {
+  --admin-primary: #1d4ed8;
+  --admin-primary-hover: #1e40af;
+  --admin-danger: #b42318;
+  --admin-danger-bg: #fef3f2;
+  --admin-danger-border: #fecdca;
+  --admin-success: #067647;
+  --admin-success-bg: #ecfdf3;
+  --admin-success-border: #abefc6;
+  --admin-warning: #b54708;
+  --admin-warning-bg: #fffaeb;
+  --admin-warning-border: #fedf89;
+  --admin-info: #175cd3;
+  --admin-info-bg: #eff8ff;
+  --admin-info-border: #b2ddff;
+  --admin-on-status: #ffffff;
+  --admin-focus: #528bff;
+  --admin-shadow: 0 8px 24px rgba(16, 24, 40, .12);
+}
+.admin-shell[data-theme="dark"] {
+  --admin-primary: #84adff;
+  --admin-primary-hover: #b2ccff;
+  --admin-danger: #fda29b;
+  --admin-danger-bg: #3a171a;
+  --admin-danger-border: #7a271a;
+  --admin-success: #75e0a7;
+  --admin-success-bg: #123126;
+  --admin-success-border: #176448;
+  --admin-warning: #fec84b;
+  --admin-warning-bg: #34250b;
+  --admin-warning-border: #69410b;
+  --admin-info: #84caff;
+  --admin-info-bg: #102a43;
+  --admin-info-border: #1849a9;
+  --admin-on-status: #101828;
+  --admin-focus: #84adff;
+  --admin-shadow: 0 12px 32px rgba(0, 0, 0, .35);
+}
+@media (prefers-color-scheme: dark) {
+  .admin-shell[data-theme="system"] {
+    --admin-primary: #84adff;
+    --admin-primary-hover: #b2ccff;
+    --admin-danger: #fda29b;
+    --admin-danger-bg: #3a171a;
+    --admin-danger-border: #7a271a;
+    --admin-success: #75e0a7;
+    --admin-success-bg: #123126;
+    --admin-success-border: #176448;
+    --admin-warning: #fec84b;
+    --admin-warning-bg: #34250b;
+    --admin-warning-border: #69410b;
+    --admin-info: #84caff;
+    --admin-info-bg: #102a43;
+    --admin-info-border: #1849a9;
+    --admin-on-status: #101828;
+    --admin-focus: #84adff;
+    --admin-shadow: 0 12px 32px rgba(0, 0, 0, .35);
+  }
+}
+.admin-shell .status-pill { background: var(--admin-success-bg); color: var(--admin-success); }
+.admin-shell .error-box { background: var(--admin-danger-bg); border-color: var(--admin-danger-border); color: var(--admin-danger); }
+.admin-shell .success-box { background: var(--admin-success-bg); border-color: var(--admin-success-border); color: var(--admin-success); }
+.admin-shell .admin-modal { box-shadow: var(--admin-shadow); }
+.admin-shell .admin-menu-toggle {
+  border-color: var(--admin-sidebar-border);
+  background: var(--admin-sidebar-hover);
+  color: var(--admin-sidebar-fg);
+}
+.admin-shell .admin-nav a { display: flex; align-items: center; gap: 10px; min-height: 42px; }
+.admin-shell .admin-nav a svg { flex: 0 0 auto; opacity: .9; }
+.admin-shell .admin-nav a.is-active,
+.admin-shell .admin-nav a[aria-current="page"] { box-shadow: inset 3px 0 var(--admin-focus); }
+.admin-shell .admin-main input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+.admin-shell .admin-main select,
+.admin-shell .admin-main textarea { min-height: 44px; }
+.admin-shell .admin-theme-select { min-height: 44px; }
+.admin-shell .admin-main .primary-btn,
+.admin-shell .admin-main .secondary-btn,
+.admin-shell .admin-main .danger-btn,
+.admin-shell .admin-main button.admin-action-button { min-height: 44px; }
+.admin-shell .admin-icon-button,
+.admin-shell .home-icon-action {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  background: var(--admin-panel-bg);
+  color: var(--admin-fg);
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
+}
+.admin-shell .admin-icon-button:hover:not(:disabled),
+.admin-shell .home-icon-action:hover:not(:disabled) {
+  background: var(--admin-tag-bg);
+  border-color: var(--admin-control-border);
+}
+.admin-shell .admin-icon-button:focus-visible,
+.admin-shell .home-icon-action:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--admin-focus) 45%, transparent);
+  outline-offset: 2px;
+}
+.admin-shell .admin-icon-button:disabled,
+.admin-shell .home-icon-action:disabled { cursor: not-allowed; opacity: .5; }
+.admin-shell .admin-icon-button--quiet { border-color: transparent; background: transparent; }
+.admin-icon-button__badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: inline-flex;
+  min-width: 19px;
+  height: 19px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--admin-panel-bg);
+  border-radius: 999px;
+  background: var(--admin-warning);
+  color: var(--admin-on-status);
+  font-size: 10px;
+  font-weight: 900;
+}
+.admin-icon-button__badge.is-danger { background: var(--admin-danger); }
+.dashboard-tool > div:not(.admin-icon-button) {
+  background: var(--admin-panel-bg) !important;
+  border-color: var(--admin-border) !important;
+  color: var(--admin-fg);
+  box-shadow: var(--admin-shadow) !important;
+}
+.dashboard-tool a { color: var(--admin-primary); }
+.dashboard-tool a:hover { background: var(--admin-tag-bg); }
+.dashboard-tool .dashboard-alert-trigger { box-shadow: var(--admin-shadow); }
+.dashboard-tool .dashboard-alert-trigger .admin-icon-button__badge { color: var(--admin-on-status); }
+.admin-shell .account-section-switcher { background: var(--admin-tag-bg); border-color: var(--admin-border); }
+.admin-shell .account-section-switcher button { color: var(--admin-muted); }
+.admin-shell .account-section-switcher button.is-selected { background: var(--admin-panel-bg); color: var(--admin-fg); }
+.admin-shell .admin-dashboard-actions { align-items: center; }
+.admin-shell .admin-dashboard-actions .status-pill { min-height: 36px; display: inline-flex; align-items: center; }
+@media (max-width: 760px) {
+  .admin-shell { height: auto; min-height: 100dvh; overflow: visible; }
+  .admin-shell .admin-main { height: auto; min-height: 0; overflow: visible; }
+  .admin-shell .admin-sidebar { max-height: none; }
+  .admin-shell .admin-menu-toggle { min-height: 44px; }
+  .admin-shell .admin-nav.is-open { max-height: min(55dvh, 420px); }
+}
+@media (max-width: 560px) {
+  .admin-shell .admin-dashboard-actions { flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .admin-shell .admin-header { flex-wrap: wrap; }
+  .admin-shell .admin-main { padding: 18px 14px; }
+}

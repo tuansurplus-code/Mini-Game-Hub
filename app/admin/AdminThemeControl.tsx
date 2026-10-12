@@ -39,7 +39,7 @@ export default function AdminThemeControl({ storageKey = STORAGE_KEY, label = "A
         value={theme}
         onChange={event => changeTheme(event.target.value)}
       >
-        <option value="light">White</option>
+        <option value="light">Light</option>
         <option value="dark">Dark</option>
         <option value="system">System</option>
       </select>
