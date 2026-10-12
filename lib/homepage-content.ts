@@ -36,9 +36,11 @@ export function getTemplateArtworkStyle(url: string): Record<string, string> | n
   };
 }
 export type HomepageSiteTheme = { preset: "clean-white" | "soft-sky" | "sage-cream" | "warm-sunset" | "lavender-mist" | "custom"; colors: { primary: string; accent: string; heroBackground: string; pageBackground: string; cardBackground: string; footerBackground: string }; fonts: { header: string; body: string; footer: string } };
-export type HomepageManagerData = { pages: SavedHomepagePage[]; livePageId: string | null; defaultPageId: string | null; siteTheme: HomepageSiteTheme };
+export type HomepageAnalyticsSettings = { gtmEnabled: boolean; gtmContainerId: string };
+export type HomepageManagerData = { pages: SavedHomepagePage[]; livePageId: string | null; defaultPageId: string | null; siteTheme: HomepageSiteTheme; analytics: HomepageAnalyticsSettings };
 export const DEFAULT_SITE_THEME: HomepageSiteTheme = { preset: "clean-white", colors: { primary: "#e31b23", accent: "#ff5b61", heroBackground: "#101828", pageBackground: "#f6f7f9", cardBackground: "#ffffff", footerBackground: "#101828" }, fonts: { header: "Arial, sans-serif", body: "Arial, sans-serif", footer: "Arial, sans-serif" } };
-export const DEFAULT_HOMEPAGE_MANAGER: HomepageManagerData = { pages: [], livePageId: null, defaultPageId: null, siteTheme: DEFAULT_SITE_THEME };
+export const DEFAULT_HOMEPAGE_ANALYTICS: HomepageAnalyticsSettings = { gtmEnabled: false, gtmContainerId: "" };
+export const DEFAULT_HOMEPAGE_MANAGER: HomepageManagerData = { pages: [], livePageId: null, defaultPageId: null, siteTheme: DEFAULT_SITE_THEME, analytics: DEFAULT_HOMEPAGE_ANALYTICS };
 export function normalizeHomepageManager(input: unknown): HomepageManagerData {
   const raw = input && typeof input === "object" ? input as Partial<HomepageManagerData> : {};
   const manager = raw.siteTheme && typeof raw.siteTheme === "object" ? raw.siteTheme : DEFAULT_SITE_THEME;
@@ -59,7 +61,10 @@ export function normalizeHomepageManager(input: unknown): HomepageManagerData {
     return [{ id: page.id.slice(0, 64), name: page.name.trim().slice(0, 80), kind, content: normalizeHomepageContent(page.content), startsAt: typeof page.startsAt === "string" ? page.startsAt.slice(0, 10) : "", endsAt: typeof page.endsAt === "string" ? page.endsAt.slice(0, 10) : "", scheduled: page.scheduled === true, published: page.published === true, createdAt: typeof page.createdAt === "string" ? page.createdAt : new Date(0).toISOString(), updatedAt: typeof page.updatedAt === "string" ? page.updatedAt : new Date(0).toISOString() }];
   }) : [];
   const id = (value: unknown) => typeof value === "string" && pages.some((page) => page.id === value) ? value : null;
-  return { pages, livePageId: id(raw.livePageId), defaultPageId: id(raw.defaultPageId), siteTheme };
+  const rawAnalytics = raw.analytics && typeof raw.analytics === "object" ? raw.analytics as Partial<HomepageAnalyticsSettings> : {};
+  const gtmContainerId = typeof rawAnalytics.gtmContainerId === "string" && /^GTM-[A-Z0-9]+$/.test(rawAnalytics.gtmContainerId.trim().toUpperCase()) ? rawAnalytics.gtmContainerId.trim().toUpperCase() : "";
+  const analytics: HomepageAnalyticsSettings = { gtmEnabled: rawAnalytics.gtmEnabled === true && Boolean(gtmContainerId), gtmContainerId };
+  return { pages, livePageId: id(raw.livePageId), defaultPageId: id(raw.defaultPageId), siteTheme, analytics };
 }
 const defaultTypography = (): HomepageTypography => ({ fontFamily: "Arial, sans-serif", fontSize: 16, bold: false, italic: false, underline: false, alignment: "left", headlineSize: 36 });
 const baseCards: HomepageGameCard[] = [

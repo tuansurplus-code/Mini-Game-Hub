@@ -32,7 +32,7 @@ export async function GET() {
     content.typography.hero.fontFamily = fonts.body;
     content.typography.games.fontFamily = fonts.body;
     content.typography.how.fontFamily = fonts.body;
-    return NextResponse.json({ content, pageName: page?.name ?? "Homepage", pageKind: page?.kind ?? "custom" }, {
+    return NextResponse.json({ content, pageName: page?.name ?? "Homepage", pageKind: page?.kind ?? "custom", analytics: manager.analytics }, {
       headers: { "Cache-Control": "no-store, max-age=0" },
     });
   } catch (error) {

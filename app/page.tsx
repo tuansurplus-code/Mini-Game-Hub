@@ -19,7 +19,20 @@ export default function Home() {
   const [pageKind, setPageKind] = useState("custom");
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSignedIn(Boolean(session?.user)));
-    fetch("/api/public/homepage").then((r) => r.json()).then((result) => { if (result.content) setContent(result.content as HomepageContent); if (result.pageKind) setPageKind(result.pageKind); }).catch(() => undefined);
+    fetch("/api/public/homepage").then((r) => r.json()).then((result) => {
+      if (result.content) setContent(result.content as HomepageContent);
+      if (result.pageKind) setPageKind(result.pageKind);
+      const containerId = result.analytics?.gtmEnabled === true && typeof result.analytics.gtmContainerId === "string" ? result.analytics.gtmContainerId : "";
+      if (!/^GTM-[A-Z0-9]+$/.test(containerId) || document.querySelector(`script[data-mini-game-hub-gtm="${containerId}"]`)) return;
+      const dataLayerWindow = window as Window & { dataLayer?: Array<Record<string, unknown>> };
+      dataLayerWindow.dataLayer = dataLayerWindow.dataLayer ?? [];
+      dataLayerWindow.dataLayer.push({ "gtm.start": Date.now(), event: "gtm.js" });
+      const script = document.createElement("script");
+      script.async = true;
+      script.dataset.miniGameHubGtm = containerId;
+      script.src = `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(containerId)}`;
+      document.head.appendChild(script);
+    }).catch(() => undefined);
     return () => subscription.unsubscribe();
   }, []);
   const router = useRouter();

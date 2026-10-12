@@ -16,6 +16,7 @@ const links = [
   { label: "Accounts", icon: "team", href: "/saas-admin/accounts" },
   { label: "Workspace Memberships", icon: "membership", href: "/saas-admin/memberships" },
   { section: "SAAS CONFIGURATION" },
+  { label: "Configuration", icon: "website", href: "/saas-admin/configuration" },
   { label: "Platform Staff", icon: "staff", href: "/saas-admin/users" },
   { label: "Game Templates", icon: "template", href: "/saas-admin/templates" },
   { label: "Plans & Limits", icon: "plans", href: "/saas-admin/plans" },
