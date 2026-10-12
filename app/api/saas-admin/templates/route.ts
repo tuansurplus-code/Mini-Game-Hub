@@ -51,8 +51,8 @@ export async function GET() {
           plan_name: plan.name,
           plan_slug: plan.slug,
           plan_active: plan.active,
-          enabled: permission?.enabled ?? true,
-          allowed_customizations: permission?.allowed_customizations ?? ["text","colors","styles","advanced"],
+          enabled: permission?.enabled ?? false,
+          allowed_customizations: permission?.allowed_customizations ?? [],
         };
       }),
     }));

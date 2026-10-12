@@ -69,6 +69,12 @@ export async function PATCH(request: Request, context: RouteContext) {
       if (JSON.stringify(previous) !== JSON.stringify(rules)) changed.add("advanced");
     }
     for (const category of changed) {
+      if (category === "branding") {
+        if (!policy?.customBrandingAllowed) {
+          return NextResponse.json({ error: "Custom campaign landing-page branding is not included in your current plan." }, { status: 403 });
+        }
+        continue;
+      }
       if (policy?.template?.active && policy.template.feature_flags?.[category] === false) {
         return NextResponse.json({ error: "The platform has disabled " + category + " customization for this game." }, { status: 403 });
       }

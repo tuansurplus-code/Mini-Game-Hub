@@ -19,9 +19,9 @@ type Plan = {
 type Props = { canEdit: boolean };
 const field = { width: "100%", padding: "10px 12px", border: "1px solid #d1d5db", borderRadius: 8, boxSizing: "border-box" as const };
 const featureLabels: Record<string, string> = {
-  custom_branding: "Custom branding",
+  custom_branding: "Custom campaign landing-page branding",
   automatic_scheduling: "Automatic scheduling",
-  advanced_reports: "Advanced reports",
+  advanced_reports: "Advanced reports and exports",
 };
 const cap = (value: number | null, suffix: string) => value === null ? `Unlimited ${suffix}` : `${value.toLocaleString()} ${suffix}`;
 const price = (value: number | string | null) => value === null ? "Price not set" : Number(value) === 0 ? "Free" : `LKR ${Number(value).toLocaleString("en-LK", { minimumFractionDigits: 2 })} / month`;
@@ -135,6 +135,7 @@ export default function PlanManager({ canEdit }: Props) {
               <label style={{ display: "flex", alignItems: "center", gap: 8 }}><input type="checkbox" checked={draft.active} disabled={saving} onChange={event => updateDraft({ active: event.target.checked })} /> Available for new subscriptions</label>
               {Object.entries(featureLabels).map(([key, label]) => <label key={key} style={{ display: "flex", alignItems: "center", gap: 8 }}><input type="checkbox" checked={Boolean(draft.feature_flags?.[key])} disabled={saving} onChange={event => updateDraft({ feature_flags: { ...draft.feature_flags, [key]: event.target.checked } })} /> {label}</label>)}
             </div>
+            <p style={{ color: "#6b7280", fontSize: 12, margin: "10px 0 0" }}>Landing-page branding controls campaign logos and page visuals. Game colors, styles, and advanced settings are managed separately in Catalog → Game Templates.</p>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20, paddingTop: 16, borderTop: "1px solid #eee" }}>
               <button type="button" className="secondary-btn" disabled={saving} onClick={() => { setDraft(null); setError(""); }}>Cancel</button>
               <button type="submit" className="primary-btn" disabled={saving}>{saving ? "Saving…" : "Save plan"}</button>
