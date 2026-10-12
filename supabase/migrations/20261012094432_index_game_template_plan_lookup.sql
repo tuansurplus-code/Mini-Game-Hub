@@ -1,0 +1,1 @@
+create index if not exists subscription_plan_game_permissions_game_type_idx on public.subscription_plan_game_permissions(game_type);

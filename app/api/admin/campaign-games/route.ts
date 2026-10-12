@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "../../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../../lib/supabase-server";
+import { getWorkspaceGameOptions, getWorkspaceGamePolicy } from "../../../../lib/game-template-access";
 
 function slugify(value: string) {
   return value
@@ -37,6 +38,8 @@ export async function GET() {
       );
     }
 
+    const templates = await getWorkspaceGameOptions(supabase, workspaceId);
+
     if (gamesResult.error) {
       return NextResponse.json(
         { error: gamesResult.error.message },
@@ -47,6 +50,7 @@ export async function GET() {
     return NextResponse.json({
       campaigns: campaignsResult.data ?? [],
       games: gamesResult.data ?? [],
+      templates,
     });
   } catch (error) {
     console.error(
@@ -97,7 +101,7 @@ export async function POST(request: Request) {
     const { data: campaign, error: campaignError } =
       await supabase
         .from("campaigns")
-        .select("id, slug")
+        .select("id, slug, type")
         .eq("id", campaignId)
         .eq("workspace_id", workspaceId)
         .maybeSingle();
@@ -121,7 +125,7 @@ export async function POST(request: Request) {
     // Verify game belongs to this workspace.
     const { data: game, error: gameError } = await supabase
       .from("games")
-      .select("id, slug")
+      .select("id, slug, type")
       .eq("id", gameId)
       .eq("workspace_id", workspaceId)
       .maybeSingle();
@@ -141,6 +145,10 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
+
+    const gamePolicy = await getWorkspaceGamePolicy(supabase, workspaceId, game.type);
+    if (!gamePolicy.template?.active) return NextResponse.json({ error: "This game is disabled platform-wide and cannot be added to a new campaign." }, { status: 403 });
+    if (!gamePolicy.enabledForPlan) return NextResponse.json({ error: "This game is not included in your current plan." }, { status: 403 });
 
     // Prevent the same game from being assigned twice.
     const { data: existingAssignment } = await supabase
@@ -199,7 +207,7 @@ export async function POST(request: Request) {
         public_slug: publicSlug,
         status: "draft",
         display_order: displayOrder,
-        appearance: {},
+        appearance: gamePolicy.template.default_appearance ?? {},
         rules: {},
       })
       .select(

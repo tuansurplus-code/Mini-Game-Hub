@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BuilderGameType, gameLabels, gameTypes } from "../../../lib/game-builder";
 
@@ -22,11 +22,21 @@ export default function NewCampaignBuilder({ initialGame }: { initialGame: Build
   const [end, setEnd] = useState("");
   const [mode, setMode] = useState("automatic");
   const [game, setGame] = useState<BuilderGameType | null>(initialGame);
+  const [availableGameTypes, setAvailableGameTypes] = useState<BuilderGameType[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [draftId, setDraftId] = useState<string | null>(null);
   const createdGame = useRef<string | null>(null);
   const submitting = useRef(false);
+
+  useEffect(() => {
+    api("/api/admin/campaign-games").then(result => {
+      const available = (result.templates ?? []).filter((template: { available?: boolean }) => template.available !== false).map((template: { game_type: string }) => template.game_type).filter((type: string): type is BuilderGameType => gameTypes.includes(type as BuilderGameType));
+      setAvailableGameTypes(available);
+      setGame(current => current && available.includes(current) ? current : available[0] ?? null);
+    }).catch(cause => setError(cause instanceof Error ? cause.message : "Unable to load available games.")).finally(() => setTemplatesLoading(false));
+  }, []);
 
   function detailsValid() {
     if (!name.trim()) { setError("Enter a campaign name."); return false; }
@@ -90,8 +100,10 @@ export default function NewCampaignBuilder({ initialGame }: { initialGame: Build
           <label htmlFor="builder-end">End date and time (Sri Lanka)</label><input id="builder-end" type="datetime-local" value={end} onChange={event => setEnd(event.target.value)} style={field} />
         </> : <fieldset disabled={busy || Boolean(draftId)} style={{ border: 0, padding: 0, margin: "0 0 24px" }}>
           <legend style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Choose your game</legend>
+          {templatesLoading && <p>Loading games available on your plan…</p>}
+          {!templatesLoading && !availableGameTypes.length && <p>No games are currently available on your plan. Contact the platform administrator for assistance.</p>}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12 }}>
-            {gameTypes.map(type => <label key={type} style={{ padding: 24, border: `2px solid ${game === type ? "#111827" : "#e5e7eb"}`, borderRadius: 12, cursor: "pointer", background: game === type ? "#f1f5f9" : "#fff" }}>
+            {availableGameTypes.map(type => <label key={type} style={{ padding: 24, border: `2px solid ${game === type ? "#111827" : "#e5e7eb"}`, borderRadius: 12, cursor: "pointer", background: game === type ? "#f1f5f9" : "#fff" }}>
               <input type="radio" name="builder-game" value={type} checked={game === type} onChange={() => setGame(type)} /> <strong>{gameLabels[type]}</strong>
               <p style={{ fontSize: 13, color: "#64748b", marginBottom: 0 }}>Customize the game, prizes, rules and coupons.</p>
             </label>)}
@@ -99,7 +111,7 @@ export default function NewCampaignBuilder({ initialGame }: { initialGame: Build
         </fieldset>}
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
           {step === "game" && !draftId ? <button type="button" className="secondary-btn" disabled={busy} onClick={() => setStep("details")}>Back</button> : <Link href="/admin/campaigns" className="secondary-btn">Campaigns</Link>}
-          <button type="submit" className="primary-btn" disabled={busy}>{busy ? "Preparing your game..." : step === "details" ? "Continue to Choose Game" : draftId ? "Retry Game Assignment" : "Create & Configure Game"}</button>
+          <button type="submit" className="primary-btn" disabled={busy || templatesLoading || (step === "game" && !availableGameTypes.length)}>{busy ? "Preparing your game..." : step === "details" ? "Continue to Choose Game" : draftId ? "Retry Game Assignment" : "Create & Configure Game"}</button>
         </div>
       </form>
     </section>

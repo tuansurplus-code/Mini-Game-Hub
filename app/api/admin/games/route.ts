@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "../../../../lib/admin-auth";
 import { createSupabaseServerClient } from "../../../../lib/supabase-server";
+import { getWorkspaceGamePolicy } from "../../../../lib/game-template-access";
 
 export async function GET() {
   try {
