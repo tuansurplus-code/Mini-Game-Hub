@@ -15,6 +15,7 @@ const links = [
   { label: "Coupons", href: "/admin/coupons", icon: "coupon" },
   { label: "Winner History", href: "/admin/winners", icon: "winner" },
   { label: "Reports", href: "/admin/reports", icon: "reports" },
+  { label: "Campaign Analytics", href: "/admin/analytics", icon: "website" },
   { label: "Team", href: "/admin/team", icon: "team" },
   { label: "Billing", href: "/admin/billing", icon: "billing" },
   { label: "Account", href: "/admin/settings", icon: "account" },

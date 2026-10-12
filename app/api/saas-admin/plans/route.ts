@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getPlatformAdmin } from "../../../../lib/platform-auth";
 import { createSupabaseServerClient } from "../../../../lib/supabase-server";
 
-const featureKeys = ["custom_branding", "automatic_scheduling", "advanced_reports"] as const;
+const featureKeys = ["custom_branding", "automatic_scheduling", "advanced_reports", "campaign_analytics"] as const;
 type FeatureKey = (typeof featureKeys)[number];
 
 function jsonError(message: string, status: number) {
@@ -72,6 +72,7 @@ export async function PATCH(request: Request) {
       custom_branding: rawFeatures.custom_branding === true,
       automatic_scheduling: rawFeatures.automatic_scheduling === true,
       advanced_reports: rawFeatures.advanced_reports === true,
+      campaign_analytics: rawFeatures.campaign_analytics === true,
     };
 
     const supabase = await createSupabaseServerClient("platform");
