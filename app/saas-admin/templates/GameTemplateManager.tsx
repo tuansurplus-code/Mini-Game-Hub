@@ -195,9 +195,9 @@ export default function GameTemplateManager({ canEdit }: Props) {
           <p style={{ marginTop: 0, color: "var(--admin-muted-text, #6b7280)" }}>Choose whether each plan includes this game and which settings its workspace admins can customize.</p>
           <div style={{ overflowX: "auto", border: "1px solid var(--admin-border, #e5e7eb)", borderRadius: 10 }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 880 }}>
-              <thead><tr style={{ textAlign: "left", background: "var(--admin-muted, #f9fafb)" }}>
-                <th style={{ padding: 11 }}>Plan</th><th style={{ padding: 11 }}>Game</th>
-                {categories.map(category => <th key={category.key} style={{ padding: 11, whiteSpace: "nowrap" }}>{category.label}</th>)}
+              <thead><tr style={{ textAlign: "left", background: "var(--admin-tag-bg, #f0f2f5)", color: "var(--admin-fg, #17202a)" }}>
+                <th scope="col" style={{ padding: 11, color: "var(--admin-fg, #17202a)" }}>Plan</th><th scope="col" style={{ padding: 11, color: "var(--admin-fg, #17202a)" }}>Game access</th>
+                {categories.map(category => <th scope="col" key={category.key} style={{ padding: 11, whiteSpace: "nowrap", color: "var(--admin-fg, #17202a)" }}>{category.label}</th>)}
               </tr></thead>
               <tbody>{draft.plan_permissions.map(plan => <tr key={plan.plan_id} style={{ borderTop: "1px solid var(--admin-border, #e5e7eb)", opacity: plan.plan_active ? 1 : 0.6 }}>
                 <td style={{ padding: 11 }}><strong>{plan.plan_name}</strong>{!plan.plan_active && <small style={{ display: "block" }}>Inactive plan</small>}</td>
@@ -208,9 +208,10 @@ export default function GameTemplateManager({ canEdit }: Props) {
           </div>
         </div>
 
-        {canEdit && <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 24 }}>
-          <button type="button" className="primary-btn" disabled={saving} onClick={() => void save()}>{saving ? "Saving…" : "Save game settings"}</button>
-        </div>}
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap", marginTop: 24 }}>
+          <button type="button" className="secondary-btn" disabled={saving} onClick={() => { setDraft(null); setError(""); setMessage(""); }}>{canEdit ? "Cancel" : "Close"}</button>
+          {canEdit && <button type="button" className="primary-btn" disabled={saving} onClick={() => void save()}>{saving ? "Saving…" : "Save game settings"}</button>}
+        </div>
       </section>}
     </div>
   );
