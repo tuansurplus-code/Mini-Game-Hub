@@ -1023,3 +1023,73 @@ th {
   .admin-shell .admin-header { flex-wrap: wrap; }
   .admin-shell .admin-main { padding: 18px 14px; }
 }
+
+.admin-shell {
+  --admin-primary-on: #ffffff;
+}
+.admin-shell[data-theme="dark"] { --admin-primary-on: #101828; }
+@media (prefers-color-scheme: dark) {
+  .admin-shell[data-theme="system"] { --admin-primary-on: #101828; }
+}
+.admin-shell .admin-main .primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--admin-primary);
+  background: var(--admin-primary);
+  color: var(--admin-primary-on);
+  font: inherit;
+  font-weight: 750;
+  text-decoration: none;
+  transition: background-color .15s ease, border-color .15s ease, transform .15s ease;
+}
+.admin-shell .admin-main .primary-btn:hover:not(:disabled) {
+  border-color: var(--admin-primary-hover);
+  background: var(--admin-primary-hover);
+}
+.admin-shell .admin-main .secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--admin-control-border);
+  border-radius: 9px;
+  padding: 9px 14px;
+  background: var(--admin-panel-bg);
+  color: var(--admin-fg);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+.admin-shell .admin-main .secondary-btn:hover:not(:disabled) {
+  background: var(--admin-tag-bg);
+  border-color: var(--admin-focus);
+}
+.admin-shell .admin-main .danger-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--admin-danger);
+  border-radius: 9px;
+  padding: 9px 14px;
+  background: var(--admin-danger);
+  color: var(--admin-on-status);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.admin-shell .admin-main .danger-btn:hover:not(:disabled) { filter: brightness(.94); }
+.admin-shell .admin-main button:focus-visible,
+.admin-shell .admin-main a:focus-visible,
+.admin-shell .admin-main input:focus-visible,
+.admin-shell .admin-main select:focus-visible,
+.admin-shell .admin-main textarea:focus-visible {
+  outline-color: var(--admin-focus);
+}
+.admin-shell .dashboard-tool > div a { min-height: 44px; }
+.admin-shell .dashboard-tool > div button { min-width: 44px; min-height: 44px; }
