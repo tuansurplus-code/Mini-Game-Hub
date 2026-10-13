@@ -10,9 +10,11 @@ export async function GET() {
   const actor = await getPlatformAdmin();
   if (!actor) return reply({ error: "Platform access required." }, 403);
   const db = createSupabaseAdminClient();
-  const [{ data, error }, { data: drafts, error: draftError }] = await Promise.all([
+  const [{ data, error }, { data: drafts, error: draftError }, { data: catalog, error: catalogError }, { data: plans, error: plansError }] = await Promise.all([
     db.from("homepage_content").select("draft,published,manager,published_manager,updated_at,published_at").eq("id", true).maybeSingle(),
     db.from("homepage_drafts").select("id,name,kind,content,starts_at,ends_at,scheduled,published,published_content,published_starts_at,published_ends_at,published_scheduled,created_at,updated_at").order("updated_at", { ascending: false }),
+    db.from("platform_game_templates").select("game_type,name,description,active").order("name"),
+    db.from("subscription_plans").select("id,slug,name,description,monthly_price_lkr,max_active_campaigns,max_monthly_participants,max_team_members").eq("active", true).order("sort_order"),
   ]);
   if (error) return reply({ error: "Unable to load homepage settings." }, 500);
   if (draftError) return reply({ error: "Unable to load saved pages. Apply the homepage manager migration first." }, 500);
@@ -23,6 +25,9 @@ export async function GET() {
   const liveManager = normalizeHomepageManager({ ...(data?.published_manager ?? {}), pages: (drafts ?? []).filter(row => row.published && row.published_content).map(row => ({ id: row.id, name: row.name, kind: row.kind, content: row.published_content, startsAt: row.published_starts_at ?? "", endsAt: row.published_ends_at ?? "", scheduled: row.published_scheduled, published: true })) });
   const livePageId = activePublished?.id ?? liveManager.defaultPageId ?? liveManager.livePageId;
   return reply({
+    catalog: catalogError ? null : (catalog ?? []).map(game => ({ id: game.game_type, label: game.name, description: game.description, active: game.active, icon: "🎮" })),
+    plans: plansError ? [] : plans ?? [],
+    catalogWarning: catalogError || plansError ? "Some catalogue or pricing options could not be loaded. Reload before changing those settings." : "",
     draft: normalizeHomepageContent(data?.draft),
     published: normalizeHomepageContent(data?.published),
     manager,

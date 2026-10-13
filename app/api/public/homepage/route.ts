@@ -8,10 +8,11 @@ export const revalidate = 0;
 export async function GET() {
   try {
     const db = createSupabaseAdminClient();
-    const [{ data, error }, { data: drafts, error: draftError }, { data: activeGames, error: gamesError }] = await Promise.all([
+    const [{ data, error }, { data: drafts, error: draftError }, { data: activeGames, error: gamesError }, { data: plans, error: plansError }] = await Promise.all([
       db.from("homepage_content").select("published,published_manager").eq("id", true).maybeSingle(),
       db.from("homepage_drafts").select("id,name,kind,published_content,published_starts_at,published_ends_at,published_scheduled,published,created_at,updated_at"),
       db.from("platform_game_templates").select("game_type").eq("active", true),
+      db.from("subscription_plans").select("id,slug,name,description,monthly_price_lkr,max_active_campaigns,max_monthly_participants,max_team_members").eq("active", true).order("sort_order"),
     ]);
     if (error) throw error;
     if (draftError) throw draftError;
@@ -26,13 +27,8 @@ export async function GET() {
     const content = normalizeHomepageContent(page?.content ?? null);
     const activeGameTypes = new Set((activeGames ?? []).map(row => row.game_type));
     content.games.cards = content.games.cards.filter(card => activeGameTypes.has(card.id));
-    const { fonts } = manager.siteTheme;
-    content.typography.header.fontFamily = fonts.header;
-    content.typography.footer.fontFamily = fonts.footer;
-    content.typography.hero.fontFamily = fonts.body;
-    content.typography.games.fontFamily = fonts.body;
-    content.typography.how.fontFamily = fonts.body;
-    return NextResponse.json({ content, pageName: page?.name ?? "Homepage", pageKind: page?.kind ?? "custom", analytics: manager.analytics }, {
+    if (plansError) console.error("Unable to load public pricing", plansError);
+    return NextResponse.json({ content, plans: plansError ? [] : plans ?? [], siteTheme: manager.siteTheme, pageName: page?.name ?? "Homepage", pageKind: page?.kind ?? "custom", analytics: manager.analytics }, {
       headers: { "Cache-Control": "no-store, max-age=0" },
     });
   } catch (error) {
