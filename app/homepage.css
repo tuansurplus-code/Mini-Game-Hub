@@ -122,3 +122,18 @@
   .home-template-christmas .mgh-hero-copy { padding:16px; border-radius:18px; background:#ffffffdf; }
   .home-template-christmas .mgh-hero-art:empty { display:none; min-height:0; height:0; }
 }
+
+/* Larger original Santa sleigh with a running reindeer team. */
+.home-public.home-template-christmas .seasonal-motif { display:none !important; }
+.home-public.home-template-christmas.mgh-effects .seasonal-santa { width:clamp(132px,16vw,225px); }
+.santa-running-team { display:block; width:100%; height:auto; overflow:visible; }
+.santa-running-leg { transform-origin:0 0; animation:santa-reindeer-stride .68s ease-in-out infinite; }
+.santa-running-leg.rear { animation-name:santa-reindeer-rear-stride; }
+.santa-team-bob { animation:santa-reindeer-bob .34s ease-in-out infinite; }
+.santa-sleigh-bob { animation:santa-sleigh-bob .68s ease-in-out infinite; }
+@keyframes santa-reindeer-stride { 0%,100% { transform:rotate(-28deg); } 50% { transform:rotate(30deg); } }
+@keyframes santa-reindeer-rear-stride { 0%,100% { transform:rotate(26deg); } 50% { transform:rotate(-32deg); } }
+@keyframes santa-reindeer-bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-2px); } }
+@keyframes santa-sleigh-bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-1px); } }
+@media(max-width:800px) { .home-public.home-template-christmas.mgh-effects .seasonal-santa { width:132px; } }
+@media(prefers-reduced-motion:reduce) { .santa-running-team * { animation:none !important; } }
