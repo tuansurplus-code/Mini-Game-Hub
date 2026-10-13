@@ -200,10 +200,10 @@ export default async function UsagePage({ searchParams }: { searchParams: Promis
 
     <form method="get" className="admin-panel" style={{ marginBottom: 18, display: "flex", alignItems: "end", gap: 12, flexWrap: "wrap" }}>
       <label style={{ display: "grid", gap: 5, minWidth: 155, flex: "1 1 155px" }}>From
-        <input type="date" name="from" value={from} max={today} required style={inputStyle} />
+        <input type="date" name="from" defaultValue={from} max={today} required style={inputStyle} />
       </label>
       <label style={{ display: "grid", gap: 5, minWidth: 155, flex: "1 1 155px" }}>To
-        <input type="date" name="to" value={to} min={from} max={today} required style={inputStyle} />
+        <input type="date" name="to" defaultValue={to} max={today} required style={inputStyle} />
       </label>
       <label style={{ display: "grid", gap: 5, minWidth: 210, flex: "1 1 210px" }}>Workspace
         <select name="workspace" defaultValue={selectedWorkspace} style={inputStyle}>
