@@ -31,6 +31,8 @@ export const TEMPLATE_ARTWORK_CROPS = {
   "new-year": { hero: [515, 25, 445, 255], spin: [88, 291, 246, 136], scratch: [362, 291, 237, 136], "pick-card": [627, 291, 252, 136] },
 } as const;
 export function getTemplateArtworkStyle(url: string): Record<string, string> | null {
+  const christmasGame = url.match(/^\/template-previews\/(?:christmas\.svg|christmas-games-v2\.webp)\?crop=(spin|scratch|pick-card)$/);
+  if (christmasGame) return { backgroundImage:'url("/template-previews/christmas-games-v2.webp")', backgroundSize:"300% 100%", backgroundPosition:{spin:"0% center",scratch:"50% center","pick-card":"100% center"}[christmasGame[1]]!, backgroundRepeat:"no-repeat", aspectRatio:"1/1" };
   const match = url.match(/^\/template-previews\/(wesak|christmas|ramadan|new-year)\.svg\?crop=(hero|spin|scratch|pick-card|sleigh|pine-left|pine-right)$/);
   if (!match) return null;
   const [, kind, area] = match;

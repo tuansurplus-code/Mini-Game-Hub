@@ -20,19 +20,19 @@ const THEME_PRESETS: Record<HomepageSiteTheme["preset"], { label: string; colors
 const READY_TEMPLATES = [
   { kind: "custom", name: "Modern Default", note: "The approved SaaS layout with colourful game artwork and flexible sections.", preview: "/homepage/campaign-games.webp" },
   { kind: "wesak", name: "Wesak", note: "The finalized lantern and lotus design in warm ivory and gold.", preview: "/template-previews/wesak.svg" },
-  { kind: "christmas", name: "Christmas", note: "The finalized holiday design with winter artwork and evergreen accents.", preview: "/template-previews/christmas.svg" },
+  { kind: "christmas", name: "Christmas", note: "The finalized holiday design with winter artwork and evergreen accents.", preview: "/template-previews/christmas-background-v2.webp" },
   { kind: "ramadan", name: "Ramadan", note: "A full-page Ramadan background with crescent and lantern artwork.", preview: "/template-previews/ramadan.svg" },
   { kind: "new-year", name: "New Year", note: "A full-page winter celebration background with falling colourful ribbons.", preview: "/template-previews/new-year.svg" },
 ] as const;
 const TEMPLATE_ART: Record<SavedHomepagePage["kind"], { hero: string; cards: Partial<Record<HomepageGameCard["id"], string>> }> = {
   custom: { hero: DEFAULT_HOMEPAGE_CONTENT.hero.backgroundImageUrl, cards: {} },
   wesak: { hero: "/template-previews/wesak.svg?crop=hero", cards: { spin: "/template-previews/wesak.svg?crop=spin", scratch: "/template-previews/wesak.svg?crop=scratch", "pick-card": "/template-previews/wesak.svg?crop=pick-card" } },
-  christmas: { hero: "/template-previews/christmas.svg?crop=hero", cards: { spin: "/template-previews/christmas.svg?crop=spin", scratch: "/template-previews/christmas.svg?crop=scratch", "pick-card": "/template-previews/christmas.svg?crop=pick-card" } },
+  christmas: { hero: "", cards: { spin: "/template-previews/christmas-games-v2.webp?crop=spin", scratch: "/template-previews/christmas-games-v2.webp?crop=scratch", "pick-card": "/template-previews/christmas-games-v2.webp?crop=pick-card" } },
   ramadan: { hero: "", cards: { spin: "/template-previews/ramadan.svg?crop=spin", scratch: "/template-previews/ramadan.svg?crop=scratch", "pick-card": "/template-previews/ramadan.svg?crop=pick-card" } },
   "new-year": { hero: "", cards: { spin: "/template-previews/new-year.svg?crop=spin", scratch: "/template-previews/new-year.svg?crop=scratch", "pick-card": "/template-previews/new-year.svg?crop=pick-card" } },
 };
 const THEME_COLORS: Record<SeasonalTheme["preset"], Pick<SeasonalTheme, "primary" | "accent" | "heroBackground" | "pageBackground">> = {
-  christmas: { primary: "#b64038", accent: "#3e634f", heroBackground: "#fbf7f1", pageBackground: "#fffdfa" },
+  christmas: { primary: "#4e8052", accent: "#b64038", heroBackground: "#fbf7f1", pageBackground: "#fffdfa" },
   "new-year": { primary: "#10b7df", accent: "#ed4b9b", heroBackground: "#edf6ff", pageBackground: "#f8fbff" },
   ramadan: { primary: "#315d50", accent: "#d9ad50", heroBackground: "#f0f3e9", pageBackground: "#fbfaf4" },
   wesak: { primary: "#e9a21c", accent: "#c95a28", heroBackground: "#fff5df", pageBackground: "#fffbf2" },
@@ -226,13 +226,13 @@ export default function HomepageManager() {
         "new-year": { eyebrow: "NEW YEAR SPECIAL", title: "Start the year", highlight: "with a win.", description: "Welcome the new year with games and rewards for your customers." },
       };
       Object.assign(next.hero, copy[kind]);
-      if (kind === "christmas") next.typography.hero.alignment = "center";
+
       const colors = THEME_COLORS[kind];
       next.theme = { ...colors };
       next.hero.backgroundImageUrl = TEMPLATE_ART[kind].hero;
       const cardColors: Record<Exclude<SavedHomepagePage["kind"], "custom">, string[]> = {
         wesak: ["#fff1ce", "#fff8e8", "#f8ecd7"],
-        christmas: ["#f4eee6", "#fbf4eb", "#f2eee7"],
+        christmas: ["#ffffff", "#ffffff", "#ffffff"],
         ramadan: ["#eef2e5", "#fbf5e7", "#edf1e8"],
         "new-year": ["#eaf4ff", "#f8eafb", "#e7f7ff"],
       };

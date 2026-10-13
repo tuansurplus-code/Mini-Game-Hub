@@ -100,3 +100,25 @@
 .home-marketing-accordion[open]>summary { margin-bottom:16px; }
 .template-reference-modal .marketing-home { max-height:70vh; overflow-y:auto; min-height:0; border-radius:14px; }
 .homepage-preview-wrap .marketing-home { max-height:70vh; overflow-y:auto; min-height:0; border-radius:14px; }
+
+/* Christmas v2: approved full scene replaces the old inset hero and pine crops. */
+.home-public.marketing-home.home-template-christmas .mgh-backdrop {
+  background-color:var(--mgh-bg);
+  background-image:url("/template-previews/christmas-background-v2.webp");
+  background-size:100% auto;
+  background-position:center top;
+  background-repeat:no-repeat;
+}
+.home-template-christmas.mgh-effects .seasonal-pine { display:none; }
+.home-template-christmas .mgh-game-art .is-christmas-game {
+  width:189px;
+  height:189px;
+  max-width:100%;
+}
+.home-template-christmas .mgh-hero-art:empty { min-height:340px; }
+.home-template-christmas .mgh-game-art { background:none; }
+@media(max-width:760px) {
+  .home-public.marketing-home.home-template-christmas .mgh-backdrop { background-size:auto 420px; background-position:right top; }
+  .home-template-christmas .mgh-hero-copy { padding:16px; border-radius:18px; background:#ffffffdf; }
+  .home-template-christmas .mgh-hero-art:empty { display:none; min-height:0; height:0; }
+}
