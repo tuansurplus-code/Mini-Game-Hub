@@ -19,7 +19,7 @@ export default function ContactSubmissions() {
     return () => { active = false; };
   }, []);
   return <>
-    <div className="admin-header"><div><div className="eyebrow">CUSTOMER OPERATIONS</div><h1>Contact enquiries</h1><p>Messages submitted through the public Contact Us form.</p></div><span className="contact-inbox-count">{items.length} submissions</span></div>
+    <div className="admin-header"><div><div className="eyebrow">PUBLIC WEBSITE</div><h1>Contact Submissions</h1><p>Messages submitted through the public Contact Us form.</p></div><span className="contact-inbox-count">{items.length} submissions</span></div>
     <section className="admin-panel contact-inbox-panel" aria-live="polite">
       {loading && <p>Loading contact enquiries…</p>}
       {error && <p className="error-box">{error}</p>}
