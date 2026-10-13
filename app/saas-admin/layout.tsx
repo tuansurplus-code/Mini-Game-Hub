@@ -7,7 +7,7 @@ import AdminThemeControl from "../admin/AdminThemeControl";
 import { requirePlatformAdmin } from "../../lib/platform-auth";
 
 const links = [
-  { label: "Overview", icon: "overview", href: "/saas-admin" },
+  { label: "Overview", icon: "overview", href: "/saas-admin/overview" },
   { section: "PUBLIC WEBSITE" },
   { label: "Homepage Layout", icon: "website", href: "/saas-admin/settings" },
   { label: "Content Pages", icon: "content", href: "/saas-admin/content-pages" },
