@@ -1,0 +1,1463 @@
+.home-public { min-height:100vh; background:var(--home-bg,#f6f7f9); }
+.home-public .topbar { height:auto; min-height:76px; flex-wrap:wrap; }
+.home-public .home-logo { width:auto; max-width:150px; height:auto; max-height:46px; object-fit:contain; }
+.home-public .topbar .brand { font-family:inherit; }
+.home-public .topbar nav .nav,.home-public .topbar nav .primary.small { font-family:inherit; font-size:inherit; font-weight:inherit; font-style:inherit; text-decoration:inherit; }
+.home-announcement { flex-basis:100%; padding:7px 0 9px; text-align:center; color:var(--home-primary); font-size:12px; font-weight:700; }
+.home-public .brandmark,.home-public .primary,.home-public .game-visual.red,.home-public .play.red { background:var(--home-primary); }
+.home-public .hero { background:var(--home-hero); }
+.home-public .hero h1 span { color:var(--home-accent); }
+.home-public .primary { box-shadow:0 8px 18px color-mix(in srgb,var(--home-primary) 20%,transparent); }
+.home-public .eyebrow,.home-public .step>b { color:var(--home-primary); }
+.home-public .grid { grid-template-columns:repeat(var(--game-columns,3),minmax(0,1fr)); }
+.home-public .home-game-card { display:flex; flex-direction:column; overflow:hidden; transition:transform .2s,box-shadow .2s; }
+.home-public .home-game-card:hover { transform:translateY(-4px); box-shadow:0 16px 36px #10182820; }
+.home-public .home-game-card .card-body { display:flex; flex:1; flex-direction:column; align-items:stretch; }
+.home-public .home-game-card .play { margin-top:auto; }
+.home-public .home-game-card .game-visual small { color:inherit; }
+.home-public{position:relative;overflow:hidden}.home-seasonal-decoration{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:2;opacity:.36}.seasonal-motif{position:absolute;top:98px;right:4vw;font-size:38px;animation:seasonal-float 7s ease-in-out infinite}.seasonal-spark{position:absolute;width:80px;height:80px;border-radius:50%;top:150px;right:14vw;background:radial-gradient(circle,#ffd76e 0 2px,transparent 3px),radial-gradient(circle at 20% 30%,#ff896c 0 2px,transparent 3px),radial-gradient(circle at 75% 25%,#a8cff6 0 2px,transparent 3px),radial-gradient(circle at 55% 78%,#fff 0 2px,transparent 3px);background-size:22px 22px;animation:seasonal-twinkle 3s ease-in-out infinite}.seasonal-spark.two{right:auto;left:8vw;top:210px;animation-delay:1.2s}.home-template-christmas .seasonal-spark{width:100%;height:100%;inset:0;border-radius:0;background-image:radial-gradient(#fff 1px,transparent 1.8px),radial-gradient(#fff 1px,transparent 2px);background-size:42px 42px,68px 68px;background-position:0 0,20px 28px;animation:seasonal-snow 13s linear infinite;opacity:.45}.home-template-christmas .seasonal-motif{top:auto;right:auto;left:-180px;bottom:18px;font-size:32px;animation:seasonal-sleigh 32s linear infinite}.home-template-ramadan .seasonal-motif{color:#c9a75e;text-shadow:0 0 20px #e4c66f;font-size:46px}.home-template-wesak .seasonal-motif{color:#e5a12d;text-shadow:0 8px 28px #ed684c;font-size:42px}.home-template-new-year .seasonal-motif{color:#c3a2f2}.home-template-new-year .seasonal-spark{box-shadow:0 0 30px #e5b15b66}.home-template-wesak .hero{background-image:radial-gradient(circle at 85% 8%,#ffc93b1e,transparent 20%),radial-gradient(circle at 5% 90%,#e4513818,transparent 26%)}.home-template-ramadan .hero{background-image:radial-gradient(circle at 90% 0%,#dcbd5d1c,transparent 20%),linear-gradient(130deg,#ffffff08,transparent)}.home-template-new-year .hero{background-image:radial-gradient(circle at 75% 20%,#d7c7f526,transparent 22%),radial-gradient(circle at 90% 78%,#87c5e91f,transparent 18%)}.home-template-christmas .hero{background-image:radial-gradient(circle at 90% 10%,#fff4 0 1px,transparent 3px),linear-gradient(130deg,#fff1,transparent 55%)}.seasonal-santa{display:none}.home-template-christmas .seasonal-santa{display:block;position:absolute;left:-130px;bottom:16px;white-space:nowrap;font-size:30px;opacity:.8;animation:seasonal-sleigh 32s linear infinite}@keyframes seasonal-float{50%{transform:translateY(10px) rotate(7deg)}}@keyframes seasonal-twinkle{50%{opacity:.6;transform:scale(1.08)}}@keyframes seasonal-snow{to{background-position:0 340px,20px 400px}}@keyframes seasonal-sleigh{to{transform:translateX(calc(100vw + 300px))}}@media(prefers-reduced-motion:reduce){.home-seasonal-decoration *{animation:none!important}}
+@media(max-width:800px) { .home-public .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:520px) { .home-public .grid { grid-template-columns:1fr; } }
+
+/* Seasonal homepage templates use the light illustrated palettes from their previews. */
+.home-public.home-template-wesak .hero,.home-public.home-template-christmas .hero,.home-public.home-template-ramadan .hero,.home-public.home-template-new-year .hero { color:#26354b; }
+.home-public.home-template-wesak .hero p,.home-public.home-template-christmas .hero p,.home-public.home-template-ramadan .hero p,.home-public.home-template-new-year .hero p { color:#596879; }
+.home-public.home-template-wesak .hero .ghost,.home-public.home-template-christmas .hero .ghost,.home-public.home-template-ramadan .hero .ghost,.home-public.home-template-new-year .hero .ghost { color:#26354b; background:#ffffffb8; border:1px solid color-mix(in srgb,var(--home-primary) 24%,white); }
+.home-public.home-template-wesak .hero .trophy,.home-public.home-template-christmas .hero .trophy,.home-public.home-template-ramadan .hero .trophy,.home-public.home-template-new-year .hero .trophy { background:linear-gradient(145deg,var(--home-primary),var(--home-accent)); box-shadow:0 24px 70px color-mix(in srgb,var(--home-primary) 24%,transparent); }
+.home-public.home-template-wesak .hero .orbit,.home-public.home-template-christmas .hero .orbit,.home-public.home-template-ramadan .hero .orbit,.home-public.home-template-new-year .hero .orbit { border-color:color-mix(in srgb,var(--home-primary) 24%,transparent); }
+.home-public.home-template-wesak .home-game-card,.home-public.home-template-christmas .home-game-card,.home-public.home-template-ramadan .home-game-card,.home-public.home-template-new-year .home-game-card { border-color:#ffffff; box-shadow:0 12px 32px #34405412; }
+.home-public.home-template-wesak .home-game-card .game-visual,.home-public.home-template-christmas .home-game-card .game-visual,.home-public.home-template-ramadan .home-game-card .game-visual,.home-public.home-template-new-year .home-game-card .game-visual { color:var(--home-primary); }
+.home-template-new-year .seasonal-motif { color:#e94e9e; text-shadow:0 0 24px #70d9f866; }
+.home-template-new-year .seasonal-spark { opacity:.7; }
+.home-template-christmas .seasonal-motif { color:#b64038; }
+.home-template-ramadan .seasonal-spark { opacity:.48; }
+.home-template-wesak .seasonal-spark { opacity:.52; }
+
+@media(max-width:800px){.homepage-preview .preview-hero:has(.preview-hero-art){grid-template-columns:1fr}.preview-hero-art{max-height:180px}}
+
+.home-template-christmas .hero{grid-template-columns:1fr}.home-template-christmas .hero>div:first-child{max-width:760px;margin-inline:auto}.home-template-christmas .hero p{margin-inline:auto}.home-template-christmas .hero-art{display:none}.home-template-christmas .hero-actions{justify-content:center}
+
+/* Christmas template hero: paper tone, falling snow, and matching pine corner artwork. */
+.home-public.home-template-christmas .hero {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--home-hero);
+  background-image:
+    radial-gradient(circle at 18% 22%, #ffffff 0 1px, transparent 2px),
+    radial-gradient(circle at 82% 34%, #ffffff 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 61% 72%, #ffffff 0 1px, transparent 2px),
+    radial-gradient(circle at 38% 55%, #ffffff 0 1px, transparent 2px),
+    linear-gradient(130deg, #fff8, transparent 62%);
+  background-size: 120px 120px, 170px 170px, 210px 210px, 145px 145px, auto;
+}
+.home-public.home-template-christmas .hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .72;
+  background-image: url("/template-previews/christmas.svg");
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position: top left;
+  clip-path: polygon(0 0, 12% 0, 12% 18%, 0 18%, 0 0, 88% 0, 100% 0, 100% 18%, 88% 18%);
+}
+.home-public.home-template-christmas .hero > div {
+  position: relative;
+}
+@media (max-width: 800px) {
+  .home-public.home-template-christmas .hero::before {
+    opacity: .45;
+  }
+}
+
+
+/* Align the four seasonal homepages with their approved compact campaign mockups. */
+.home-public.home-template-christmas,
+.home-public.home-template-new-year,
+.home-public.home-template-ramadan,
+.home-public.home-template-wesak {
+  min-height: 100vh;
+}
+.home-public.home-template-christmas .topbar,
+.home-public.home-template-new-year .topbar,
+.home-public.home-template-ramadan .topbar,
+.home-public.home-template-wesak .topbar {
+  width: min(100%, 960px);
+  min-height: 48px;
+  margin: 0 auto;
+  padding: 8px 18px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.home-public.home-template-christmas .hero,
+.home-public.home-template-new-year .hero,
+.home-public.home-template-ramadan .hero,
+.home-public.home-template-wesak .hero {
+  width: min(100%, 960px);
+  min-height: 250px;
+  margin: 0 auto;
+  padding: 26px 5%;
+  border-radius: 0;
+  color: #26354b;
+  overflow: hidden;
+}
+.home-public.home-template-new-year { background: linear-gradient(180deg,#f4f9ff 0%,#e8f3ff 58%,#fbfdff 100%); }
+.home-public.home-template-new-year .hero {
+  background-color: #edf6ff;
+  background-image: radial-gradient(ellipse at 80% 105%,#d8e9ff 0 22%,transparent 23%),radial-gradient(ellipse at 25% 110%,#e8e3ff 0 28%,transparent 29%),linear-gradient(180deg,#edf7ff,#f5f6ff);
+}
+.home-public.home-template-ramadan { background: linear-gradient(180deg,#fbfbf4 0%,#f4f5e9 100%); }
+.home-public.home-template-ramadan .hero {
+  background-color: #f8f9f1;
+  background-image: radial-gradient(ellipse at 12% 110%,#e4e9d7 0 25%,transparent 26%),radial-gradient(ellipse at 75% 118%,#e8ecd9 0 31%,transparent 32%),linear-gradient(180deg,#fafbf5,#f1f3e8);
+}
+.home-public.home-template-wesak { background: linear-gradient(180deg,#fffaf0 0%,#fff5df 58%,#fffdf6 100%); }
+.home-public.home-template-wesak .hero {
+  background-color: #fff8e9;
+  background-image: radial-gradient(ellipse at 10% 108%,#f0dfb6 0 26%,transparent 27%),radial-gradient(ellipse at 80% 115%,#f5e6c7 0 31%,transparent 32%),linear-gradient(180deg,#fffaf0,#fff4dd);
+}
+.home-public.home-template-christmas { background: linear-gradient(180deg,#fbf8f2 0%,#f8f3eb 100%); }
+.home-public.home-template-christmas .hero {
+  min-height: 250px;
+  background-color: #fbf8f2;
+  background-size: 150px 150px,180px 180px,210px 210px,145px 145px,auto;
+}
+.home-public.home-template-new-year .hero,
+.home-public.home-template-ramadan .hero,
+.home-public.home-template-wesak .hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  text-align: center;
+}
+.home-public.home-template-new-year .hero > div:first-child,
+.home-public.home-template-ramadan .hero > div:first-child,
+.home-public.home-template-wesak .hero > div:first-child {
+  position: relative;
+  z-index: 1;
+  max-width: 70%;
+  margin: 0 auto;
+}
+.home-public.home-template-new-year .hero-art,
+.home-public.home-template-ramadan .hero-art,
+.home-public.home-template-wesak .hero-art {
+  position: absolute;
+  z-index: 0;
+  top: 18px;
+  right: 4%;
+  width: min(28%,230px);
+  height: auto;
+  margin: 0;
+  opacity: .98;
+}
+.home-public.home-template-new-year .hero-art.has-template-art { aspect-ratio: 1.75; }
+.home-public.home-template-ramadan .hero-art.has-template-art,
+.home-public.home-template-wesak .hero-art.has-template-art { aspect-ratio: 1.3; }
+.home-public.home-template-new-year .hero-actions,
+.home-public.home-template-ramadan .hero-actions,
+.home-public.home-template-wesak .hero-actions { justify-content: center; }
+.home-public.home-template-christmas .games,
+.home-public.home-template-new-year .games,
+.home-public.home-template-ramadan .games,
+.home-public.home-template-wesak .games {
+  width: min(100%, 900px);
+  margin: 12px auto 36px;
+  padding: 0 18px;
+}
+.home-public.home-template-christmas .games .section-head,
+.home-public.home-template-new-year .games .section-head,
+.home-public.home-template-ramadan .games .section-head,
+.home-public.home-template-wesak .games .section-head { display: none; }
+.home-public.home-template-christmas .games .grid,
+.home-public.home-template-new-year .games .grid,
+.home-public.home-template-ramadan .games .grid,
+.home-public.home-template-wesak .games .grid { gap: 14px; }
+.home-public.home-template-christmas .home-game-card,
+.home-public.home-template-new-year .home-game-card,
+.home-public.home-template-ramadan .home-game-card,
+.home-public.home-template-wesak .home-game-card {
+  background: #fffefa !important;
+  border: 1px solid #fff !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 24px #34405412 !important;
+  color: #26354b !important;
+}
+.home-public.home-template-christmas .home-game-card .game-visual,
+.home-public.home-template-new-year .home-game-card .game-visual,
+.home-public.home-template-ramadan .home-game-card .game-visual,
+.home-public.home-template-wesak .home-game-card .game-visual {
+  height: 132px !important;
+  margin: 10px 10px 0;
+  border-radius: 12px !important;
+}
+.home-public.home-template-christmas .home-game-card .game-visual small,
+.home-public.home-template-new-year .home-game-card .game-visual small,
+.home-public.home-template-ramadan .home-game-card .game-visual small,
+.home-public.home-template-wesak .home-game-card .game-visual small { display: none; }
+.home-public.home-template-christmas .home-game-card .card-body,
+.home-public.home-template-new-year .home-game-card .card-body,
+.home-public.home-template-ramadan .home-game-card .card-body,
+.home-public.home-template-wesak .home-game-card .card-body {
+  padding: 12px 16px 16px;
+  text-align: center !important;
+}
+.home-public.home-template-christmas .home-game-card h3,
+.home-public.home-template-wesak .home-game-card h3 { font-family: Georgia,serif !important; }
+.home-public.home-template-christmas .hero h1,
+.home-public.home-template-christmas .home-game-card h3,
+.home-public.home-template-wesak .hero h1,
+.home-public.home-template-wesak .home-game-card h3 { font-family: Georgia,serif !important; }
+.home-public.home-template-christmas .home-game-card .play,
+.home-public.home-template-new-year .home-game-card .play,
+.home-public.home-template-ramadan .home-game-card .play,
+.home-public.home-template-wesak .home-game-card .play {
+  min-height: 38px;
+  width: auto;
+  min-width: 130px;
+  align-self: center;
+  justify-content: center;
+  padding: 9px 20px;
+  border-radius: 24px;
+}
+.home-public.home-template-christmas .home-game-card .play {
+  background: #e7eadf !important;
+  color: #304539 !important;
+}
+.home-public.home-template-ramadan .home-game-card .play {
+  background: #fffefa !important;
+  color: #31594d !important;
+  border: 1px solid #cdb77e;
+}
+.home-public.home-template-wesak .home-game-card .play {
+  background: #e5a11b !important;
+  color: #fff !important;
+}
+.home-public.home-template-christmas .home-seasonal-decoration { opacity: 1; }
+.home-public.home-template-christmas .seasonal-spark {
+  opacity: .78;
+  background-image: radial-gradient(#cbbcad 1.5px,transparent 2.5px),radial-gradient(#fff 1.5px,transparent 2.7px);
+  background-size: 38px 38px,62px 62px;
+}
+.home-public.home-template-christmas .seasonal-flake {
+  position: absolute;
+  color: #aa9585;
+  font: 700 27px/1 Georgia,serif;
+  text-shadow: 0 1px 2px #fff;
+  animation: seasonal-snowflake 8s ease-in-out infinite;
+}
+.home-public.home-template-christmas .flake-a { left: 12%; top: 12%; font-size: 35px; }
+.home-public.home-template-christmas .flake-b { left: 28%; top: 37%; font-size: 22px; animation-delay: -3s; }
+.home-public.home-template-christmas .flake-c { right: 16%; top: 23%; font-size: 31px; animation-delay: -5s; }
+.home-public.home-template-christmas .flake-d { right: 35%; top: 68%; font-size: 18px; animation-delay: -1s; }
+.home-public.home-template-christmas .seasonal-santa {
+  display: block;
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  width: min(265px,42vw);
+  height: auto;
+  aspect-ratio: 265 / 52;
+  transform: translateX(-50%);
+  opacity: 1;
+  animation: none;
+  background-repeat: no-repeat;
+}
+@keyframes seasonal-snowflake {
+  0%,100% { transform: translate3d(0,-8px,0) rotate(0deg); }
+  50% { transform: translate3d(10px,14px,0) rotate(22deg); }
+}
+@media (max-width: 800px) {
+  .home-public.home-template-christmas .topbar,
+  .home-public.home-template-new-year .topbar,
+  .home-public.home-template-ramadan .topbar,
+  .home-public.home-template-wesak .topbar { padding: 8px 16px; }
+  .home-public.home-template-christmas .hero,
+  .home-public.home-template-new-year .hero,
+  .home-public.home-template-ramadan .hero,
+  .home-public.home-template-wesak .hero { min-height: 230px; padding: 24px 18px; }
+  .home-public.home-template-new-year .hero > div:first-child,
+  .home-public.home-template-ramadan .hero > div:first-child,
+  .home-public.home-template-wesak .hero > div:first-child { max-width: 100%; }
+  .home-public.home-template-new-year .hero-art,
+  .home-public.home-template-ramadan .hero-art,
+  .home-public.home-template-wesak .hero-art { top: 8px; right: 8px; width: 84px; opacity: .42; }
+  .home-public.home-template-christmas .games .grid,
+  .home-public.home-template-new-year .games .grid,
+  .home-public.home-template-ramadan .games .grid,
+  .home-public.home-template-wesak .games .grid { grid-template-columns: 1fr; }
+  .home-public.home-template-christmas .home-game-card .game-visual,
+  .home-public.home-template-new-year .home-game-card .game-visual,
+  .home-public.home-template-ramadan .home-game-card .game-visual,
+  .home-public.home-template-wesak .home-game-card .game-visual { height: 180px !important; }
+}
+
+.home-public.home-template-new-year .home-game-card:nth-child(odd) .play {
+  background: #16bde7 !important;
+  color: #fff !important;
+}
+.home-public.home-template-new-year .home-game-card:nth-child(even) .play {
+  background: #ee4d9a !important;
+  color: #fff !important;
+}
+
+
+/* Responsive finishing for the four approved seasonal homepage layouts. */
+.home-public.home-template-christmas,
+.home-public.home-template-new-year,
+.home-public.home-template-ramadan,
+.home-public.home-template-wesak { min-height: 100vh; }
+.home-public.home-template-christmas .topbar,
+.home-public.home-template-new-year .topbar,
+.home-public.home-template-ramadan .topbar,
+.home-public.home-template-wesak .topbar {
+  width: min(100%, 1320px);
+  min-height: 62px;
+  margin: 0 auto;
+  padding: 8px clamp(18px, 3vw, 40px);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.home-public.home-template-christmas .hero,
+.home-public.home-template-new-year .hero,
+.home-public.home-template-ramadan .hero,
+.home-public.home-template-wesak .hero {
+  width: min(100%, 1320px);
+  min-height: clamp(250px, 30vh, 330px);
+  margin: 0 auto;
+  padding: clamp(24px, 3vw, 42px) clamp(20px, 5vw, 72px);
+  border-radius: 0;
+  color: #26354b;
+  overflow: hidden;
+}
+.home-public.home-template-new-year { background: linear-gradient(180deg,#f4f9ff 0%,#e8f3ff 58%,#fbfdff 100%); }
+.home-public.home-template-new-year .hero {
+  background-color: #edf6ff;
+  background-image: radial-gradient(ellipse at 80% 105%,#d8e9ff 0 22%,transparent 23%),radial-gradient(ellipse at 25% 110%,#e8e3ff 0 28%,transparent 29%),linear-gradient(180deg,#edf7ff,#f5f6ff);
+}
+.home-public.home-template-ramadan { background: linear-gradient(180deg,#fbfbf4 0%,#f4f5e9 100%); }
+.home-public.home-template-ramadan .hero {
+  background-color: #f8f9f1;
+  background-image: radial-gradient(ellipse at 12% 110%,#e4e9d7 0 25%,transparent 26%),radial-gradient(ellipse at 75% 118%,#e8ecd9 0 31%,transparent 32%),linear-gradient(180deg,#fafbf5,#f1f3e8);
+}
+.home-public.home-template-wesak { background: linear-gradient(180deg,#fffaf0 0%,#fff5df 58%,#fffdf6 100%); }
+.home-public.home-template-wesak .hero {
+  background-color: #fff8e9;
+  background-image: radial-gradient(ellipse at 10% 108%,#f0dfb6 0 26%,transparent 27%),radial-gradient(ellipse at 80% 115%,#f5e6c7 0 31%,transparent 32%),linear-gradient(180deg,#fffaf0,#fff4dd);
+}
+.home-public.home-template-christmas { background: linear-gradient(180deg,#fbf8f2 0%,#f8f3eb 100%); }
+.home-public.home-template-christmas .hero {
+  min-height: clamp(250px, 30vh, 330px);
+  background-color: #fbf8f2;
+  background-size: 150px 150px,180px 180px,210px 210px,145px 145px,auto;
+}
+.home-public.home-template-new-year .hero,
+.home-public.home-template-ramadan .hero,
+.home-public.home-template-wesak .hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  text-align: center;
+}
+.home-public.home-template-new-year .hero > div:first-child,
+.home-public.home-template-ramadan .hero > div:first-child,
+.home-public.home-template-wesak .hero > div:first-child {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 850px);
+  margin: 0 auto;
+}
+.home-public.home-template-new-year .hero-art,
+.home-public.home-template-ramadan .hero-art,
+.home-public.home-template-wesak .hero-art {
+  position: absolute;
+  z-index: 0;
+  top: 18px;
+  right: 4%;
+  width: min(27%,300px);
+  height: auto;
+  margin: 0;
+  opacity: .98;
+}
+.home-public.home-template-new-year .hero-art.has-template-art { aspect-ratio: 1.75; }
+.home-public.home-template-ramadan .hero-art.has-template-art,
+.home-public.home-template-wesak .hero-art.has-template-art { aspect-ratio: 1.3; }
+.home-public.home-template-new-year .hero-actions,
+.home-public.home-template-ramadan .hero-actions,
+.home-public.home-template-wesak .hero-actions { justify-content: center; }
+.home-public.home-template-christmas .games,
+.home-public.home-template-new-year .games,
+.home-public.home-template-ramadan .games,
+.home-public.home-template-wesak .games {
+  width: min(100%, 1320px);
+  margin: 12px auto 36px;
+  padding: 0 clamp(18px, 3vw, 40px);
+}
+.home-public.home-template-christmas .games .section-head,
+.home-public.home-template-new-year .games .section-head,
+.home-public.home-template-ramadan .games .section-head,
+.home-public.home-template-wesak .games .section-head { display: none; }
+.home-public.home-template-christmas .games .grid,
+.home-public.home-template-new-year .games .grid,
+.home-public.home-template-ramadan .games .grid,
+.home-public.home-template-wesak .games .grid { gap: clamp(14px,1.5vw,24px); }
+.home-public.home-template-christmas .home-game-card,
+.home-public.home-template-new-year .home-game-card,
+.home-public.home-template-ramadan .home-game-card,
+.home-public.home-template-wesak .home-game-card {
+  background: #fffefa !important;
+  border: 1px solid #fff !important;
+  border-radius: 18px !important;
+  box-shadow: 0 8px 24px #34405412 !important;
+  color: #26354b !important;
+}
+.home-public.home-template-christmas .home-game-card .game-visual,
+.home-public.home-template-new-year .home-game-card .game-visual,
+.home-public.home-template-ramadan .home-game-card .game-visual,
+.home-public.home-template-wesak .home-game-card .game-visual {
+  min-height: 0;
+  margin: clamp(8px,1vw,14px) clamp(8px,1vw,14px) 0;
+  border-radius: 12px !important;
+}
+.home-public.home-template-christmas .home-game-card .game-visual small,
+.home-public.home-template-new-year .home-game-card .game-visual small,
+.home-public.home-template-ramadan .home-game-card .game-visual small,
+.home-public.home-template-wesak .home-game-card .game-visual small { display: none; }
+.home-public.home-template-christmas .home-game-card .card-body,
+.home-public.home-template-new-year .home-game-card .card-body,
+.home-public.home-template-ramadan .home-game-card .card-body,
+.home-public.home-template-wesak .home-game-card .card-body {
+  padding: 12px clamp(14px,2vw,24px) clamp(16px,2vw,22px);
+  text-align: center !important;
+}
+.home-public.home-template-christmas .hero h1,
+.home-public.home-template-christmas .home-game-card h3,
+.home-public.home-template-wesak .hero h1,
+.home-public.home-template-wesak .home-game-card h3 { font-family: Georgia,serif !important; }
+.home-public.home-template-christmas .home-game-card .play,
+.home-public.home-template-new-year .home-game-card .play,
+.home-public.home-template-ramadan .home-game-card .play,
+.home-public.home-template-wesak .home-game-card .play {
+  min-height: 38px;
+  width: auto;
+  min-width: 130px;
+  align-self: center;
+  justify-content: center;
+  padding: 9px 20px;
+  border-radius: 24px;
+}
+.home-public.home-template-christmas .home-game-card .play { background:#e7eadf!important;color:#304539!important; }
+.home-public.home-template-ramadan .home-game-card .play { background:#fffefa!important;color:#31594d!important;border:1px solid #cdb77e; }
+.home-public.home-template-wesak .home-game-card .play { background:#e5a11b!important;color:#fff!important; }
+.home-public.home-template-new-year .home-game-card:nth-child(odd) .play { background:#16bde7!important;color:#fff!important; }
+.home-public.home-template-new-year .home-game-card:nth-child(even) .play { background:#ee4d9a!important;color:#fff!important; }
+.home-public.home-template-christmas .hero::before { display:none; }
+.home-public.home-template-christmas .home-seasonal-decoration { opacity:1; }
+.home-public.home-template-christmas .seasonal-spark { display:none; }
+.home-public.home-template-christmas .seasonal-pine {
+  position:absolute;
+  top:70px;
+  width:clamp(68px,8vw,110px);
+  height:auto;
+  opacity:.92;
+  background-repeat:no-repeat;
+}
+.home-public.home-template-christmas .seasonal-pine.pine-left { left:0; }
+.home-public.home-template-christmas .seasonal-pine.pine-right { right:0; }
+.home-public.home-template-christmas .seasonal-flake {
+  position:absolute;
+  top:-36px;
+  display:block;
+  animation-name:seasonal-snowfall;
+  animation-timing-function:linear;
+  animation-iteration-count:infinite;
+  pointer-events:none;
+}
+.home-public.home-template-christmas .seasonal-flake svg { display:block;width:100%;height:100%;overflow:visible; }
+.home-public.home-template-christmas .seasonal-flake path {
+  fill:none;
+  stroke:#9b887a;
+  stroke-width:1.55;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  filter:drop-shadow(0 1px 1px #fff);
+}
+.home-public.home-template-christmas .seasonal-santa {
+  display:block;
+  position:absolute;
+  left:50%;
+  bottom:18px;
+  width:min(265px,42vw);
+  height:auto;
+  aspect-ratio:265/52;
+  transform:translateX(-50%);
+  opacity:1;
+  animation:none;
+  background-repeat:no-repeat;
+}
+@keyframes seasonal-snowfall {
+  from { transform:translate3d(0,-40px,0) rotate(0deg); }
+  to { transform:translate3d(38px,105vh,0) rotate(320deg); }
+}
+@media (max-width: 800px) {
+  .home-public.home-template-christmas .topbar,
+  .home-public.home-template-new-year .topbar,
+  .home-public.home-template-ramadan .topbar,
+  .home-public.home-template-wesak .topbar { padding:8px 16px; }
+  .home-public.home-template-christmas .hero,
+  .home-public.home-template-new-year .hero,
+  .home-public.home-template-ramadan .hero,
+  .home-public.home-template-wesak .hero { min-height:230px;padding:24px 18px; }
+  .home-public.home-template-new-year .hero > div:first-child,
+  .home-public.home-template-ramadan .hero > div:first-child,
+  .home-public.home-template-wesak .hero > div:first-child { max-width:100%; }
+  .home-public.home-template-new-year .hero-art,
+  .home-public.home-template-ramadan .hero-art,
+  .home-public.home-template-wesak .hero-art { top:8px;right:8px;width:84px;opacity:.3; }
+  .home-public.home-template-christmas .games .grid,
+  .home-public.home-template-new-year .games .grid,
+  .home-public.home-template-ramadan .games .grid,
+  .home-public.home-template-wesak .games .grid { grid-template-columns:1fr; }
+}
+
+/* Christmas card sizing and snowflake design from the approved reference. */
+.home-public.home-template-christmas .home-game-card { height:350px !important; min-height:350px !important; }
+.home-public.home-template-christmas .seasonal-flake { color:#78c4dc !important; }
+.home-public.home-template-christmas .seasonal-flake path { fill:none; stroke:#78c4dc; stroke-width:4.5; stroke-linecap:square; stroke-linejoin:miter; filter:drop-shadow(0 1px 1px #fff); }
+.home-public.home-template-christmas .seasonal-flake circle { stroke:none; }
+
+/* Animate the provided transparent Santa and sleigh artwork across the Christmas page. */
+.home-public.home-template-christmas .seasonal-santa { display:block; position:absolute; left:0; top:auto; bottom:18px; width:clamp(180px,22vw,310px); height:auto; aspect-ratio:auto; opacity:.94; transform:translateX(-100%); animation:christmas-sleigh-flight 36s linear infinite; background:none; background-image:none; background-size:contain; background-repeat:no-repeat; will-change:transform; }
+.home-public.home-template-christmas .seasonal-santa img { display:block; width:100%; height:auto; }
+@keyframes christmas-sleigh-flight { from { transform:translateX(-100%); } to { transform:translateX(calc(100vw + 310px)); } }
+@media (max-width:800px) { .home-public.home-template-christmas .seasonal-santa { width:180px; bottom:12px; } }
+@media (prefers-reduced-motion:reduce) { .home-public.home-template-christmas .seasonal-santa { animation:none; left:auto; right:12px; transform:none; } }
+
+/* Half-size sleigh with the original transparent background preserved. */
+.home-public.home-template-christmas .seasonal-santa { width:clamp(90px,11vw,155px); }
+@keyframes christmas-sleigh-flight { from { transform:translateX(-100%); } to { transform:translateX(calc(100vw + 100%)); } }
+@media (max-width:800px) { .home-public.home-template-christmas .seasonal-santa { width:90px; } }
+
+
+/* Wesak alignment to the approved warm ivory mockup. */
+.home-public.home-template-wesak {
+  min-height:100vh;
+  overflow-x:hidden;
+  background:linear-gradient(180deg,#fffaf0 0%,#fff5df 72%,#fffdf6 100%);
+}
+.home-public.home-template-wesak .topbar {
+  width:min(100%,1200px);
+  min-height:64px;
+  padding:8px 22px;
+}
+.home-public.home-template-wesak .brandmark {
+  width:48px;
+  height:48px;
+  border-radius:15px;
+  background:#efa51a;
+}
+.home-public.home-template-wesak .hero {
+  width:min(100%,1200px);
+  min-height:380px;
+  margin:0 auto;
+  padding:30px 32px 34px;
+  display:grid;
+  grid-template-columns:1fr;
+  place-items:center;
+  position:relative;
+  overflow:hidden;
+  text-align:center;
+  background-color:#fff8e9;
+  background-image:
+    radial-gradient(ellipse at 10% 108%,#f0dfb6 0 26%,transparent 27%),
+    radial-gradient(ellipse at 80% 115%,#f5e6c7 0 31%,transparent 32%),
+    linear-gradient(180deg,#fffaf0,#fff4dd);
+}
+.home-public.home-template-wesak .hero > div:first-child {
+  position:relative;
+  z-index:1;
+  width:min(100%,740px);
+  max-width:calc(100% - 260px);
+  margin:0 auto;
+}
+.home-public.home-template-wesak .hero .eyebrow {
+  color:#e99b12;
+  letter-spacing:.15em;
+  font-weight:800;
+}
+.home-public.home-template-wesak .hero h1 {
+  margin:12px 0 0;
+  color:#26354b;
+  font-family:Georgia,serif !important;
+  font-size:clamp(44px,4vw,58px) !important;
+  line-height:.98;
+  letter-spacing:-.045em;
+}
+.home-public.home-template-wesak .hero h1 span { color:#c95528 !important; }
+.home-public.home-template-wesak .hero p {
+  margin:22px auto 30px;
+  color:#52657a;
+  font-size:19px;
+  line-height:1.55;
+}
+.home-public.home-template-wesak .hero-art {
+  position:absolute;
+  z-index:0;
+  top:16px;
+  right:0;
+  width:min(26%,300px);
+  height:auto;
+  aspect-ratio:1.3;
+  margin:0;
+  opacity:1;
+}
+.home-public.home-template-wesak .hero-actions { justify-content:center; gap:14px; }
+.home-public.home-template-wesak .hero-actions .primary {
+  min-height:62px;
+  padding:0 28px;
+  border-radius:16px;
+  background:#efa51a;
+  box-shadow:0 12px 28px #d89a2225;
+  font-size:20px;
+}
+.home-public.home-template-wesak .hero-actions .ghost {
+  min-height:62px;
+  padding:0 28px;
+  border-radius:16px;
+  background:#fffdf8;
+  border:0;
+  font-size:20px;
+}
+.home-public.home-template-wesak .games {
+  width:min(100%,1140px);
+  margin:14px auto 40px;
+  padding:0 10px;
+}
+.home-public.home-template-wesak .games .grid {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:16px;
+  align-items:stretch;
+}
+.home-public.home-template-wesak .home-game-card {
+  width:100% !important;
+  min-width:0;
+  min-height:445px !important;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  background:#fffefa !important;
+  border:1px solid #ffffff !important;
+  border-radius:20px !important;
+  box-shadow:0 12px 30px #8e672016 !important;
+}
+.home-public.home-template-wesak .home-game-card .game-visual {
+  height:164px !important;
+  min-height:164px;
+  flex:none;
+  margin:12px 12px 0;
+  border-radius:14px !important;
+  background-color:#fff5df !important;
+}
+.home-public.home-template-wesak .home-game-card .game-visual small { display:none; }
+.home-public.home-template-wesak .home-game-card .card-body {
+  display:flex;
+  flex:1;
+  flex-direction:column;
+  align-items:stretch;
+  padding:14px 20px 20px;
+  text-align:left !important;
+}
+.home-public.home-template-wesak .home-game-card h3 {
+  min-height:1.2em;
+  margin:0 0 10px;
+  color:#1d3554 !important;
+  font-family:Georgia,serif !important;
+  font-size:clamp(25px,2vw,34px) !important;
+  line-height:1.08;
+}
+.home-public.home-template-wesak .home-game-card p {
+  margin:0 0 18px;
+  color:#24364b !important;
+  font-size:19px !important;
+  line-height:1.55;
+}
+.home-public.home-template-wesak .home-game-card .play {
+  min-width:0;
+  min-height:52px;
+  width:max-content;
+  max-width:100%;
+  align-self:center;
+  justify-content:center;
+  margin-top:auto;
+  padding:10px 26px;
+  border:0;
+  border-radius:28px;
+  background:#efa51a !important;
+  color:#fff !important;
+  font-size:19px;
+  font-weight:800;
+}
+.home-public.home-template-wesak .seasonal-spark {
+  width:92px;
+  height:92px;
+  top:205px;
+  background-image:
+    radial-gradient(circle,#f3b768 0 2px,transparent 2.5px),
+    radial-gradient(circle,#f7d8a1 0 2px,transparent 2.5px);
+  background-size:18px 18px,26px 26px;
+  opacity:.55;
+}
+.home-public.home-template-wesak .seasonal-spark.one { right:14vw; }
+.home-public.home-template-wesak .seasonal-spark.two { left:8vw; top:238px; }
+.home-public.home-template-wesak .seasonal-motif { display:none; }
+@media(max-width:800px) {
+  .home-public.home-template-wesak .topbar { min-height:60px; padding:8px 16px; }
+  .home-public.home-template-wesak .hero {
+    width:100%;
+    min-height:330px;
+    padding:36px 20px 30px;
+  }
+  .home-public.home-template-wesak .hero > div:first-child {
+    width:100%;
+    max-width:100%;
+    padding-top:48px;
+  }
+  .home-public.home-template-wesak .hero h1 { font-size:clamp(36px,9vw,48px) !important; }
+  .home-public.home-template-wesak .hero p { margin:16px auto 22px; font-size:16px; }
+  .home-public.home-template-wesak .hero-art {
+    top:6px;
+    right:8px;
+    width:94px;
+    opacity:.62;
+  }
+  .home-public.home-template-wesak .hero-actions { gap:10px; }
+  .home-public.home-template-wesak .hero-actions .primary,
+  .home-public.home-template-wesak .hero-actions .ghost {
+    min-height:50px;
+    padding:0 18px;
+    font-size:16px;
+  }
+  .home-public.home-template-wesak .games { width:100%; padding:0 16px; }
+  .home-public.home-template-wesak .games .grid {
+    grid-template-columns:1fr !important;
+    gap:16px;
+  }
+  .home-public.home-template-wesak .home-game-card { min-height:420px !important; }
+  .home-public.home-template-wesak .home-game-card .game-visual { height:190px !important; min-height:190px; }
+  .home-public.home-template-wesak .home-game-card h3 { font-size:30px !important; }
+  .home-public.home-template-wesak .seasonal-spark { opacity:.3; }
+}
+
+
+/* Wesak refinements from the full-width lantern reference. */
+.home-public.home-template-wesak {
+  min-height:100vh;
+  overflow-x:hidden;
+  background:#fff8e8;
+  background-image:
+    radial-gradient(ellipse at 5% 24%,#fff0c8 0,transparent 30%),
+    radial-gradient(ellipse at 96% 38%,#f8e8bc 0,transparent 32%),
+    linear-gradient(180deg,#fffaf0 0%,#fff3d6 55%,#fffaf0 100%);
+}
+.home-public.home-template-wesak .topbar {
+  width:100%;
+  max-width:none;
+  min-height:68px;
+  padding:8px max(22px,calc((100% - 1200px)/2));
+  background:#fffdf6;
+}
+.home-public.home-template-wesak .hero {
+  width:100%;
+  max-width:none;
+  min-height:310px;
+  margin:0;
+  padding:30px 24px 34px;
+  border-radius:0;
+  box-shadow:none;
+  background-color:transparent;
+  background-image:
+    radial-gradient(ellipse at 5% 108%,#f1e1b8 0 19%,transparent 20%),
+    radial-gradient(ellipse at 28% 116%,#f9eacb 0 21%,transparent 22%),
+    radial-gradient(ellipse at 78% 115%,#f1dfb6 0 24%,transparent 25%),
+    radial-gradient(ellipse at 98% 105%,#faedcf 0 20%,transparent 21%),
+    linear-gradient(180deg,#fff6df 0%,#fff5dd 100%);
+}
+.home-public.home-template-wesak .hero > div:first-child {
+  width:min(100%,760px);
+  max-width:calc(100% - 300px);
+}
+.home-public.home-template-wesak .hero h1 {
+  font-size:clamp(42px,4.3vw,62px) !important;
+  line-height:1;
+}
+.home-public.home-template-wesak .hero p {
+  margin:16px auto 22px;
+  font-size:18px;
+}
+.home-public.home-template-wesak .hero-art {
+  top:8px;
+  right:2%;
+  width:clamp(210px,23vw,310px);
+  opacity:1;
+}
+.home-public.home-template-wesak .games {
+  width:min(100%,1200px);
+  margin:0 auto 42px;
+  padding:0 14px;
+}
+.home-public.home-template-wesak .games .grid {
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:18px;
+}
+.home-public.home-template-wesak .home-game-card {
+  height:350px !important;
+  min-height:350px !important;
+  width:100% !important;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid #fffdf6 !important;
+  border-radius:22px !important;
+  background:#fffaf0 !important;
+  box-shadow:0 12px 28px #8560181c !important;
+}
+.home-public.home-template-wesak .home-game-card .game-visual {
+  height:205px !important;
+  min-height:205px;
+  flex:none;
+  margin:10px 10px 0;
+  border-radius:16px !important;
+}
+.home-public.home-template-wesak .home-game-card .card-body {
+  min-height:0;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  padding:7px 14px 10px;
+  text-align:center !important;
+}
+.home-public.home-template-wesak .home-game-card h3 {
+  margin:0 0 4px;
+  color:#873b13 !important;
+  font-size:clamp(22px,1.9vw,27px) !important;
+  line-height:1.05;
+  white-space:nowrap;
+}
+.home-public.home-template-wesak .home-game-card p {
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  margin:0 0 5px;
+  color:#6a5534 !important;
+  font-size:14px !important;
+  line-height:1.25;
+}
+.home-public.home-template-wesak .home-game-card .play {
+  min-height:40px;
+  width:max-content;
+  min-width:150px;
+  align-self:center;
+  margin-top:auto;
+  padding:8px 20px;
+  border-radius:24px;
+  background:#efa51a !important;
+  color:#fff !important;
+  font-size:16px;
+}
+.home-public.home-template-wesak .seasonal-spark {
+  width:100px;
+  height:100px;
+  top:145px;
+  opacity:.42;
+}
+.home-public.home-template-wesak .seasonal-spark.one { right:9vw; }
+.home-public.home-template-wesak .seasonal-spark.two { left:8vw; top:175px; }
+.home-public.home-template-wesak .seasonal-motif { display:none; }
+@media(max-width:800px) {
+  .home-public.home-template-wesak .topbar {
+    min-height:60px;
+    padding:8px 16px;
+  }
+  .home-public.home-template-wesak .hero {
+    min-height:300px;
+    padding:34px 18px 28px;
+  }
+  .home-public.home-template-wesak .hero > div:first-child {
+    width:100%;
+    max-width:100%;
+    padding-top:60px;
+  }
+  .home-public.home-template-wesak .hero h1 {
+    font-size:clamp(34px,9vw,48px) !important;
+  }
+  .home-public.home-template-wesak .hero-art {
+    top:2px;
+    right:8px;
+    width:112px;
+    opacity:.8;
+  }
+  .home-public.home-template-wesak .games { padding:0 16px; }
+  .home-public.home-template-wesak .games .grid {
+    grid-template-columns:1fr !important;
+    gap:16px;
+  }
+  .home-public.home-template-wesak .home-game-card {
+    height:350px !important;
+    min-height:350px !important;
+  }
+  .home-public.home-template-wesak .home-game-card .game-visual {
+    height:210px !important;
+    min-height:210px;
+  }
+}
+@media(max-width:420px) {
+  .home-public.home-template-wesak .home-game-card h3 { font-size:21px !important; }
+  .home-public.home-template-wesak .home-game-card .play { min-width:138px; }
+}
+
+/* Wesak final alignment: use the approved full-scene artwork as the page backdrop. */
+.home-public.home-template-wesak {
+  background-color:#fff8e8;
+  background-image:url("/template-previews/wesak.svg");
+  background-size:100% 100vh;
+  background-position:center -60px;
+  background-repeat:no-repeat;
+  background-attachment:scroll;
+}
+.home-public.home-template-wesak .hero {
+  background:transparent !important;
+}
+.home-public.home-template-wesak .hero > div:first-child {
+  width:min(100%,900px);
+  max-width:900px;
+}
+.home-public.home-template-wesak .hero-art,
+.home-public.home-template-wesak .home-seasonal-decoration {
+  display:none !important;
+}
+.home-public.home-template-wesak .home-game-card .game-visual-contained {
+  height:205px !important;
+  min-height:205px !important;
+  display:grid;
+  place-items:center;
+  background-color:#fff3d6 !important;
+  overflow:hidden;
+}
+.home-public.home-template-wesak .game-visual-art {
+  display:block;
+  height:100%;
+  max-width:100%;
+  flex:none;
+  background-repeat:no-repeat;
+}
+@media(max-width:800px) {
+  .home-public.home-template-wesak {
+    background-size:auto 100vh;
+    background-position:center -48px;
+  }
+  .home-public.home-template-wesak .hero > div:first-child {
+    width:100%;
+    max-width:100%;
+  }
+  .home-public.home-template-wesak .home-game-card .game-visual-contained {
+    height:210px !important;
+    min-height:210px !important;
+  }
+}
+
+/* Soften the mockup's built-in sample copy under live Wesak content. */
+.home-public.home-template-wesak .hero {
+  isolation:isolate;
+}
+.home-public.home-template-wesak .hero::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse 78% 75% at 50% 52%,#fff8e9 0%,#fff8e9f5 58%,#fff8e9c9 78%,transparent 100%),
+    linear-gradient(180deg,transparent 48%,#fff8e9e8 100%);
+}
+.home-public.home-template-wesak .hero > div:first-child {
+  position:relative;
+  z-index:1;
+}
+.home-public.home-template-wesak .how {
+  position:relative;
+  isolation:isolate;
+}
+.home-public.home-template-wesak .how::before {
+  content:"";
+  position:absolute;
+  inset:-20px 0;
+  z-index:-1;
+  pointer-events:none;
+  background:radial-gradient(ellipse at center,#fff8e8f4 0%,#fff8e8e8 62%,transparent 100%);
+}
+
+/* Hide the flattened mockup's sample title, cards, and footer marks behind live sections. */
+.home-public.home-template-wesak .hero::before {
+  background:
+    radial-gradient(ellipse 72% 25% at 50% 24%,#fff8e9 0 72%,#fff8e9f5 88%,transparent 100%),
+    radial-gradient(ellipse 78% 75% at 50% 52%,#fff8e9 0%,#fff8e9f5 58%,#fff8e9c9 78%,transparent 100%),
+    linear-gradient(180deg,transparent 48%,#fff8e9e8 100%);
+}
+.home-public.home-template-wesak .games {
+  position:relative;
+  background:radial-gradient(ellipse 110% 110% at center,#fff8e8 0 74%,#fff8e8ef 88%,transparent 100%);
+}
+.home-public.home-template-wesak .how::before {
+  background:radial-gradient(ellipse 100% 100% at center,#fff8e8 0 72%,#fff8e8f4 88%,transparent 100%);
+}
+
+/* Keep the Wesak lantern borders visible while masking only the mockup's duplicate center content. */
+.home-public.home-template-wesak .hero > div:first-child {
+  text-align:center !important;
+}
+.home-public.home-template-wesak .hero h1,
+.home-public.home-template-wesak .hero p {
+  text-align:center !important;
+}
+.home-public.home-template-wesak .hero::before {
+  background:
+    radial-gradient(ellipse 36% 28% at 50% 22%,#fff8e9 0 76%,#fff8e9f1 92%,transparent 100%),
+    radial-gradient(ellipse 40% 22% at 50% 56%,#fff8e9 0 74%,#fff8e9ed 92%,transparent 100%),
+    radial-gradient(ellipse 58% 28% at 50% 86%,#fff8e9 0 70%,#fff8e9ec 88%,transparent 100%);
+}
+
+
+/* The uploaded Wesak scene begins directly below the responsive header. */
+.home-public.home-template-wesak {
+  background:#fff8e8 !important;
+  background-image:none !important;
+}
+.home-public.home-template-wesak .home-template-backdrop {
+  background-color:#fff8e8;
+  background-image:url("/template-previews/wesak-background.webp");
+  background-position:center top;
+  background-repeat:no-repeat;
+  background-size:100% auto;
+}
+.home-public.home-template-wesak .hero::before,
+.home-public.home-template-wesak .how::before {
+  display:none !important;
+}
+.home-public.home-template-wesak .games {
+  background:transparent !important;
+}
+@media(max-width:800px) {
+  .home-public.home-template-wesak .home-template-backdrop {
+    background-size:100% auto;
+  }
+}
+
+
+/* Ramadan template: use the uploaded scene as one full-page backdrop, matching Wesak. */
+.home-public.home-template-ramadan {
+  min-height:100vh;
+  overflow-x:hidden;
+  background:#f8f7ee !important;
+  background-image:none !important;
+}
+.home-public.home-template-ramadan .topbar {
+  width:100%;
+  max-width:none;
+  min-height:68px;
+  padding:8px max(22px,calc((100% - 1200px)/2));
+  background:#fffdf6;
+}
+.home-public.home-template-ramadan .home-template-backdrop {
+  background-color:#f8f7ee;
+  background-image:url("/template-previews/ramadan-background.webp");
+  background-position:center top;
+  background-repeat:no-repeat;
+  background-size:100% auto;
+}
+.home-public.home-template-ramadan .hero {
+  width:100%;
+  max-width:none;
+  min-height:310px;
+  margin:0;
+  padding:30px 24px 34px;
+  border-radius:0;
+  box-shadow:none;
+  background:transparent !important;
+}
+.home-public.home-template-ramadan .hero > div:first-child {
+  width:min(100%,900px);
+  max-width:900px;
+}
+.home-public.home-template-ramadan .hero h1,
+.home-public.home-template-ramadan .home-game-card h3 {
+  font-family:Georgia,serif !important;
+}
+.home-public.home-template-ramadan .hero h1 {
+  color:#31594d;
+  font-size:clamp(42px,4.3vw,62px) !important;
+  line-height:1;
+}
+.home-public.home-template-ramadan .hero h1 span { color:#b68731; }
+.home-public.home-template-ramadan .hero p {
+  margin:16px auto 22px;
+  color:#52685d;
+  font-size:18px;
+}
+.home-public.home-template-ramadan .hero-art,
+.home-public.home-template-ramadan .home-seasonal-decoration {
+  display:none !important;
+}
+.home-public.home-template-ramadan .games {
+  width:min(100%,1200px);
+  margin:0 auto 42px;
+  padding:0 14px;
+}
+.home-public.home-template-ramadan .games .grid {
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:18px;
+}
+.home-public.home-template-ramadan .home-game-card {
+  height:350px !important;
+  min-height:350px !important;
+  width:100% !important;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid #fffdf6 !important;
+  border-radius:22px !important;
+  background:#fffdf7 !important;
+  box-shadow:0 12px 28px #46513c1c !important;
+}
+.home-public.home-template-ramadan .home-game-card .game-visual {
+  height:205px !important;
+  min-height:205px;
+  flex:none;
+  margin:10px 10px 0;
+  border-radius:16px !important;
+}
+.home-public.home-template-ramadan .home-game-card .game-visual-contained {
+  display:grid;
+  place-items:center;
+  background-color:#f4f3e8 !important;
+  overflow:hidden;
+}
+.home-public.home-template-ramadan .game-visual-art {
+  display:block;
+  height:100%;
+  max-width:100%;
+  flex:none;
+  background-repeat:no-repeat;
+}
+.home-public.home-template-ramadan .home-game-card .game-visual small { display:none; }
+.home-public.home-template-ramadan .home-game-card .card-body {
+  min-height:0;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  padding:7px 14px 10px;
+  text-align:center !important;
+}
+.home-public.home-template-ramadan .home-game-card h3 {
+  margin:0 0 4px;
+  color:#31594d !important;
+  font-size:clamp(22px,1.9vw,27px) !important;
+  line-height:1.05;
+  white-space:nowrap;
+}
+.home-public.home-template-ramadan .home-game-card p {
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  margin:0 0 5px;
+  color:#52685d !important;
+  font-size:14px !important;
+  line-height:1.25;
+}
+.home-public.home-template-ramadan .home-game-card .play {
+  min-height:40px;
+  width:max-content;
+  min-width:150px;
+  align-self:center;
+  margin-top:auto;
+  padding:8px 20px;
+  border-radius:24px;
+  background:#315d50 !important;
+  color:#fff !important;
+  font-size:16px;
+}
+@media(max-width:800px) {
+  .home-public.home-template-ramadan .topbar {
+    min-height:60px;
+    padding:8px 16px;
+  }
+  .home-public.home-template-ramadan .hero {
+    min-height:300px;
+    padding:34px 18px 28px;
+  }
+  .home-public.home-template-ramadan .hero h1 {
+    font-size:clamp(34px,9vw,48px) !important;
+  }
+  .home-public.home-template-ramadan .games { padding:0 16px; }
+  .home-public.home-template-ramadan .games .grid {
+    grid-template-columns:1fr !important;
+    gap:16px;
+  }
+  .home-public.home-template-ramadan .home-game-card {
+    height:350px !important;
+    min-height:350px !important;
+  }
+  .home-public.home-template-ramadan .home-game-card .game-visual {
+    height:210px !important;
+    min-height:210px;
+  }
+  .home-public.home-template-ramadan .home-game-card h3 { font-size:clamp(23px,6vw,28px) !important; }
+}
+@media(max-width:420px) {
+  .home-public.home-template-ramadan .home-game-card .play { min-width:138px; }
+}
+
+/* New Year template: use the uploaded scene as one full-page backdrop, matching Wesak. */
+.home-public.home-template-new-year {
+  min-height:100vh;
+  overflow-x:hidden;
+  background:#f8fbff !important;
+  background-image:none !important;
+}
+.home-public.home-template-new-year .topbar {
+  width:100%;
+  max-width:none;
+  min-height:68px;
+  padding:8px max(22px,calc((100% - 1200px)/2));
+  background:#ffffff;
+}
+.home-public.home-template-new-year .home-template-backdrop {
+  background-color:#f8fbff;
+  background-image:url("/template-previews/new-year-background.webp");
+  background-position:center top;
+  background-repeat:no-repeat;
+  background-size:100% auto;
+}
+.home-public.home-template-new-year .hero {
+  width:100%;
+  max-width:none;
+  min-height:310px;
+  margin:0;
+  padding:30px 24px 34px;
+  border-radius:0;
+  box-shadow:none;
+  background:transparent !important;
+}
+.home-public.home-template-new-year .hero > div:first-child {
+  width:min(100%,900px);
+  max-width:900px;
+}
+.home-public.home-template-new-year .hero h1,
+.home-public.home-template-new-year .home-game-card h3 {
+  font-family:Georgia,serif !important;
+}
+.home-public.home-template-new-year .hero h1 {
+  color:#243c65;
+  font-size:clamp(42px,4.3vw,62px) !important;
+  line-height:1;
+}
+.home-public.home-template-new-year .hero h1 span { color:#ed4b9b; }
+.home-public.home-template-new-year .hero p {
+  margin:16px auto 22px;
+  color:#526580;
+  font-size:18px;
+}
+.home-public.home-template-new-year .hero-art,
+.home-public.home-template-new-year .seasonal-spark,
+.home-public.home-template-new-year .seasonal-motif {
+  display:none !important;
+}
+.home-public.home-template-new-year .games {
+  width:min(100%,1200px);
+  margin:0 auto 42px;
+  padding:0 14px;
+}
+.home-public.home-template-new-year .games .grid {
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:18px;
+}
+.home-public.home-template-new-year .home-game-card {
+  height:350px !important;
+  min-height:350px !important;
+  width:100% !important;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid #ffffff !important;
+  border-radius:22px !important;
+  background:#ffffff !important;
+  box-shadow:0 12px 28px #465a811c !important;
+}
+.home-public.home-template-new-year .home-game-card .game-visual {
+  height:205px !important;
+  min-height:205px;
+  flex:none;
+  margin:10px 10px 0;
+  border-radius:16px !important;
+}
+.home-public.home-template-new-year .home-game-card .game-visual-contained {
+  display:grid;
+  place-items:center;
+  background-color:#edf6ff !important;
+  overflow:hidden;
+}
+.home-public.home-template-new-year .game-visual-art {
+  display:block;
+  height:100%;
+  max-width:100%;
+  flex:none;
+  background-repeat:no-repeat;
+}
+.home-public.home-template-new-year .home-game-card .game-visual small { display:none; }
+.home-public.home-template-new-year .home-game-card .card-body {
+  min-height:0;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  padding:7px 14px 10px;
+  text-align:center !important;
+}
+.home-public.home-template-new-year .home-game-card h3 {
+  margin:0 0 4px;
+  color:#243c65 !important;
+  font-size:clamp(22px,1.9vw,27px) !important;
+  line-height:1.05;
+  white-space:nowrap;
+}
+.home-public.home-template-new-year .home-game-card p {
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  margin:0 0 5px;
+  color:#526580 !important;
+  font-size:14px !important;
+  line-height:1.25;
+}
+.home-public.home-template-new-year .home-game-card .play {
+  min-height:40px;
+  width:max-content;
+  min-width:150px;
+  align-self:center;
+  margin-top:auto;
+  padding:8px 20px;
+  border-radius:24px;
+  background:#10b7df !important;
+  color:#fff !important;
+  font-size:16px;
+}
+@media(max-width:800px) {
+  .home-public.home-template-new-year .topbar {
+    min-height:60px;
+    padding:8px 16px;
+  }
+  .home-public.home-template-new-year .hero {
+    min-height:300px;
+    padding:34px 18px 28px;
+  }
+  .home-public.home-template-new-year .hero h1 {
+    font-size:clamp(34px,9vw,48px) !important;
+  }
+  .home-public.home-template-new-year .games { padding:0 16px; }
+  .home-public.home-template-new-year .games .grid {
+    grid-template-columns:1fr !important;
+    gap:16px;
+  }
+  .home-public.home-template-new-year .home-game-card {
+    height:350px !important;
+    min-height:350px !important;
+  }
+  .home-public.home-template-new-year .home-game-card .game-visual {
+    height:210px !important;
+    min-height:210px;
+  }
+  .home-public.home-template-new-year .home-game-card h3 { font-size:clamp(23px,6vw,28px) !important; }
+}
+@media(max-width:420px) {
+  .home-public.home-template-new-year .home-game-card .play { min-width:138px; }
+}
+
+.home-public.home-template-new-year .hero > div:first-child { margin:0 auto; text-align:center !important; }
+.home-public.home-template-new-year .hero h1,.home-public.home-template-new-year .hero p { text-align:center !important; }
+.home-public.home-template-new-year .hero-actions { justify-content:center; }
+.home-public.home-template-new-year .home-seasonal-decoration { position:fixed; inset:68px 0 0; opacity:.8; pointer-events:none; }
+.seasonal-ribbon { position:absolute; top:-100px; animation:new-year-ribbon-fall linear infinite; will-change:transform; }
+.seasonal-ribbon svg { width:100%; height:100%; overflow:visible; }
+@keyframes new-year-ribbon-fall {
+  0% { transform:translate3d(0,-100px,0) rotate(var(--ribbon-turn)); }
+  35% { transform:translate3d(var(--ribbon-drift),35vh,0) rotate(calc(var(--ribbon-turn) + 100deg)); }
+  70% { transform:translate3d(calc(var(--ribbon-drift) * -.5),70vh,0) rotate(calc(var(--ribbon-turn) + 220deg)); }
+  100% { transform:translate3d(var(--ribbon-drift),calc(100vh + 160px),0) rotate(calc(var(--ribbon-turn) + 360deg)); }
+}
+@media(max-width:800px) {
+  .home-public.home-template-new-year .hero > div:first-child { width:100%; max-width:100%; }
+  .home-public.home-template-new-year .home-seasonal-decoration { top:60px; }
+  .seasonal-ribbon:nth-of-type(n+17) { display:none; }
+}
+@media(prefers-reduced-motion:reduce) { .home-public.home-template-new-year .seasonal-ribbon { display:none; } }
+
+/* New Year reference alignment: copy beside the snowman and left-aligned cards. */
+.home-public.home-template-new-year .hero {
+  min-height:clamp(310px,26vw,430px);
+  padding:48px 24px 36px;
+  align-items:center;
+}
+.home-public.home-template-new-year .hero > div:first-child {
+  width:38%;
+  max-width:600px;
+  margin:0 0 0 27%;
+  text-align:left !important;
+}
+.home-public.home-template-new-year .hero h1,
+.home-public.home-template-new-year .hero p {
+  text-align:left !important;
+}
+.home-public.home-template-new-year .hero h1 {
+  font-size:clamp(34px,3.2vw,50px) !important;
+  color:#7c8ddb;
+}
+.home-public.home-template-new-year .hero h1 span { color:#7c8ddb; }
+.home-public.home-template-new-year .hero-actions { justify-content:flex-start; gap:16px; }
+.home-public.home-template-new-year .hero-actions .primary,
+.home-public.home-template-new-year .hero-actions .ghost {
+  min-height:48px;
+  padding:12px 24px;
+  border:0;
+  border-radius:30px;
+  color:#fff;
+}
+.home-public.home-template-new-year .hero-actions .primary { background:#10b7df; }
+.home-public.home-template-new-year .hero-actions .ghost { background:#ed4b9b; }
+.home-public.home-template-new-year .home-game-card .card-body {
+  padding:8px 20px 12px;
+  text-align:left !important;
+}
+.home-public.home-template-new-year .home-game-card h3,
+.home-public.home-template-new-year .home-game-card p { text-align:left !important; }
+.home-public.home-template-new-year .home-game-card .play { align-self:flex-start; }
+@media(max-width:800px) {
+  .home-public.home-template-new-year .hero { min-height:310px; padding:32px 20px; }
+  .home-public.home-template-new-year .hero > div:first-child {
+    width:100%;
+    max-width:600px;
+    margin:0 auto;
+    text-align:center !important;
+  }
+  .home-public.home-template-new-year .hero h1,
+  .home-public.home-template-new-year .hero p { text-align:center !important; }
+  .home-public.home-template-new-year .hero-actions { justify-content:center; flex-wrap:wrap; gap:10px; }
+  .home-public.home-template-new-year .hero-actions .primary,
+  .home-public.home-template-new-year .hero-actions .ghost { padding:10px 18px; }
+}
+

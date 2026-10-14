@@ -43,6 +43,11 @@ export default async function CampaignGameConfigurationLayout({
     </section>;
   }
 
+  const definition = Array.isArray(game.games) ? game.games[0] : game.games;
+  const gameType = String(definition?.type ?? "").trim().toLowerCase().replace(/[\s_]+/g, "-");
+  const isSpin = ["spin", "spin-and-win"].includes(gameType);
+  const isScratch = ["scratch", "scratch-and-win"].includes(gameType);
+  const isCard = ["pick-a-card", "pick-card", "card"].includes(gameType);
   return <>
     <CampaignBuilderNav campaignId={game.campaign_id} gameId={id} />
     <div className="campaign-game-configuration">
@@ -51,9 +56,9 @@ export default async function CampaignGameConfigurationLayout({
       <PrizeCouponSettings campaignGameId={id} />
       <AutoCouponSettings campaignGameId={id} />
       <CampaignPrizeColors campaignGameId={id} />
-      <WheelCustomization campaignGameId={id} />
-      <ScratchCustomization campaignGameId={id} />
-      <PickACardCustomization campaignGameId={id} />
+      {isSpin && <WheelCustomization campaignGameId={id} />}
+      {isScratch && <ScratchCustomization campaignGameId={id} />}
+      {isCard && <PickACardCustomization campaignGameId={id} />}
       <style>{`.campaign-game-configuration form > .admin-panel:first-child{display:none}`}</style>
     </div>
   </>;

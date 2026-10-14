@@ -1,8 +1,9 @@
+import { cache } from "react";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { CUSTOMER_SESSION_KEY, PLATFORM_SESSION_KEY } from "./auth-session";
 
-export async function createSupabaseServerClient(area: "customer" | "platform" = "customer") {
+export const createSupabaseServerClient = cache(async function createSupabaseServerClient(area: "customer" | "platform" = "customer") {
   const cookieStore = await cookies();
 
   return createServerClient(
@@ -28,4 +29,4 @@ export async function createSupabaseServerClient(area: "customer" | "platform" =
       },
     }
   );
-}
+});

@@ -1,10 +1,11 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "./supabase-server";
 
 export type WorkspaceRole = "owner" | "admin" | "editor" | "viewer";
 
-export async function requireAdmin() {
+export const requireAdmin = cache(async function requireAdmin() {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -36,4 +37,4 @@ export async function requireAdmin() {
     workspaceId: membership.workspace_id,
     role: membership.role as WorkspaceRole,
   };
-}
+});

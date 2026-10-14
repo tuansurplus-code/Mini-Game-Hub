@@ -1,6 +1,7 @@
 "use client";
-import HomepageView from "../../../components/HomepageView";
-import MarketingSectionsEditor from "./MarketingSectionsEditor";
+import dynamic from "next/dynamic";
+const HomepageView = dynamic(() => import("../../../components/HomepageView"), { loading: () => <p role="status">Loading preview…</p> });
+const MarketingSectionsEditor = dynamic(() => import("./MarketingSectionsEditor"), { loading: () => <p role="status">Loading section settings…</p> });
 
 import { useEffect, useState } from "react";
 import type { CSSProperties, ChangeEvent } from "react";
@@ -19,7 +20,7 @@ const THEME_PRESETS: Record<HomepageSiteTheme["preset"], { label: string; colors
 };
 const READY_TEMPLATES = [
   { kind: "custom", name: "Modern Default", note: "The approved SaaS layout with colourful game artwork and flexible sections.", preview: "/homepage/campaign-games.webp" },
-  { kind: "wesak", name: "Wesak", note: "The finalized lantern and lotus design in warm ivory and gold.", preview: "/template-previews/wesak-background-exact.png" },
+  { kind: "wesak", name: "Wesak", note: "The finalized lantern and lotus design in warm ivory and gold.", preview: "/template-previews/wesak-background-mobile.webp" },
   { kind: "christmas", name: "Christmas", note: "The finalized holiday design with winter artwork and evergreen accents.", preview: "/template-previews/christmas-background-v2.webp" },
   { kind: "ramadan", name: "Ramadan", note: "A full-page Ramadan background with crescent and lantern artwork.", preview: "/template-previews/ramadan.svg" },
   { kind: "new-year", name: "New Year", note: "A full-page winter celebration background with falling colourful ribbons.", preview: "/template-previews/new-year.svg" },

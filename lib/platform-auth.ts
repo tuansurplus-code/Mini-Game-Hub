@@ -1,10 +1,11 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "./supabase-server";
 
 import type { PlatformRole } from "./platform-roles";
 export type { PlatformRole } from "./platform-roles";
 
-export async function requirePlatformAdmin() {
+export const requirePlatformAdmin = cache(async function requirePlatformAdmin() {
   const supabase = await createSupabaseServerClient("platform");
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -21,7 +22,7 @@ export async function requirePlatformAdmin() {
   if (user.app_metadata?.must_change_password === true) redirect("/saas-password");
 
   return { user, role: platformAdmin.role as PlatformRole };
-}
+});
 
 export async function getPlatformAdmin() {
   const supabase = await createSupabaseServerClient("platform");

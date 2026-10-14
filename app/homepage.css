@@ -24,7 +24,7 @@
 .mgh-hero h1 span { color:var(--mgh-primary); }
 .mgh-hero p { color:var(--mgh-muted); line-height:1.7; max-width:530px; margin:0 0 24px; }
 .mgh-actions { display:flex; gap:14px; flex-wrap:wrap; }
-.mgh-hero-art { min-width:0; height:390px; display:grid; place-items:center; }
+.mgh-hero-art { position:relative; min-width:0; height:390px; display:grid; place-items:center; }
 .mgh-hero-art img { max-width:100%; width:100%; height:100%; object-fit:contain; }
 .mgh-crop-art { width:100%; height:100%; background-repeat:no-repeat; }
 .mgh-hero.is-centered { grid-template-columns:1fr; text-align:center; }
@@ -139,5 +139,10 @@
 @media(prefers-reduced-motion:reduce) { .santa-running-team * { animation:none !important; } }
 
 /* Exact uploaded Wesak scene; artwork keeps native proportions. */
-.home-public.marketing-home.home-template-wesak .mgh-backdrop { background-image:url("/template-previews/wesak-background-exact.png"); background-position:center top; background-size:100% auto; background-repeat:no-repeat; }
+.home-public.marketing-home.home-template-wesak .mgh-backdrop { background-image:url("/template-previews/wesak-background-exact.webp"); background-position:center top; background-size:100% auto; background-repeat:no-repeat; }
 .home-template-wesak .mgh-game-art,.home-template-ramadan .mgh-game-art { padding:15px; }
+
+/* Suspend decorative animation work when the tab is in the background. */
+html[data-page-hidden] .mgh-effects *,html[data-page-hidden] .mgh-effects *::before,html[data-page-hidden] .mgh-effects *::after { animation-play-state:paused!important; }
+
+@media(max-width:760px) { .home-public.marketing-home.home-template-wesak .mgh-backdrop { background-image:url("/template-previews/wesak-background-mobile.webp"); } }

@@ -15,6 +15,9 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      { source: "/homepage/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=86400" }] },
+      { source: "/template-previews/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=86400" }] },
+      { source: "/template-artwork/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=86400" }] },
       { source: "/api/:path*", headers: [{ key: "Cache-Control", value: "no-store" }] },
     ];
   },
