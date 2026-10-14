@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // Content-hashed thumbnails can be cached permanently; replacing artwork creates a new URL.
+      { source: "/template-thumbnails/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
       { source: "/homepage/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=86400" }] },
       { source: "/template-previews/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=86400" }] },
       { source: "/template-artwork/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=86400" }] },
