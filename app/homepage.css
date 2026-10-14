@@ -137,3 +137,7 @@
 @keyframes santa-sleigh-bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-1px); } }
 @media(max-width:800px) { .home-public.home-template-christmas.mgh-effects .seasonal-santa { width:132px; } }
 @media(prefers-reduced-motion:reduce) { .santa-running-team * { animation:none !important; } }
+
+/* Exact uploaded Wesak scene; artwork keeps native proportions. */
+.home-public.marketing-home.home-template-wesak .mgh-backdrop { background-image:url("/template-previews/wesak-background-exact.png"); background-position:center top; background-size:100% auto; background-repeat:no-repeat; }
+.home-template-wesak .mgh-game-art,.home-template-ramadan .mgh-game-art { padding:15px; }
