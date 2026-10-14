@@ -135,7 +135,7 @@ export default function PrizeCouponSettings({ campaignGameId }: { campaignGameId
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 12 }}>
                   <strong>{prize.name}</strong><span style={{ fontSize: 12, color: prize.active ? "#166534" : "#6b7280" }}>{prize.active ? "Active" : "Inactive"}</span>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 12, alignItems: "end" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,190px),1fr))", gap: 12, alignItems: "end" }}>
                   <label style={{ fontSize: 13, fontWeight: 700 }}>Coupon Type
                     <select value={draft.mode} onChange={(e) => update(prize.id, { mode: e.target.value as CouponMode })} style={{ ...input, marginTop: 6 }}>
                       <option value="auto">Auto Generate</option>

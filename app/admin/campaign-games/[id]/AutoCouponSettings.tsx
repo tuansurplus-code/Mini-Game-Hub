@@ -126,7 +126,7 @@ export default function AutoCouponSettings({ campaignGameId }: { campaignGameId:
       {message && <div style={{ padding: 11, borderRadius: 10, background: "#f0fdf4", color: "#166534", marginBottom: 12 }}>{message}</div>}
 
       {loading ? <p>Loading automatic coupon settings...</p> : <>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,180px),1fr))", gap: 12 }}>
           <label style={{ fontSize: 13, fontWeight: 700 }}>Prefix
             <input value={format.prefix} onChange={(e) => update({ prefix: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") })} placeholder="SGWIN" maxLength={20} style={input} />
           </label>

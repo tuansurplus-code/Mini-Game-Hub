@@ -23,3 +23,13 @@
 .rich-text-canvas img,.rich-text-canvas video { cursor:pointer; }
 .rich-text-canvas iframe,.content-preview-body iframe,.public-content-body iframe { border:0; aspect-ratio:16 / 9; }
 @media(max-width:700px) { .rich-text-media-panel { grid-template-columns:1fr; margin:8px; padding:12px; } }
+
+.public-content-body { overflow-wrap:anywhere; }
+.public-content-body table { display:block; max-width:100%; overflow-x:auto; }
+@media(max-width:600px) { .public-contact-form input,.public-contact-form textarea { min-width:0; font-size:16px; } }
+
+@media(max-width:600px) {
+  body input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),body select,body textarea { font-size:16px!important; }
+  .public-content-page>header { gap:16px; }
+  .public-content-page>header .brand { min-width:0; overflow-wrap:anywhere; }
+}

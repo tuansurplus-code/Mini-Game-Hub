@@ -946,7 +946,7 @@ export default function CampaignGameConfigurationPage() {
           style={{
             display: "grid",
             gridTemplateColumns:
-              "repeat(auto-fit, minmax(220px, 1fr))",
+              "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
             gap: "20px",
           }}
         >
@@ -1138,7 +1138,7 @@ export default function CampaignGameConfigurationPage() {
             style={{
               display: "grid",
               gridTemplateColumns:
-                "repeat(auto-fit, minmax(280px, 1fr))",
+                "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
               gap: "20px",
             }}
           >
@@ -1849,7 +1849,7 @@ export default function CampaignGameConfigurationPage() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
                 gap: "16px",
               }}
             >
@@ -2431,7 +2431,7 @@ function PrizeFormFields({
         style={{
           display: "grid",
           gridTemplateColumns:
-            "1fr 1fr",
+            "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
           gap: "16px",
         }}
       >

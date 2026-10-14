@@ -1093,3 +1093,32 @@ th {
 }
 .admin-shell .dashboard-tool > div a { min-height: 44px; }
 .admin-shell .dashboard-tool > div button { min-width: 44px; min-height: 44px; }
+
+/* Shared narrow-screen controls and containers. */
+.admin-main > *, .admin-panel, .admin-modal { min-width:0; max-width:100%; }
+.admin-panel:has(> table) { overflow-x:auto; overscroll-behavior-x:contain; }
+.admin-main h1,.admin-main h2,.admin-main h3,.admin-modal h2 { overflow-wrap:anywhere; }
+.admin-modal { overscroll-behavior:contain; }
+.admin-shell [role="dialog"] { max-height:calc(100dvh - 24px)!important; overflow-y:auto; overscroll-behavior:contain; }
+.admin-modal-body input,.admin-modal-body select,.admin-modal-body textarea { min-width:0; max-width:100%; }
+.admin-modal-header h2 { min-width:0; }
+.admin-modal-close { flex-shrink:0; }
+@media(max-width:760px), (pointer:coarse) {
+  .admin-shell .home-icon-action { width:48px; height:48px; flex-basis:48px; }
+  .admin-shell .admin-icon-button,.admin-shell .admin-modal-close { min-width:48px!important; min-height:48px!important; }
+  .admin-shell .admin-main button,.admin-shell .primary-btn,.admin-shell .secondary-btn,.admin-shell .danger-btn { min-height:48px; }
+  .admin-shell .admin-main input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+  .admin-shell .admin-main select,.admin-shell .admin-main textarea { font-size:16px!important; }
+  .admin-shell .rich-text-toolbar button { min-width:44px; }
+  .admin-shell .home-saved-actions { flex-wrap:wrap; }
+  .admin-shell .campaign-row-actions { grid-template-columns:repeat(3,48px)!important; }
+  .admin-shell .campaign-row-actions > * { min-width:48px!important; min-height:48px!important; }
+}
+@media(max-width:600px) {
+  .admin-form-columns { grid-template-columns:minmax(0,1fr)!important; }
+  .home-fields,.home-step-fields,.admin-shell .home-colors,.admin-shell .home-colors.compact { grid-template-columns:minmax(0,1fr); }
+  .admin-shell .admin-panel { padding:16px; }
+  .admin-shell .home-template-grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr)); }
+  .admin-shell .admin-modal { max-height:calc(100dvh - 20px); }
+  .admin-shell .admin-modal-header { padding:14px 16px; }
+}

@@ -71,7 +71,7 @@ export default function PrizeForm() {
           <label style={{display:"block",marginBottom:"16px"}}><div style={{marginBottom:"6px",fontWeight:600}}>Prize Name</div><input value={name} onChange={e=>setName(e.target.value)} placeholder="Example: Rs. 5,000 Voucher" disabled={saving} style={fieldStyle}/></label>
           <label style={{display:"block",marginBottom:"16px"}}><div style={{marginBottom:"6px",fontWeight:600}}>Description</div><textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder="Prize details" rows={3} disabled={saving} style={{...fieldStyle,resize:"vertical"}}/></label>
           <label style={{display:"block",marginBottom:"16px"}}><div style={{marginBottom:"6px",fontWeight:600}}>Image URL</div><input type="url" value={imageUrl} onChange={e=>setImageUrl(e.target.value)} placeholder="https://..." disabled={saving} style={fieldStyle}/></label>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"16px"}}>
+          <div className="admin-form-columns" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"16px"}}>
             <label><div style={{marginBottom:"6px",fontWeight:600}}>Weight</div><input type="number" min="0" step="0.01" value={weight} onChange={e=>setWeight(e.target.value)} disabled={saving} style={fieldStyle}/></label>
             <label><div style={{marginBottom:"6px",fontWeight:600}}>Inventory</div><input type="number" min="0" step="1" value={inventory} onChange={e=>setInventory(e.target.value)} placeholder="Unlimited" disabled={saving} style={fieldStyle}/></label>
           </div>

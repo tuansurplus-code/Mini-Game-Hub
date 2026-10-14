@@ -1,0 +1,14 @@
+/* Shared layout rules preserve each campaign's configured colors and artwork. */
+.game-page { min-height:100dvh!important; }
+.game-panel { min-width:0; overflow-wrap:anywhere; }
+.game-panel input,.game-panel textarea { min-width:0; max-width:100%; }
+.pick-card-grid { display:grid; grid-template-columns:repeat(var(--pick-columns,3),minmax(0,1fr)); gap:14px; }
+.pick-card-grid button { min-width:0; overflow-wrap:anywhere; }
+@media(max-width:600px) {
+  .game-page { padding:20px 12px 32px!important; }
+  .game-panel { padding:26px 16px 30px!important; }
+  .game-panel input,.game-panel textarea { font-size:16px!important; }
+  .game-panel button { min-height:48px; }
+  .pick-card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+}
+@media(prefers-reduced-motion:reduce) { .pick-card-grid button { transition:none!important; } }
