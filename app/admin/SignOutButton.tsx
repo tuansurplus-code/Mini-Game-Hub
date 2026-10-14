@@ -2,8 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { supabase } from "../../lib/supabase";
-import { platformSupabase } from "../../lib/supabase-platform";
 
 export default function SignOutButton({ area = "customer" }: { area?: "customer" | "platform" }) {
   const router = useRouter();
@@ -11,11 +9,18 @@ export default function SignOutButton({ area = "customer" }: { area?: "customer"
 
   async function signOut() {
     setLoading(true);
-    const client = area === "platform" ? platformSupabase : supabase;
-    const { error } = await client.auth.signOut({ scope: "local" });
-    if (error) { setLoading(false); window.alert("Unable to sign out. Please try again."); return; }
-    router.replace(area === "platform" ? "/saas-login" : "/login");
-    router.refresh();
+    try {
+      const client = area === "platform"
+        ? (await import("../../lib/supabase-platform")).platformSupabase
+        : (await import("../../lib/supabase")).supabase;
+      const { error } = await client.auth.signOut({ scope: "local" });
+      if (error) throw error;
+      router.replace(area === "platform" ? "/saas-login" : "/login");
+      router.refresh();
+    } catch {
+      setLoading(false);
+      window.alert("Unable to sign out. Please try again.");
+    }
   }
 
   return (
