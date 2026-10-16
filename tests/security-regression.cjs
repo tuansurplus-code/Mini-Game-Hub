@@ -1,0 +1,12 @@
+const fs=require('fs'),path=require('path'),ts=require('typescript'),assert=require('node:assert/strict');const repo=path.resolve(__dirname,'..');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,esModuleInterop:true,target:ts.ScriptTarget.ES2022}}).outputText,f);
+(async()=>{const {readJsonBody,RequestBodyError}=require(repo+'/lib/request-body.ts');
+assert.deepEqual(await readJsonBody(new Request('http://localhost',{method:'POST',body:'{"ok":true}'}),128),{ok:true});
+for(const request of [new Request('http://localhost',{method:'POST',body:'x'.repeat(257)}),new Request('http://localhost',{method:'POST',headers:{'content-length':'1'},body:new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('x'.repeat(257)));c.close();}}),duplex:'half'})])await assert.rejects(readJsonBody(request,256),e=>e instanceof RequestBodyError&&e.status===413);
+await assert.rejects(readJsonBody(new Request('http://localhost',{method:'POST',body:'{'}),256),e=>e.status===400);
+const {contentSecurityPolicy}=require(repo+'/lib/content-security-policy.ts');const csp=contentSecurityPolicy('testnonce');assert(csp.includes("'nonce-testnonce'"));assert(csp.includes("'strict-dynamic'"));assert(!csp.includes("'unsafe-eval'"));assert(!csp.match(/script-src[^;]*'unsafe-inline'/));assert(csp.includes("object-src 'none'"));
+// Load the server-only helper through a test module loader without server-only's browser guard.
+const vm=require('vm');const source=ts.transpileModule(fs.readFileSync(repo+'/lib/public-prizes.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;const mod={exports:{}};vm.runInNewContext(source,{module:mod,exports:mod.exports,console,require:n=>{if(n==='server-only')return{};return require(n)}});
+const rows=await mod.exports.getPublicGamePrizes({rpc:async()=>({data:[{id:'p',name:'Prize',weight:1,metadata:{segment_color:'#ffffff',fixed_coupon_code:'must-not-leak',nested:{coupon:'secret'}}}],error:null})},'g');assert.equal(Object.keys(rows[0].metadata).join(','),'segment_color');assert(!JSON.stringify(rows).includes('must-not-leak'));
+await assert.rejects(mod.exports.getPublicGamePrizes({rpc:async()=>({data:null,error:{code:'TEST'}})},'g'));
+console.log('Passed: valid/bounded/chunked/malformed JSON, production CSP restrictions, public prize metadata allowlist, closed failure handling.');})().catch(e=>{console.error(e);process.exitCode=1});

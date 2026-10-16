@@ -21,6 +21,8 @@ export const requirePlatformAdmin = cache(async function requirePlatformAdmin() 
 
   if (user.app_metadata?.must_change_password === true) redirect("/saas-password");
 
+  const assurance=await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(assurance.error || assurance.data.currentLevel!=="aal2") redirect("/saas-mfa");
   return { user, role: platformAdmin.role as PlatformRole };
 });
 
@@ -35,5 +37,7 @@ export async function getPlatformAdmin() {
     .eq("user_id", user.id)
     .maybeSingle();
 
+  const assurance=await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(assurance.error || assurance.data.currentLevel!=="aal2") return null;
   return data?.active && ["owner", "admin", "support"].includes(data.role) ? { user, role: data.role as PlatformRole } : null;
 }

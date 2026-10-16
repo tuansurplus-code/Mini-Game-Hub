@@ -1,3 +1,5 @@
+import { readJsonBody,RequestBodyError } from "../../../../lib/request-body";
+import { getClientIp,rateLimit,tooManyRequests } from "../../../../lib/rate-limit";
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "../../../../lib/supabase-admin";
 
@@ -6,8 +8,11 @@ type ContactField = { id: string; label: string; type: string; enabled: boolean;
 
 export async function POST(request: Request) {
   if (request.headers.get("origin") !== new URL(request.url).origin) return json({ error: "Invalid request origin." }, 403);
-  let body: { fields?: unknown };
-  try { body = await request.json(); } catch { return json({ error: "Invalid form submission." }, 400); }
+  try { const limit=await rateLimit(`contact:ip:${getClientIp(request)}`,5,60_000);if(!limit.allowed)return tooManyRequests(limit.retryAfter); }
+  catch { return json({error:"The contact form is temporarily unavailable."},503); }
+  let body: { fields?: unknown; website?:unknown };
+  try { body = await readJsonBody(request,65536) as {fields?:unknown;website?:unknown}; } catch(e) { return json({ error: "Invalid form submission." },e instanceof RequestBodyError?e.status:400); }
+  if(typeof body?.website==="string"&&body.website.trim())return json({submitted:true,message:"Thank you. Your message has been received."});
   const { data: page, error: pageError } = await createSupabaseAdminClient().from("content_pages").select("published").eq("slug", "contact").maybeSingle();
   if (pageError || !page) return json({ error: "The contact form is unavailable." }, 503);
   const config = page.published as { fields?: ContactField[] };

@@ -1,3 +1,4 @@
+import { getPublicGamePrizes } from "../../../lib/public-prizes";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "../../../lib/supabase-server";
 import SpinGameClient from "./SpinGameClient";
@@ -57,17 +58,8 @@ export default async function GamePage({ params }: PageProps) {
     notFound();
   }
 
-  const { data: prizes, error: prizesError } = await supabase
-    .from("prizes")
-    .select("id, name, description, image_url, weight, inventory")
-    .eq("campaign_game_id", campaignGame.id)
-    .eq("active", true)
-    .gt("weight", 0)
-    .order("created_at", { ascending: true });
-
-  if (prizesError || !prizes || prizes.length === 0) {
-    notFound();
-  }
+  const prizes = await getPublicGamePrizes(supabase,campaignGame.id).catch(()=>null);
+  if (!prizes?.length) notFound();
 
   const availablePrizes = prizes.filter(
     (prize) => prize.inventory === null || prize.inventory > 0

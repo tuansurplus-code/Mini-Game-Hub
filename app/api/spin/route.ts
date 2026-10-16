@@ -1,3 +1,5 @@
+import { createSupabaseAdminClient } from "../../../lib/supabase-admin";
+import { readJsonBody,RequestBodyError } from "../../../lib/request-body";
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "../../../lib/supabase-server";
 import { getClientIp, rateLimit, tooManyRequests } from "../../../lib/rate-limit";
@@ -21,14 +23,14 @@ function playError(message: string) {
 
 export async function POST(request: Request) {
   try {
-    const ipLimit = rateLimit(`legacy-spin:ip:${getClientIp(request)}`, 12, 60_000);
+    const ipLimit = await rateLimit(`legacy-spin:ip:${getClientIp(request)}`, 12, 60_000);
     if (!ipLimit.allowed) return tooManyRequests(ipLimit.retryAfter);
 
     const contentLength = Number(request.headers.get("content-length") || 0);
     if (contentLength > 4096) return NextResponse.json({ error: "Request is too large." }, { status: 413 });
 
     let body: Record<string, unknown>;
-    try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid request." }, { status: 400 }); }
+    try { body = await readJsonBody(request,4096) as Record<string,unknown>; } catch(e) { return NextResponse.json({ error: "Invalid request." }, { status:e instanceof RequestBodyError?e.status:400 }); }
 
     const campaignGameId = typeof body.campaign_game_id === "string" ? body.campaign_game_id.trim() : "";
     const mobile = normalizeSriLankanMobile(body.mobile);
@@ -37,7 +39,7 @@ export async function POST(request: Request) {
 
     if (!uuid.test(campaignGameId) || !mobile || !uuid.test(requestId)) return NextResponse.json({ error: "Invalid spin request." }, { status: 400 });
 
-    const mobileLimit = rateLimit(`legacy-spin:mobile:${campaignGameId}:${mobile}`, 5, 60_000);
+    const mobileLimit = await rateLimit(`legacy-spin:mobile:${campaignGameId}:${mobile}`, 5, 60_000);
     if (!mobileLimit.allowed) return tooManyRequests(mobileLimit.retryAfter);
 
     const supabase = await createSupabaseServerClient();
@@ -51,7 +53,7 @@ export async function POST(request: Request) {
     const endsAt = campaign?.ends_at ? new Date(campaign.ends_at) : null;
     if (!campaign || campaign.status !== "active" || (startsAt && startsAt > now) || (endsAt && endsAt < now)) return NextResponse.json({ error: "This game is not currently available." }, { status: 409 });
 
-    const { data, error } = await supabase.rpc("play_spin", { p_campaign_game_id: campaignGameId, p_mobile_e164: mobile, p_request_id: requestId });
+    const { data, error } = await createSupabaseAdminClient().rpc("play_spin", { p_campaign_game_id: campaignGameId, p_mobile_e164: mobile, p_request_id: requestId });
     if (error) {
       console.error("Legacy spin RPC error:", error.code);
       const friendly = playError(error.message || "");
